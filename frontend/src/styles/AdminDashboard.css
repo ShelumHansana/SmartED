@@ -1,0 +1,137 @@
+/* Admin Dashboard Specific Styles */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.stat-card h3 {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+  color: var(--text-color);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.recent-activities {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+}
+
+.activities-list {
+  margin-top: 1rem;
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.activity-type {
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.activity-user {
+  font-weight: 500;
+}
+
+.activity-role {
+  color: var(--text-light);
+  font-size: 0.875rem;
+}
+
+.activity-time {
+  color: var(--text-light);
+  font-size: 0.875rem;
+}
+
+.quick-actions {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  padding: 1rem;
+  background: #f8fafc;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+/* Admin Profile */
+.admin-profile {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.admin-profile img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
