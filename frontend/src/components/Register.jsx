@@ -130,7 +130,7 @@ const Register = ({ onClose }) => {
                 <div className="form-group">
                   <label htmlFor="class">Class*</label>
                   <select id="class" required>
-                    {['A', 'B', 'C', 'D', 'E'].map(cls => (
+                    {['A', 'B', 'C', 'D', 'E', 'F', 'G' , 'H' , 'I'].map(cls => (
                       <option key={cls} value={cls}>Class {cls}</option>
                     ))}
                   </select>
