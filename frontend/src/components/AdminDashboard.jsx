@@ -3,6 +3,11 @@ import '../styles/AdminDashboard.css'
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview')
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(4)
+  const [selectedMessage, setSelectedMessage] = useState(null)
+  const [showMessageDetail, setShowMessageDetail] = useState(false)
+  const [readNotifications, setReadNotifications] = useState(new Set())
 
   const [stats, setStats] = useState({
     totalStudents: 156,
@@ -16,6 +21,70 @@ const AdminDashboard = () => {
     { id: 2, type: 'Course Added', user: 'Jane Smith', role: 'Teacher', time: '3 hours ago' },
     { id: 3, type: 'Report Generated', user: 'Admin', role: 'Admin', time: '5 hours ago' }
   ])
+
+  const notifications = [
+    { 
+      id: 1, 
+      title: 'System Maintenance', 
+      message: 'Scheduled maintenance tonight at 2 AM', 
+      time: '30 minutes ago', 
+      type: 'warning',
+      details: 'Scheduled system maintenance will occur tonight from 2:00 AM to 4:00 AM EST. During this time, the system will be temporarily unavailable. This maintenance includes server updates, database optimization, and security patches. Please inform all users to save their work before 2:00 AM.',
+      sender: 'System Administrator',
+      priority: 'High'
+    },
+    { 
+      id: 2, 
+      title: 'New User Registration', 
+      message: '5 new students registered today', 
+      time: '2 hours ago', 
+      type: 'info',
+      details: 'Today we have 5 new student registrations across different grades. The new students are: John Smith (Grade 10), Mary Johnson (Grade 11), David Wilson (Grade 9), Sarah Davis (Grade 12), and Michael Brown (Grade 10). Please ensure their accounts are properly set up and class assignments are completed.',
+      sender: 'Registration System',
+      priority: 'Medium'
+    },
+    { 
+      id: 3, 
+      title: 'Server Alert', 
+      message: 'High CPU usage detected', 
+      time: '4 hours ago', 
+      type: 'warning',
+      details: 'Server monitoring has detected high CPU usage (85%) on the main application server. This may be due to increased user activity during peak hours. Please monitor the situation and consider load balancing if the issue persists. Current active users: 245.',
+      sender: 'Monitoring System',
+      priority: 'High'
+    },
+    { 
+      id: 4, 
+      title: 'Backup Complete', 
+      message: 'Daily backup completed successfully', 
+      time: '1 day ago', 
+      type: 'success',
+      details: 'Daily automated backup has been completed successfully. Backup size: 2.3 GB. All student data, grades, and system configurations have been securely backed up to the cloud storage. Backup verification completed without errors.',
+      sender: 'Backup System',
+      priority: 'Low'
+    }
+  ]
+
+  const markAllAsRead = () => {
+    setNotificationCount(0)
+    setShowNotifications(false)
+  }
+
+  const openMessageDetail = (notification) => {
+    setSelectedMessage(notification)
+    setShowMessageDetail(true)
+  }
+
+  const closeMessageDetail = () => {
+    setSelectedMessage(null)
+    setShowMessageDetail(false)
+  }
+
+  const markSingleAsRead = (notificationId) => {
+    setReadNotifications(prev => new Set(prev).add(notificationId))
+    setNotificationCount(prev => Math.max(0, prev - 1))
+    closeMessageDetail()
+  }
 
   return (
     <div className="dashboard-container">
@@ -65,8 +134,13 @@ const AdminDashboard = () => {
         <header className="dashboard-header">
           <h2>Admin Dashboard</h2>
           <div className="header-actions">
-            <button className="notification-btn">
-              <span className="notification-badge">3</span>
+            <button 
+              className="notification-btn"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              {notificationCount > 0 && (
+                <span className="notification-badge">{notificationCount}</span>
+              )}
               Notifications
             </button>
           </div>
@@ -151,6 +225,95 @@ const AdminDashboard = () => {
           )}
         </div>
       </main>
+
+      {/* Notification Panel */}
+      <div className={`notification-panel ${showNotifications ? 'open' : ''}`}>
+        <div className="notification-header">
+          <h3>Notifications</h3>
+          <button 
+            className="close-notifications"
+            onClick={() => setShowNotifications(false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="notification-list">
+          {notifications.map(notification => (
+            <div 
+              key={notification.id} 
+              className={`notification-item ${notification.type} ${readNotifications.has(notification.id) ? 'read' : ''}`}
+              onClick={() => openMessageDetail(notification)}
+            >
+              <div className="notification-content">
+                <h4>{notification.title}</h4>
+                <p>{notification.message}</p>
+                <span className="notification-time">{notification.time}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="notification-footer">
+          <button className="mark-all-read" onClick={markAllAsRead}>
+            Mark all as read
+          </button>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      {showNotifications && (
+        <div 
+          className="notification-overlay"
+          onClick={() => setShowNotifications(false)}
+        />
+      )}
+
+      {/* Message Detail Modal */}
+      {showMessageDetail && selectedMessage && (
+        <div className="message-detail-modal">
+          <div className="message-detail-overlay" onClick={closeMessageDetail} />
+          <div className="message-detail-content">
+            <div className="message-detail-header">
+              <div className="message-detail-title">
+                <h2>{selectedMessage.title}</h2>
+                <span className={`priority-badge ${selectedMessage.priority.toLowerCase()}`}>
+                  {selectedMessage.priority} Priority
+                </span>
+              </div>
+              <button className="close-message-detail" onClick={closeMessageDetail}>
+                ×
+              </button>
+            </div>
+            <div className="message-detail-body">
+              <div className="message-meta">
+                <div className="meta-item">
+                  <strong>From:</strong> {selectedMessage.sender}
+                </div>
+                <div className="meta-item">
+                  <strong>Time:</strong> {selectedMessage.time}
+                </div>
+                <div className="meta-item">
+                  <strong>Type:</strong> 
+                  <span className={`type-badge ${selectedMessage.type}`}>
+                    {selectedMessage.type.charAt(0).toUpperCase() + selectedMessage.type.slice(1)}
+                  </span>
+                </div>
+              </div>
+              <div className="message-content-detail">
+                <p>{selectedMessage.details}</p>
+              </div>
+            </div>
+            <div className="message-detail-footer">
+              <button className="reply-btn">Reply</button>
+              <button 
+                className="mark-read-btn" 
+                onClick={() => markSingleAsRead(selectedMessage.id)}
+              >
+                Mark as Read
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -15,10 +15,13 @@
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  width: 100%;
-  max-width: 480px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
   position: relative;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  padding-right: 1rem;
 }
 
 .close-button {
@@ -72,9 +75,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding-right: 1rem;
 }
 
 .form-group {
@@ -105,6 +105,38 @@
   width: 100%;
 }
 
+.form-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Adjust scrollbar styling */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
@@ -132,12 +164,7 @@
   outline: none;
 }
 
-/* Make the modal scrollable if content is too long */
-.modal-content {
-  max-height: 90vh;
-  overflow-y: auto;
-  padding-right: 1rem;
-}
+/* Style for required field indicator */
 
 /* Style for required field indicator */
 .form-group label::after {
@@ -165,4 +192,97 @@
 
 .submit-button:hover {
   background: #1d4ed8;
+}
+
+.teaching-classes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selected-classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.selected-class-tag {
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remove-class-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.remove-class-btn:hover {
+  color: #ef4444;
+}
+
+.add-class-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.add-class-btn:hover {
+  background: #1d4ed8;
+}
+
+.help-text {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.subject-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subject-checkbox input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.subject-checkbox label {
+  font-weight: normal;
+  color: #374151;
+  cursor: pointer;
+}
+
+.subject-checkbox:hover label {
+  color: #2563eb;
+}
+
+.form-row select {
+  flex: 1;
+  min-width: 0;
 }
