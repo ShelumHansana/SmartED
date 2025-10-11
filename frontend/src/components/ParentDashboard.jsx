@@ -197,58 +197,6 @@ const ParentDashboard = () => {
     }
   }
 
-  // Messages from teachers
-  const messages = [
-    {
-      id: 1,
-      from: 'Mr. Sunil Perera',
-      student: 'Kamal Bandara Perera',
-      subject: 'Excellent Progress in A/L Mathematics',
-      content: 'Kamal has been performing exceptionally well in his A/L Mathematics classes. He scored 95% on his recent Calculus unit test and shows excellent understanding of integration techniques. Keep up the good work!',
-      date: '2025-09-28',
-      time: '2:30 PM',
-      priority: 'normal',
-      read: false,
-      category: 'academic'
-    },
-    {
-      id: 2,
-      from: 'Dr. Amara Silva',
-      student: 'Kamal Bandara Perera',
-      subject: 'Physics Practical Session Reminder',
-      content: 'Dear Parent, please remind Kamal to bring his lab coat and safety glasses for tomorrow\'s Physics practical session on Electromagnetic Induction. The session starts at 9:00 AM.',
-      date: '2025-09-27',
-      time: '4:15 PM',
-      priority: 'high',
-      read: false,
-      category: 'reminder'
-    },
-    {
-      id: 3,
-      from: 'Mrs. Chamari Wickramasinghe',
-      student: 'Sanduni Perera',
-      subject: 'Mathematics Assignment Completed',
-      content: 'Sanduni has successfully completed her O/L Mathematics assignment on Algebraic Expressions. She scored full marks and her problem-solving approach was impressive. Well done!',
-      date: '2025-09-26',
-      time: '11:45 AM',
-      priority: 'normal',
-      read: true,
-      category: 'academic'
-    },
-    {
-      id: 4,
-      from: 'Miss. Sandamali Fernando',
-      student: 'Sanduni Perera',
-      subject: 'English Speaking Competition',
-      content: 'Sanduni has been selected to represent Grade 10 in the inter-school English speaking competition. Please encourage her to practice and prepare well. The competition is on October 15th.',
-      date: '2025-09-25',
-      time: '1:20 PM',
-      priority: 'high',
-      read: false,
-      category: 'achievement'
-    }
-  ]
-
   // Get recent test results for selected student
   const getRecentTests = (studentLevel) => {
     if (studentLevel === 'A/L') {
@@ -291,8 +239,6 @@ const ParentDashboard = () => {
       type: 'success'
     }
   ]
-
-  const unreadMessages = messages.filter(m => !m.read).length
 
   const currentStudent = students[selectedStudent]
   const currentSubjects = getSubjectsProgress(currentStudent.level)
@@ -349,15 +295,6 @@ const ParentDashboard = () => {
             onClick={() => setActiveTab('teachers')}
           >
             Teachers
-          </button>
-          <button 
-            className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
-          >
-            Messages
-            {unreadMessages > 0 && (
-              <span className="notification-badge">{unreadMessages}</span>
-            )}
           </button>
         </nav>
       </aside>
@@ -430,25 +367,86 @@ const ParentDashboard = () => {
             <div className="progress-section">
               <h3>Academic Progress - {currentStudent.level} Level</h3>
               <div className="subjects-grid">
-                {currentSubjects.map((subject, index) => (
-                  <div key={index} className="subject-card">
-                    <div className="subject-header">
-                      <h4>{subject.subject}</h4>
-                      <span className="subject-grade">{subject.grade}</span>
-                    </div>
-                    <div className="progress-bar">
+                {currentSubjects.map((subject, index) => {
+                  const getSubjectIcon = (subjectName) => {
+                    const icons = {
+                      'Mathematics': '📐',
+                      'Physics': '⚛️',
+                      'Chemistry': '🧪',
+                      'Biology': '🧬',
+                      'English': '📚',
+                      'Science': '🔬',
+                      'Sinhala': '🇱🇰',
+                      'History': '📜',
+                      'Geography': '🌍',
+                      'ICT': '💻'
+                    };
+                    return icons[subjectName] || '📖';
+                  };
+
+                  const getPerformanceLevel = (progress) => {
+                    if (progress >= 95) return 'excellent';
+                    return 'normal';
+                  };
+
+                  return (
+                    <div 
+                      key={index} 
+                      className="subject-card"
+                      data-performance={getPerformanceLevel(subject.progress)}
+                      tabIndex="0"
+                    >
+                      <div className="subject-header">
+                        <h4 data-subject-icon={getSubjectIcon(subject.subject)}>
+                          {subject.subject}
+                        </h4>
+                        <span 
+                          className="subject-grade" 
+                          data-grade={subject.grade}
+                        >
+                          {subject.grade}
+                        </span>
+                      </div>
                       <div 
-                        className="progress-fill" 
-                        style={{ width: `${subject.progress}%` }}
-                      ></div>
+                        className="progress-bar"
+                        style={{ 
+                          height: '14px', 
+                          width: subject.progress < 25 ? 'calc(100% - 50px)' : '100%', 
+                          position: 'relative',
+                          display: 'block'
+                        }}
+                      >
+                        <div 
+                          className="progress-fill"
+                          style={{ 
+                            width: `${subject.progress}%`, 
+                            height: '14px',
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            zIndex: '5'
+                          }}
+                        ></div>
+                        <span 
+                          className={`progress-percentage ${subject.progress < 25 ? 'outside' : ''}`}
+                          style={{
+                            background: subject.progress >= 25 ? 'rgba(255, 255, 255, 0.95)' : undefined,
+                            color: subject.progress >= 25 ? '#1e293b' : undefined,
+                            padding: subject.progress >= 25 ? '2px 8px' : undefined,
+                            borderRadius: subject.progress >= 25 ? '12px' : undefined
+                          }}
+                        >
+                          {subject.progress}%
+                        </span>
+                      </div>
+                      <div className="subject-info">
+                        <p>Teacher: {subject.teacher}</p>
+                        <p>Assignments: {subject.completed}/{subject.assignments}</p>
+                        <p>Next: {subject.upcoming}</p>
+                      </div>
                     </div>
-                    <div className="subject-info">
-                      <p>Teacher: {subject.teacher}</p>
-                      <p>Assignments: {subject.completed}/{subject.assignments}</p>
-                      <p>Next: {subject.upcoming}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -468,38 +466,6 @@ const ParentDashboard = () => {
                       <p>⏰ {teacher.availability}</p>
                       <p>🎓 {teacher.experience}</p>
                     </div>
-                    <button className="contact-btn">Send Message</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'messages' && (
-            <div className="messages-section">
-              <h3>Messages from Teachers</h3>
-              <div className="messages-list">
-                {messages.map(message => (
-                  <div key={message.id} className={`message-card ${!message.read ? 'unread' : ''}`}>
-                    <div className="message-header">
-                      <h4>{message.subject}</h4>
-                      <span className="message-time">{message.date} at {message.time}</span>
-                    </div>
-                    <div className="message-from">
-                      <strong>{message.from}</strong> - {message.student}
-                    </div>
-                    <div className="message-content">
-                      <p>{message.content}</p>
-                    </div>
-                    <div className="message-actions">
-                      <button className="reply-btn">Reply</button>
-                      {!message.read && (
-                        <button className="mark-read-btn">Mark as Read</button>
-                      )}
-                    </div>
-                    <span className={`priority-badge ${message.priority}`}>
-                      {message.priority} priority
-                    </span>
                   </div>
                 ))}
               </div>
