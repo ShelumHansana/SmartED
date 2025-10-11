@@ -1,0 +1,106 @@
+.admin-user-management {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 2rem auto;
+}
+.aum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.aum-header h2 {
+  font-size: 1.5rem;
+  color: #2563eb;
+  font-weight: 700;
+  margin: 0;
+}
+.aum-search {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 250px;
+  background: #f8fafc;
+  color: #1e293b;
+}
+.aum-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.aum-table th, .aum-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+.aum-table th {
+  background: #f8fafc;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.aum-table tr:last-child td {
+  border-bottom: none;
+}
+.aum-btn {
+  padding: 0.35rem 0.9rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 0.95rem;
+  margin-right: 0.3rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.aum-btn.edit {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+.aum-btn.delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.aum-btn.save {
+  background: #2563eb;
+  color: #fff;
+}
+.aum-btn.cancel {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.aum-btn.add {
+  background: #22c55e;
+  color: #fff;
+}
+.aum-btn:disabled {
+  background: #e5e7eb;
+  color: #a1a1aa;
+  cursor: not-allowed;
+}
+.aum-editing td {
+  background: #f0f9ff;
+}
+.aum-add-row td {
+  background: #f8fafc;
+}
+input, select {
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  color: #1e293b;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb22;
+}

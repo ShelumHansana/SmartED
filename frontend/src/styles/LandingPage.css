@@ -1,61 +1,28 @@
-/* Reset CSS */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --background-color: #f8fafc;
-  --text-color: #1e293b;
-  --text-light: #64748b;
-}
-
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: var(--text-color);
-  background: var(--background-color);
-}
-
-button {
-  font: inherit;
-  cursor: pointer;
-  border: none;
-  outline: none;
-}
-
-input {
-  font: inherit;
-  outline: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  width: 100%;
-}
-
-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
+/* Landing Page Styles - Uses global design system */
 .landing-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+  /* Fallback gradient background */
+  background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+  /* Background with image overlay - the graduation image you provided */
+  background: 
+    linear-gradient(135deg, rgba(115, 110, 220, 0.6) 0%, rgba(6, 182, 212, 0.6) 100%),
+    url('/graduation-bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   display: flex;
   flex-direction: column;
+  padding-top: 5rem; /* Account for fixed navbar */
 }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: var(--space-4) var(--space-8);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   position: fixed;
   top: 0;
   left: 0;
@@ -71,28 +38,28 @@ input:focus {
 }
 
 .logo h1 {
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   color: var(--primary-color);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   margin: 0;
 }
 
 .tagline {
-  font-size: 0.875rem;
-  color: var(--text-light);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .auth-buttons {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .login-button, .signup-button {
-  padding: 0.5rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-base);
 }
 
 .login-button {
@@ -102,7 +69,7 @@ input:focus {
 }
 
 .login-button:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: var(--primary-50);
 }
 
 .signup-button {
@@ -127,7 +94,7 @@ input:focus {
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(8px);
-  padding: 1rem;
+  padding: var(--space-4);
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -143,13 +110,13 @@ input:focus {
 }
 
 .modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
+  background: var(--surface);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 440px;
   position: relative;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -165,26 +132,29 @@ input:focus {
 }
 
 .modal-content h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-6);
   text-align: center;
+  color: var(--text-color);
+  font-weight: var(--font-semibold);
 }
 
 .close-button {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 1.5rem;
-  color: var(--text-light);
+  top: var(--space-4);
+  right: var(--space-4);
+  font-size: var(--text-2xl);
+  color: var(--text-secondary);
   background: none;
-  padding: 0.25rem;
-  border-radius: 4px;
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
   cursor: pointer;
+  transition: all var(--transition-base);
 }
 
 .close-button:hover {
   color: var(--text-color);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--neutral-100);
 }
 
 /* Role Selector Styles */
@@ -207,19 +177,22 @@ input:focus {
 }
 
 .role-button {
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-3) var(--space-6);
   border: 2px solid var(--primary-color);
-  border-radius: 8px;
-  background: white;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   color: var(--primary-color);
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: var(--font-medium);
+  transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .role-button:hover,
 .role-button.active {
   background: var(--primary-color);
   color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Auth Form Styles */
@@ -245,15 +218,19 @@ input:focus {
 .submit-button {
   background: var(--primary-color);
   color: white;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  margin-top: 1rem;
-  transition: all 0.2s ease;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-medium);
+  margin-top: var(--space-4);
+  transition: all var(--transition-base);
+  border: none;
+  cursor: pointer;
 }
 
 .submit-button:hover {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-buttons {
@@ -262,26 +239,28 @@ input:focus {
 }
 
 .nav-button {
-  padding: 0.5rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-base);
+  border: none;
+  cursor: pointer;
 }
 
 .nav-button:first-child {
   background: transparent;
-  color: #2563eb;
-  border: 2px solid #2563eb;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
 }
 
 .nav-button:last-child {
-  background: #2563eb;
+  background: var(--primary-color);
   color: white;
 }
 
 .nav-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .landing-container {
@@ -292,10 +271,10 @@ input:focus {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: var(--space-8) var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: var(--space-12);
 }
 
 /* Hero Section */
@@ -303,79 +282,89 @@ input:focus {
   text-align: center;
   max-width: 800px;
   margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: var(--space-12);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .hero-section h2 {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, var(--primary-color), #1e40af);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-6);
+  color: var(--text-color);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .hero-section p {
-  font-size: 1.25rem;
-  color: var(--text-light);
-  margin-bottom: 2rem;
-  line-height: 1.6;
+  font-size: var(--text-xl);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+  line-height: var(--leading-relaxed);
   max-width: 600px;
-  margin: 0 auto 2rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hero-buttons {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
 }
 
 .cta-button {
-  padding: 0.75rem 2rem;
+  padding: var(--space-3) var(--space-8);
   background: var(--primary-color);
   color: white;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 1.125rem;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-medium);
+  font-size: var(--text-lg);
+  transition: all var(--transition-base);
   cursor: pointer;
 }
 
 .cta-button:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Features Section */
 .features-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 2rem 0;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
 }
 
 .feature-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.95);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  border: 1px solid var(--border-light);
+  backdrop-filter: blur(5px);
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
 .feature-card h3 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-4);
   color: var(--text-color);
+  font-weight: var(--font-semibold);
 }
 
 .feature-card p {
-  color: var(--text-light);
-  line-height: 1.6;
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
 }
 
 /* Responsive Design */

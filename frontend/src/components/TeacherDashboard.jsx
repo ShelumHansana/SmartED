@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import StudentList from './teacher/StudentList'
 import MessageBoard from './teacher/MessageBoard'
+import MarksEntry from './teacher/MarksEntry'
 import Notepad from './Notepad'
 import TodoList from './teacher/TodoList'
 import ActivityUpload from './teacher/ActivityUpload'
@@ -106,6 +107,12 @@ const TeacherDashboard = () => {
             Students
           </button>
           <button 
+            className={`nav-item ${activeTab === 'marks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('marks')}
+          >
+            Marks Entry
+          </button>
+          <button 
             className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
             onClick={() => setActiveTab('messages')}
           >
@@ -144,6 +151,7 @@ const TeacherDashboard = () => {
 
         <div className="dashboard-content">
           {activeTab === 'students' && <StudentList />}
+          {activeTab === 'marks' && <MarksEntry />}
           {activeTab === 'messages' && <MessageBoard />}
           {activeTab === 'activities' && <ActivityUpload />}
           {activeTab === 'tools' && (

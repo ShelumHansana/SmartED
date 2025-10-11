@@ -93,18 +93,22 @@
 }
 
 .action-button {
-  padding: 1rem;
-  background: #f8fafc;
+  padding: var(--space-4);
+  background: var(--neutral-50);
   border: 2px solid var(--border-color);
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  color: var(--text-color);
 }
 
 .action-button:hover {
   background: var(--primary-color);
   border-color: var(--primary-color);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Admin Profile */

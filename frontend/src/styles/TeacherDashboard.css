@@ -57,19 +57,35 @@
 }
 
 .action-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  margin-right: 0.5rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  margin-right: var(--space-2);
+  border: none;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
 }
 
 .view-btn {
-  background: #3b82f6;
+  background: var(--primary-color);
   color: white;
 }
 
+.view-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
 .message-btn {
-  background: #10b981;
+  background: var(--success-700);
   color: white;
+}
+
+.message-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Message Board Styles */

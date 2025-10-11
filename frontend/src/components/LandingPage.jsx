@@ -19,14 +19,14 @@ const LandingPage = () => {
 
       <main className="main-content">
         <div className="hero-section">
-          <h2>Welcome to SmartED Learning</h2>
+          <h2>Achieve Your Educational Dreams</h2>
           <p>
-            Transform your educational journey with our comprehensive 
-            Learning Management System
+            Embark on a transformative learning journey with SmartED - 
+            Your gateway to academic excellence and success
           </p>
           <div className="hero-buttons">
             <button className="cta-button" onClick={() => setShowLogin(true)}>
-              Get Started
+              Start Learning Today
             </button>
           </div>
         </div>

@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import AdminUserManagement from './AdminUserManagement';
+import AdminCourseManagement from './AdminCourseManagement';
+import AdminReporting from './AdminReporting';
+import AdminSettings from './AdminSettings';
 import '../styles/AdminDashboard.css'
 
 const AdminDashboard = () => {
@@ -198,29 +202,25 @@ const AdminDashboard = () => {
 
           {activeTab === 'users' && (
             <div className="users-section">
-              <h3>User Management</h3>
-              <p>User management interface will be implemented here.</p>
+              <AdminUserManagement />
             </div>
           )}
 
           {activeTab === 'courses' && (
             <div className="courses-section">
-              <h3>Course Management</h3>
-              <p>Course management interface will be implemented here.</p>
+              <AdminCourseManagement />
             </div>
           )}
 
           {activeTab === 'reports' && (
             <div className="reports-section">
-              <h3>Reports</h3>
-              <p>Reporting interface will be implemented here.</p>
+              <AdminReporting />
             </div>
           )}
 
           {activeTab === 'settings' && (
             <div className="settings-section">
-              <h3>System Settings</h3>
-              <p>Settings interface will be implemented here.</p>
+              <AdminSettings />
             </div>
           )}
         </div>
