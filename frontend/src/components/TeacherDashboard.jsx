@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import StudentList from './teacher/StudentList'
 import MessageBoard from './teacher/MessageBoard'
-import MarksEntry from './teacher/MarksEntry'
 import Notepad from './Notepad'
 import TodoList from './teacher/TodoList'
 import ActivityUpload from './teacher/ActivityUpload'
+import GradeEntry from './teacher/GradeEntry'
+import GradeAnalytics from './teacher/GradeAnalytics'
 import '../styles/TeacherDashboard.css'
 
 const TeacherDashboard = () => {
@@ -19,51 +20,51 @@ const TeacherDashboard = () => {
     { 
       id: 1, 
       title: 'New Student Registration', 
-      message: 'John Smith has registered for your Math class', 
+      message: 'Kamal Perera has registered for your A/L Mathematics class', 
       time: '1 hour ago', 
       type: 'info',
-      details: 'Student John Smith (ID: ST2025001) has successfully registered for your Advanced Mathematics class. Please review his academic background and add him to your class roster. His contact information and guardian details are available in the student management system.',
+      details: 'Student Kamal Perera (Admission No: AL2025001) has successfully registered for your Advanced Level Mathematics class for Physical Science stream. Please review his O/L results and add him to your Grade 12 M1 class roster. His contact information and guardian details are available in the student management system.',
       sender: 'Registration System',
       priority: 'Medium'
     },
     { 
       id: 2, 
       title: 'Assignment Submitted', 
-      message: '15 students have submitted their homework', 
+      message: '18 students have submitted their Calculus homework', 
       time: '3 hours ago', 
       type: 'success',
-      details: 'A total of 15 students have submitted their Mathematics Assignment #5 on Algebraic Equations. The submission deadline was today at 11:59 PM. You can now review and grade these submissions in the assignments section.',
+      details: 'A total of 18 students have submitted their Mathematics Assignment on Differential Calculus. The submission deadline was today at 11:59 PM. You can now review and grade these submissions in the assignments section. This covers Grade 12 Physical Science and Bio Science streams.',
       sender: 'Assignment System',
       priority: 'Low'
     },
     { 
       id: 3, 
       title: 'Parent Message', 
-      message: 'Mrs. Johnson sent you a message about her child', 
+      message: 'Mrs. Sanduni Silva sent you a message about her daughter', 
       time: '5 hours ago', 
       type: 'warning',
-      details: 'Dear Mr. Smith, I am writing to discuss my son Michael\'s recent performance in your mathematics class. He has been struggling with the current topics and I would appreciate if we could schedule a meeting to discuss how we can support his learning at home. Please let me know your available times this week. Thank you for your dedication to teaching.',
-      sender: 'Mrs. Sarah Johnson',
+      details: 'Dear Mr. Sunil Perera, I am writing to discuss my daughter Tharika\'s recent performance in your A/L Mathematics class. She has been struggling with the Integration topics and I would appreciate if we could schedule a meeting to discuss how we can support her learning at home. Please let me know your available times this week. Thank you for your dedication to teaching our children.',
+      sender: 'Mrs. Sanduni Silva',
       priority: 'High'
     },
     { 
       id: 4, 
-      title: 'Grade Deadline', 
-      message: 'Reminder: Grades due this Friday', 
+      title: 'Term Test Deadline', 
+      message: 'Reminder: First Term marks due this Friday', 
       time: '1 day ago', 
       type: 'warning',
-      details: 'This is a reminder that all grades for the second quarter must be submitted by Friday, July 28th, 2025 at 5:00 PM. Please ensure all assignments, tests, and projects are graded and entered into the system. Late submissions may affect report card generation.',
-      sender: 'Academic Office',
+      details: 'This is a reminder that all marks for the First Term Test must be submitted by Friday, September 30th, 2025 at 5:00 PM. Please ensure all A/L Mathematics tests for Grade 12 and Grade 13 are graded and entered into the system. Late submissions may affect the term report generation.',
+      sender: 'Academic Office - Mahinda College',
       priority: 'High'
     },
     { 
       id: 5, 
-      title: 'System Update', 
-      message: 'New features available in the gradebook', 
+      title: 'A/L Syllabus Update', 
+      message: 'New A/L Mathematics syllabus features available', 
       time: '2 days ago', 
       type: 'info',
-      details: 'We have released new features in the gradebook system including: automated grade calculations, improved parent communication tools, assignment analytics, and enhanced reporting capabilities. Please check the help section for detailed guides on using these new features.',
-      sender: 'IT Department',
+      details: 'The Department of Education has released updates to the A/L Mathematics syllabus including: new topics in Applied Mathematics, revised marking schemes for practical assessments, and enhanced university entrance preparation materials. Please check the syllabus section for detailed guides.',
+      sender: 'Department of Education',
       priority: 'Low'
     }
   ]
@@ -96,8 +97,9 @@ const TeacherDashboard = () => {
           <div className="profile-image">
             <img src="/teacher-avatar.svg" alt="Teacher" />
           </div>
-          <h3>Mr. Smith</h3>
-          <p>Mathematics</p>
+          <h3>Mr. Sunil Perera</h3>
+          <p>Mathematics Teacher</p>
+          <p>A/L Physical Science</p>
         </div>
         <nav className="dashboard-nav">
           <button 
@@ -107,10 +109,16 @@ const TeacherDashboard = () => {
             Students
           </button>
           <button 
-            className={`nav-item ${activeTab === 'marks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('marks')}
+            className={`nav-item ${activeTab === 'grades' ? 'active' : ''}`}
+            onClick={() => setActiveTab('grades')}
           >
-            Marks Entry
+            Grades
+          </button>
+          <button 
+            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
           </button>
           <button 
             className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
@@ -135,7 +143,7 @@ const TeacherDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h2>Welcome back, Mr. Smith!</h2>
+          <h2>Welcome back, Mr. Sunil Perera!</h2>
           <div className="header-actions">
             <button 
               className="notification-btn"
@@ -151,7 +159,8 @@ const TeacherDashboard = () => {
 
         <div className="dashboard-content">
           {activeTab === 'students' && <StudentList />}
-          {activeTab === 'marks' && <MarksEntry />}
+          {activeTab === 'grades' && <GradeEntry />}
+          {activeTab === 'analytics' && <GradeAnalytics />}
           {activeTab === 'messages' && <MessageBoard />}
           {activeTab === 'activities' && <ActivityUpload />}
           {activeTab === 'tools' && (

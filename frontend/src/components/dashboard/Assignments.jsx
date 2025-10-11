@@ -1,39 +1,119 @@
 import { useState } from 'react'
+import { getStudentLevel } from '../../utils/sriLankanSchoolUtils'
 
 const Assignments = () => {
   const [selectedSubject, setSelectedSubject] = useState('all')
 
-  const subjects = [
-    { id: 'math', name: 'Mathematics' },
+  // Student context - can be changed to test O/L vs A/L
+  const studentInfo = {
+    grade: 12, // Change to 10 for O/L student
+    stream: 'Physical Science'
+  }
+  
+  const studentLevel = getStudentLevel(studentInfo.grade)
+
+  // Subjects based on student level
+  const subjects = studentLevel === 'AL' ? [
+    { id: 'mathematics', name: 'Mathematics' },
+    { id: 'physics', name: 'Physics' },
+    { id: 'chemistry', name: 'Chemistry' },
+    { id: 'english', name: 'English' },
+    { id: 'ict', name: 'ICT' }
+  ] : [
+    { id: 'mathematics', name: 'Mathematics' },
     { id: 'science', name: 'Science' },
     { id: 'english', name: 'English' },
-    { id: 'history', name: 'History' }
+    { id: 'sinhala', name: 'Sinhala' },
+    { id: 'history', name: 'History' },
+    { id: 'geography', name: 'Geography' },
+    { id: 'buddhism', name: 'Buddhism' },
+    { id: 'ict', name: 'ICT' }
   ]
 
-  const assignments = [
+  // Assignments based on student level
+  const assignments = studentLevel === 'AL' ? [
+    // A/L assignments
     {
       id: 1,
-      subject: 'math',
-      title: 'Quadratic Equations Practice',
+      subject: 'mathematics',
+      title: 'Advanced Algebra - Quadratic Functions',
       dueDate: '2025-07-25',
       status: 'pending',
-      description: 'Complete problems 1-10 from Chapter 5'
+      description: 'Complete Exercise 8.2 from G.C.E A/L Mathematics textbook (Questions 1-15)'
+    },
+    {
+      id: 2,
+      subject: 'physics',
+      title: 'Practical Report: Wave Motion',
+      dueDate: '2025-07-28',
+      status: 'submitted',
+      description: 'Submit detailed observations from wave interference experiment'
+    },
+    {
+      id: 3,
+      subject: 'chemistry',
+      title: 'Organic Chemistry Assignment',
+      dueDate: '2025-07-30',
+      status: 'pending',
+      description: 'Analyze the structure and properties of benzene derivatives'
+    },
+    {
+      id: 4,
+      subject: 'english',
+      title: 'Essay: Contemporary Literature',
+      dueDate: '2025-08-02',
+      status: 'pending',
+      description: 'Write a 1000-word critical analysis on modern Sri Lankan literature'
+    },
+    {
+      id: 5,
+      subject: 'ict',
+      title: 'Database Design Project',
+      dueDate: '2025-08-05',
+      status: 'submitted',
+      description: 'Create a database system for school library management using MySQL'
+    }
+  ] : [
+    // O/L assignments
+    {
+      id: 1,
+      subject: 'mathematics',
+      title: 'Algebra Practice Problems',
+      dueDate: '2025-07-25',
+      status: 'pending',
+      description: 'Complete exercises 4.1 to 4.3 from Mathematics textbook'
     },
     {
       id: 2,
       subject: 'science',
-      title: 'Lab Report: Photosynthesis',
+      title: 'Science Project: Plant Growth',
       dueDate: '2025-07-28',
       status: 'submitted',
-      description: 'Write a detailed lab report on the photosynthesis experiment'
+      description: 'Observe and record plant growth under different conditions over 2 weeks'
     },
     {
       id: 3,
       subject: 'english',
-      title: 'Essay: Modern Literature',
+      title: 'Composition: My Hometown',
       dueDate: '2025-07-30',
       status: 'pending',
-      description: 'Write a 1000-word essay on the assigned novel'
+      description: 'Write a 300-word composition describing your hometown and its features'
+    },
+    {
+      id: 4,
+      subject: 'sinhala',
+      title: 'Kavya Parichaya (Poetry Analysis)',
+      dueDate: '2025-08-01',
+      status: 'pending',
+      description: 'Analyze the themes and literary devices in selected poems'
+    },
+    {
+      id: 5,
+      subject: 'history',
+      title: 'Ancient Sri Lankan Civilization',
+      dueDate: '2025-08-03',
+      status: 'submitted',
+      description: 'Research project on Anuradhapura and Polonnaruwa periods'
     }
   ]
 

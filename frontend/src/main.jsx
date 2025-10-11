@@ -6,7 +6,6 @@ import StudentDashboard from './components/StudentDashboard.jsx'
 import TeacherDashboard from './components/TeacherDashboard.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import ParentDashboard from './components/ParentDashboard.jsx'
-import { ParentProvider } from './components/ParentContext.jsx'
 import './styles/global.css'
 import './styles/App.css'
 import './styles/Auth.css'
@@ -26,11 +25,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/parent-dashboard" element={
-            <ParentProvider>
-              <ParentDashboard />
-            </ParentProvider>
-          } />
+          <Route path="/parent-dashboard" element={<ParentDashboard />} />
         </Routes>
       </div>
     </BrowserRouter>

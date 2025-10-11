@@ -7,21 +7,27 @@ const MessageBoard = () => {
     {
       id: 1,
       class: 'class-1',
-      content: 'Remember to submit your mathematics homework by Friday!',
-      date: '2025-07-21'
+      content: 'Remember to submit your A/L Mathematics homework on Calculus by Friday! Please focus on integration techniques covered in this week\'s lessons.',
+      date: '2025-09-28'
     },
     {
       id: 2,
       class: 'class-2',
-      content: 'Quiz on Algebra next Monday. Be prepared!',
-      date: '2025-07-20'
+      content: 'Unit Test on Differential Calculus next Monday. Please review Chapter 6 and practice the examples we solved in class.',
+      date: '2025-09-27'
+    },
+    {
+      id: 3,
+      class: 'class-3',
+      content: 'Grade 13 students - Final revision session for Applied Mathematics this Saturday at 9:00 AM. Attendance is highly recommended.',
+      date: '2025-09-26'
     }
   ])
 
   const classes = [
-    { id: 'class-1', name: 'Class 10-A' },
-    { id: 'class-2', name: 'Class 10-B' },
-    { id: 'class-3', name: 'Class 11-A' }
+    { id: 'class-1', name: 'Grade 12 M1 (Physical Science)' },
+    { id: 'class-2', name: 'Grade 12 M2 (Physical Science)' },
+    { id: 'class-3', name: 'Grade 13 M1 (Physical Science)' }
   ]
 
   const handleSubmit = (e) => {

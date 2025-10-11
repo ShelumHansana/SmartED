@@ -8,31 +8,41 @@ const ActivityUpload = () => {
       id: 1,
       class: 'class-1',
       type: 'assignment',
-      title: 'Algebra Practice',
-      dueDate: '2025-07-25',
-      description: 'Complete exercises 1-10 from Chapter 5'
+      title: 'Calculus Integration Practice',
+      dueDate: '2025-10-05',
+      description: 'Complete exercises 1-15 from Chapter 8: Integration Techniques. Focus on integration by parts and substitution methods.'
     },
     {
       id: 2,
       class: 'class-2',
-      type: 'quiz',
-      title: 'Geometry Quiz',
-      dueDate: '2025-07-23',
-      description: 'Online quiz on basic geometric shapes'
+      type: 'unit-test',
+      title: 'Differential Calculus Unit Test',
+      dueDate: '2025-10-03',
+      description: 'Unit test covering differentiation rules, chain rule, and applications of derivatives. Duration: 2 hours.'
+    },
+    {
+      id: 3,
+      class: 'class-3',
+      type: 'model-paper',
+      title: 'A/L Mathematics Model Paper 2025',
+      dueDate: '2025-10-10',
+      description: 'Practice model paper based on previous A/L examination patterns. Covers Pure Mathematics and Applied Mathematics sections.'
     }
   ])
 
   const classes = [
-    { id: 'class-1', name: 'Class 10-A' },
-    { id: 'class-2', name: 'Class 10-B' },
-    { id: 'class-3', name: 'Class 11-A' }
+    { id: 'class-1', name: 'Grade 12 M1 (Physical Science)' },
+    { id: 'class-2', name: 'Grade 12 M2 (Physical Science)' },
+    { id: 'class-3', name: 'Grade 13 M1 (Physical Science)' }
   ]
 
   const activityTypes = [
     { id: 'assignment', name: 'Assignment' },
-    { id: 'quiz', name: 'Quiz' },
-    { id: 'project', name: 'Project' },
-    { id: 'exam', name: 'Exam' }
+    { id: 'unit-test', name: 'Unit Test' },
+    { id: 'term-test', name: 'Term Test' },
+    { id: 'practical', name: 'Practical Test' },
+    { id: 'model-paper', name: 'Model Paper' },
+    { id: 'project', name: 'Project' }
   ]
 
   const [newActivity, setNewActivity] = useState({

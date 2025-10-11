@@ -1,136 +1,334 @@
-﻿import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import '../styles/ParentDashboard.css';
+﻿import { useState } from 'react'
+import '../styles/ParentDashboard.css'
 
 const ParentDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedStudent, setSelectedStudent] = useState('sarah');
-  const [messageFilter, setMessageFilter] = useState('all');
-  const [teacherSearch, setTeacherSearch] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationCount] = useState(3);
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [showMessageDetail, setShowMessageDetail] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview')
+  const [selectedStudent, setSelectedStudent] = useState(0)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(3)
 
-  // Sample data
+  const markAllAsRead = () => {
+    setNotificationCount(0)
+    setShowNotifications(false)
+  }
+
+  // Sri Lankan students data - Both O/L and A/L children
   const students = [
-    { id: 'sarah', name: 'Sarah Johnson', grade: '10th', avatar: '/sarah-avatar.svg' },
-    { id: 'mike', name: 'Mike Johnson', grade: '8th', avatar: '/mike-avatar.svg' }
-  ];
-
-  const currentStudent = students.find(s => s.id === selectedStudent);
-
-  const subjectsProgress = [
-    { subject: 'Mathematics', grade: 92, trend: '+5', color: '#3498db' },
-    { subject: 'English', grade: 88, trend: '+2', color: '#2ecc71' },
-    { subject: 'Science', grade: 85, trend: '-1', color: '#f39c12' },
-    { subject: 'History', grade: 90, trend: '+3', color: '#e74c3c' },
-    { subject: 'Physics', grade: 87, trend: '+4', color: '#9b59b6' }
-  ];
-
-  const recentGrades = [
-    { id: 1, subject: 'Mathematics', assignment: 'Algebra Test', grade: 'A+', score: 95, date: '2024-06-20', teacher: 'Mr. Smith' },
-    { id: 2, subject: 'English', assignment: 'Essay Writing', grade: 'A', score: 88, date: '2024-06-18', teacher: 'Ms. Johnson' },
-    { id: 3, subject: 'Science', assignment: 'Lab Report', grade: 'B+', score: 85, date: '2024-06-15', teacher: 'Dr. Wilson' },
-    { id: 4, subject: 'History', assignment: 'Research Project', grade: 'A', score: 92, date: '2024-06-12', teacher: 'Mr. Davis' }
-  ];
-
-  const teachers = [
-    { id: 1, name: 'Mr. John Smith', subject: 'Mathematics', email: 'j.smith@smarted.com', phone: '+1-555-0101', office: 'Room 101', image: '/teacher1.jpg' },
-    { id: 2, name: 'Ms. Emily Johnson', subject: 'English Literature', email: 'e.johnson@smarted.com', phone: '+1-555-0102', office: 'Room 102', image: '/teacher2.jpg' },
-    { id: 3, name: 'Dr. Michael Wilson', subject: 'Science', email: 'm.wilson@smarted.com', phone: '+1-555-0103', office: 'Room 103', image: '/teacher3.jpg' },
-    { id: 4, name: 'Mr. Robert Davis', subject: 'History', email: 'r.davis@smarted.com', phone: '+1-555-0104', office: 'Room 104', image: '/teacher4.jpg' }
-  ];
-
-  const messages = [
-    { 
-      id: 1, 
-      from: 'Mr. Smith', 
-      subject: 'Excellent Progress in Math', 
-      preview: 'Sarah has shown remarkable improvement...', 
-      date: '2024-06-20', 
-      priority: 'normal', 
-      read: false,
-      content: 'Dear Mr. and Mrs. Johnson, I wanted to reach out to commend Sarah on her excellent progress in mathematics this semester. She has consistently demonstrated a strong understanding of algebraic concepts and has improved her problem-solving skills significantly. Keep up the great work!'
+    {
+      id: 1,
+      name: 'Kamal Bandara Perera',
+      class: 'Grade 12 M1',
+      stream: 'Physical Science',
+      level: 'A/L',
+      admissionNo: 'AL2025001',
+      overallGrade: 'A',
+      gpa: '3.8',
+      attendance: 92,
+      subjects: 5,
+      nextExam: 'First Term Test',
+      school: 'Mahinda College, Colombo 07'
     },
-    { 
-      id: 2, 
-      from: 'Ms. Johnson', 
-      subject: 'Parent-Teacher Conference', 
-      preview: 'Schedule a meeting to discuss...', 
-      date: '2024-06-18', 
-      priority: 'high', 
-      read: false,
-      content: 'Hello, I would like to schedule a parent-teacher conference to discuss Sarah\'s creative writing development. She has great potential and I have some suggestions for nurturing her talent further. Please let me know your availability.'
-    },
-    { 
-      id: 3, 
-      from: 'Dr. Wilson', 
-      subject: 'Science Fair Participation', 
-      preview: 'Invitation to participate in...', 
-      date: '2024-06-15', 
-      priority: 'normal', 
-      read: true,
-      content: 'Dear Parents, Sarah has been selected to participate in the upcoming Science Fair due to her outstanding performance in our recent lab experiments. This is a great opportunity for her to showcase her scientific skills.'
+    {
+      id: 2,
+      name: 'Sanduni Perera',
+      class: 'Grade 10 A',
+      level: 'O/L',
+      admissionNo: 'OL2025045',
+      overallGrade: 'A',
+      attendance: 95,
+      subjects: 8,
+      nextExam: 'Monthly Test',
+      school: 'Mahinda College, Colombo 07'
     }
-  ];
+  ]
+
+  // Sri Lankan teachers data
+  const teachers = [
+    {
+      id: 1,
+      name: 'Mr. Sunil Perera',
+      subject: 'Mathematics',
+      email: 'sunil.perera@mahindacollege.lk',
+      phone: '+94 77 123 4567',
+      experience: '12 years',
+      availability: 'Mon-Fri 8AM-3PM',
+      level: 'A/L Physical Science & Bio Science'
+    },
+    {
+      id: 2,
+      name: 'Dr. Amara Silva',
+      subject: 'Physics',
+      email: 'amara.silva@mahindacollege.lk',
+      phone: '+94 76 234 5678',
+      experience: '15 years',
+      availability: 'Mon-Fri 9AM-4PM',
+      level: 'A/L Physical Science & Bio Science'
+    },
+    {
+      id: 3,
+      name: 'Mrs. Kushani Jayawardena',
+      subject: 'Chemistry',
+      email: 'kushani.j@mahindacollege.lk',
+      phone: '+94 75 345 6789',
+      experience: '10 years',
+      availability: 'Mon-Fri 8AM-3PM',
+      level: 'A/L Physical Science & Bio Science'
+    },
+    {
+      id: 4,
+      name: 'Mr. Nimal Rajapaksa',
+      subject: 'English',
+      email: 'nimal.rajapaksa@mahindacollege.lk',
+      phone: '+94 78 456 7890',
+      experience: '8 years',
+      availability: 'Mon-Fri 9AM-4PM',
+      level: 'All A/L Streams & O/L'
+    },
+    {
+      id: 5,
+      name: 'Mrs. Chamari Wickramasinghe',
+      subject: 'Mathematics (O/L)',
+      email: 'chamari.w@mahindacollege.lk',
+      phone: '+94 77 567 8901',
+      experience: '7 years',
+      availability: 'Mon-Fri 8AM-3PM',
+      level: 'O/L Grades 6-11'
+    }
+  ]
+
+  // Academic progress data for selected student
+  const getSubjectsProgress = (studentLevel) => {
+    if (studentLevel === 'A/L') {
+      return [
+        {
+          subject: 'Mathematics',
+          grade: 'A',
+          progress: 92,
+          teacher: 'Mr. Sunil Perera',
+          assignments: 12,
+          completed: 11,
+          upcoming: 'Integration Test - Oct 5'
+        },
+        {
+          subject: 'Physics',
+          grade: 'A',
+          progress: 88,
+          teacher: 'Dr. Amara Silva',
+          assignments: 10,
+          completed: 9,
+          upcoming: 'Practical Test - Oct 8'
+        },
+        {
+          subject: 'Chemistry',
+          grade: 'B',
+          progress: 85,
+          teacher: 'Mrs. Kushani Jayawardena',
+          assignments: 8,
+          completed: 7,
+          upcoming: 'Organic Chemistry - Oct 12'
+        },
+        {
+          subject: 'English',
+          grade: 'A',
+          progress: 94,
+          teacher: 'Mr. Nimal Rajapaksa',
+          assignments: 6,
+          completed: 6,
+          upcoming: 'Essay Writing - Oct 10'
+        },
+        {
+          subject: 'ICT',
+          grade: 'A',
+          progress: 96,
+          teacher: 'Mr. Ravi Wickramasinghe',
+          assignments: 5,
+          completed: 5,
+          upcoming: 'Programming Project - Oct 15'
+        }
+      ]
+    } else {
+      return [
+        {
+          subject: 'Mathematics',
+          grade: 'A',
+          progress: 95,
+          teacher: 'Mrs. Chamari Wickramasinghe',
+          assignments: 15,
+          completed: 14,
+          upcoming: 'Algebra Test - Oct 3'
+        },
+        {
+          subject: 'Science',
+          grade: 'A',
+          progress: 90,
+          teacher: 'Mr. Roshan Perera',
+          assignments: 12,
+          completed: 11,
+          upcoming: 'Biology Project - Oct 7'
+        },
+        {
+          subject: 'English',
+          grade: 'A',
+          progress: 93,
+          teacher: 'Miss. Sandamali Fernando',
+          assignments: 10,
+          completed: 10,
+          upcoming: 'Reading Comprehension - Oct 5'
+        },
+        {
+          subject: 'Sinhala',
+          grade: 'A',
+          progress: 88,
+          teacher: 'Mr. Priyantha Jayawardena',
+          assignments: 8,
+          completed: 7,
+          upcoming: 'Essay Writing - Oct 9'
+        },
+        {
+          subject: 'History',
+          grade: 'B',
+          progress: 82,
+          teacher: 'Mr. Nimal Rathnayake',
+          assignments: 6,
+          completed: 5,
+          upcoming: 'Ancient Civilizations - Oct 11'
+        }
+      ]
+    }
+  }
+
+  // Messages from teachers
+  const messages = [
+    {
+      id: 1,
+      from: 'Mr. Sunil Perera',
+      student: 'Kamal Bandara Perera',
+      subject: 'Excellent Progress in A/L Mathematics',
+      content: 'Kamal has been performing exceptionally well in his A/L Mathematics classes. He scored 95% on his recent Calculus unit test and shows excellent understanding of integration techniques. Keep up the good work!',
+      date: '2025-09-28',
+      time: '2:30 PM',
+      priority: 'normal',
+      read: false,
+      category: 'academic'
+    },
+    {
+      id: 2,
+      from: 'Dr. Amara Silva',
+      student: 'Kamal Bandara Perera',
+      subject: 'Physics Practical Session Reminder',
+      content: 'Dear Parent, please remind Kamal to bring his lab coat and safety glasses for tomorrow\'s Physics practical session on Electromagnetic Induction. The session starts at 9:00 AM.',
+      date: '2025-09-27',
+      time: '4:15 PM',
+      priority: 'high',
+      read: false,
+      category: 'reminder'
+    },
+    {
+      id: 3,
+      from: 'Mrs. Chamari Wickramasinghe',
+      student: 'Sanduni Perera',
+      subject: 'Mathematics Assignment Completed',
+      content: 'Sanduni has successfully completed her O/L Mathematics assignment on Algebraic Expressions. She scored full marks and her problem-solving approach was impressive. Well done!',
+      date: '2025-09-26',
+      time: '11:45 AM',
+      priority: 'normal',
+      read: true,
+      category: 'academic'
+    },
+    {
+      id: 4,
+      from: 'Miss. Sandamali Fernando',
+      student: 'Sanduni Perera',
+      subject: 'English Speaking Competition',
+      content: 'Sanduni has been selected to represent Grade 10 in the inter-school English speaking competition. Please encourage her to practice and prepare well. The competition is on October 15th.',
+      date: '2025-09-25',
+      time: '1:20 PM',
+      priority: 'high',
+      read: false,
+      category: 'achievement'
+    }
+  ]
+
+  // Get recent test results for selected student
+  const getRecentTests = (studentLevel) => {
+    if (studentLevel === 'A/L') {
+      return [
+        { subject: 'Mathematics', score: '95%', date: '2025-09-25', grade: 'A', type: 'Unit Test' },
+        { subject: 'Physics', score: '88%', date: '2025-09-22', grade: 'B', type: 'Practical Test' },
+        { subject: 'Chemistry', score: '85%', date: '2025-09-20', grade: 'B', type: 'Term Test' },
+        { subject: 'English', score: '92%', date: '2025-09-18', grade: 'A', type: 'Assignment' }
+      ]
+    } else {
+      return [
+        { subject: 'Mathematics', score: '96%', date: '2025-09-24', grade: 'A', type: 'Monthly Test' },
+        { subject: 'Science', score: '94%', date: '2025-09-21', grade: 'A', type: 'Unit Test' },
+        { subject: 'English', score: '93%', date: '2025-09-19', grade: 'A', type: 'Assignment' },
+        { subject: 'Sinhala', score: '90%', date: '2025-09-17', grade: 'A', type: 'Essay' }
+      ]
+    }
+  }
 
   const notifications = [
-    { id: 1, title: 'New Grade Posted', message: 'Mathematics - Algebra Test: A+', time: '2 hours ago', type: 'success' },
-    { id: 2, title: 'Message from Teacher', message: 'Ms. Johnson sent a message about Sarah', time: '5 hours ago', type: 'info' },
-    { id: 3, title: 'Assignment Due', message: 'History Research Project due tomorrow', time: '1 day ago', type: 'warning' }
-  ];
+    {
+      id: 1,
+      title: 'Parent-Teacher Meeting',
+      message: 'Scheduled for October 5th at 2:00 PM',
+      time: '2 hours ago',
+      type: 'info'
+    },
+    {
+      id: 2,
+      title: 'School Fee Payment',
+      message: 'Third term fees due by October 10th',
+      time: '1 day ago',
+      type: 'warning'
+    },
+    {
+      id: 3,
+      title: 'Academic Achievement',
+      message: 'Sanduni selected for English competition',
+      time: '2 days ago',
+      type: 'success'
+    }
+  ]
 
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(teacherSearch.toLowerCase()) ||
-    teacher.subject.toLowerCase().includes(teacherSearch.toLowerCase())
-  );
+  const unreadMessages = messages.filter(m => !m.read).length
 
-  const filteredMessages = messages.filter(message => {
-    if (messageFilter === 'unread') return !message.read;
-    if (messageFilter === 'priority') return message.priority === 'high';
-    return true;
-  });
+  const currentStudent = students[selectedStudent]
+  const currentSubjects = getSubjectsProgress(currentStudent.level)
+  const currentTests = getRecentTests(currentStudent.level)
 
-  const unreadCount = messages.filter(m => !m.read).length;
 
-  const openMessageDetail = (message) => {
-    setSelectedMessage(message);
-    setShowMessageDetail(true);
-  };
-
-  const closeMessageDetail = () => {
-    setSelectedMessage(null);
-    setShowMessageDetail(false);
-  };
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
       <aside className="dashboard-sidebar">
         <div className="parent-profile">
           <div className="profile-image">
             <img src="/parent-avatar.svg" alt="Parent" />
           </div>
-          <h3>Parent Portal</h3>
-          <p>Monitor your child's progress</p>
+          <h3>Mr. & Mrs. Perera</h3>
+          <p>Parent Portal</p>
+          <p>Mahinda College</p>
         </div>
-
-        {/* Student Selector */}
+        
         <div className="student-selector">
-          <label>Select Student</label>
-          <select 
-            value={selectedStudent} 
-            onChange={(e) => setSelectedStudent(e.target.value)}
-            className="student-select"
-          >
-            {students.map(student => (
-              <option key={student.id} value={student.id}>
-                {student.name} - {student.grade}
-              </option>
+          <h4>Select Child</h4>
+          <div className="student-tabs">
+            {students.map((student, index) => (
+              <button
+                key={student.id}
+                className={`student-tab ${selectedStudent === index ? 'active' : ''}`}
+                onClick={() => setSelectedStudent(index)}
+              >
+                <div className="student-tab-info">
+                  <span className="student-name">{student.name.split(' ')[0]}</span>
+                  <span className="student-class">{student.class}</span>
+                  <span className="student-level">{student.level}</span>
+                </div>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <nav className="dashboard-nav">
@@ -157,16 +355,21 @@ const ParentDashboard = () => {
             onClick={() => setActiveTab('messages')}
           >
             Messages
+            {unreadMessages > 0 && (
+              <span className="notification-badge">{unreadMessages}</span>
+            )}
           </button>
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <div className="header-left">
-            <h2>Welcome back, Parent!</h2>
-            <p>Here's {currentStudent?.name}'s progress overview</p>
+          <div className="header-info">
+            <h2>
+              {currentStudent.name} - {currentStudent.class}
+              {currentStudent.stream && ` (${currentStudent.stream})`}
+            </h2>
+            <p>{currentStudent.school}</p>
           </div>
           <div className="header-actions">
             <button 
@@ -182,261 +385,125 @@ const ParentDashboard = () => {
         </header>
 
         <div className="dashboard-content">
-          {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <motion.div 
-              className="overview-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* Quick Stats */}
-              <div className="stats-grid">
+            <div className="overview-section">
+              <div className="student-stats">
                 <div className="stat-card">
-                  <div className="stat-icon">📊</div>
-                  <div className="stat-info">
-                    <h3>Overall GPA</h3>
-                    <p className="stat-value">3.85</p>
-                    <span className="stat-trend positive">+0.12</span>
-                  </div>
+                  <h3>Overall Grade</h3>
+                  <div className="stat-value grade">{currentStudent.overallGrade}</div>
+                  {currentStudent.gpa && <p>GPA: {currentStudent.gpa}</p>}
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon">📝</div>
-                  <div className="stat-info">
-                    <h3>Assignments</h3>
-                    <p className="stat-value">15/18</p>
-                    <span className="stat-trend">Completed</span>
-                  </div>
+                  <h3>Attendance</h3>
+                  <div className="stat-value attendance">{currentStudent.attendance}%</div>
+                  <p>Above average</p>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon">👥</div>
-                  <div className="stat-info">
-                    <h3>Attendance</h3>
-                    <p className="stat-value">96%</p>
-                    <span className="stat-trend positive">Excellent</span>
-                  </div>
+                  <h3>Active Subjects</h3>
+                  <div className="stat-value subjects">{currentStudent.subjects}</div>
+                  <p>All enrolled</p>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon">🏆</div>
-                  <div className="stat-info">
-                    <h3>Rank</h3>
-                    <p className="stat-value">5th</p>
-                    <span className="stat-trend">of 120</span>
-                  </div>
+                  <h3>Next Exam</h3>
+                  <div className="stat-value exam">{currentStudent.nextExam}</div>
+                  <p>Coming up</p>
                 </div>
               </div>
 
-              {/* Subject Performance Chart */}
-              <div className="chart-container">
-                <h3>Subject Performance</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={subjectsProgress}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="subject" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Bar dataKey="grade" fill="#3498db" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Recent Grades */}
-              <div className="recent-grades">
-                <h3>Recent Grades</h3>
-                <div className="grades-list">
-                  {recentGrades.slice(0, 4).map(grade => (
-                    <div key={grade.id} className="grade-item">
-                      <div className="grade-info">
-                        <h4>{grade.subject}</h4>
-                        <p>{grade.assignment}</p>
-                        <span className="grade-teacher">by {grade.teacher}</span>
-                      </div>
-                      <div className="grade-result">
-                        <span className={`grade-letter ${grade.grade.toLowerCase().replace('+', 'plus')}`}>
-                          {grade.grade}
-                        </span>
-                        <span className="grade-score">{grade.score}%</span>
-                        <span className="grade-date">{new Date(grade.date).toLocaleDateString()}</span>
-                      </div>
+              <div className="recent-tests">
+                <h3>Recent Test Results</h3>
+                <div className="test-list">
+                  {currentTests.map((test, index) => (
+                    <div key={index} className="test-item">
+                      <div className="test-subject">{test.subject}</div>
+                      <div className="test-score">{test.score}</div>
+                      <div className="test-grade">{test.grade}</div>
+                      <div className="test-date">{test.date}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Academic Progress Tab */}
           {activeTab === 'progress' && (
-            <motion.div 
-              className="progress-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3>Academic Progress - {currentStudent?.name}</h3>
-              
-              <div className="progress-overview">
-                <div className="progress-stats">
-                  <div className="progress-stat">
-                    <span className="stat-label">Current GPA</span>
-                    <span className="stat-value">3.85</span>
-                  </div>
-                  <div className="progress-stat">
-                    <span className="stat-label">Class Rank</span>
-                    <span className="stat-value">5/120</span>
-                  </div>
-                  <div className="progress-stat">
-                    <span className="stat-label">Improvement</span>
-                    <span className="stat-value positive">+3.2%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="subjects-detailed">
-                {subjectsProgress.map((subject, index) => (
+            <div className="progress-section">
+              <h3>Academic Progress - {currentStudent.level} Level</h3>
+              <div className="subjects-grid">
+                {currentSubjects.map((subject, index) => (
                   <div key={index} className="subject-card">
                     <div className="subject-header">
                       <h4>{subject.subject}</h4>
-                      <span className={`trend ${subject.trend.startsWith('+') ? 'positive' : 'negative'}`}>
-                        {subject.trend}
-                      </span>
+                      <span className="subject-grade">{subject.grade}</span>
                     </div>
-                    <div className="subject-grade">
-                      <span className="grade-value">{subject.grade}%</span>
-                      <div className="grade-bar">
-                        <div 
-                          className="grade-fill" 
-                          style={{ width: `${subject.grade}%`, backgroundColor: subject.color }}
-                        ></div>
-                      </div>
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${subject.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="subject-info">
+                      <p>Teacher: {subject.teacher}</p>
+                      <p>Assignments: {subject.completed}/{subject.assignments}</p>
+                      <p>Next: {subject.upcoming}</p>
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="all-grades">
-                <h3>All Recent Grades</h3>
-                <div className="grades-table">
-                  <div className="table-header">
-                    <span>Subject</span>
-                    <span>Assignment</span>
-                    <span>Grade</span>
-                    <span>Score</span>
-                    <span>Date</span>
-                  </div>
-                  {recentGrades.map(grade => (
-                    <div key={grade.id} className="table-row">
-                      <span className="subject-name">{grade.subject}</span>
-                      <span className="assignment-name">{grade.assignment}</span>
-                      <span className={`grade-letter ${grade.grade.toLowerCase().replace('+', 'plus')}`}>
-                        {grade.grade}
-                      </span>
-                      <span className="grade-score">{grade.score}%</span>
-                      <span className="grade-date">{new Date(grade.date).toLocaleDateString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Teachers Tab */}
           {activeTab === 'teachers' && (
-            <motion.div 
-              className="teachers-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="teachers-header">
-                <h3>Teachers Directory</h3>
-                <input
-                  type="text"
-                  placeholder="Search by name or subject..."
-                  value={teacherSearch}
-                  onChange={(e) => setTeacherSearch(e.target.value)}
-                  className="teacher-search"
-                />
-              </div>
-
+            <div className="teachers-section">
+              <h3>Teachers Directory</h3>
               <div className="teachers-grid">
-                {filteredTeachers.map(teacher => (
+                {teachers.map(teacher => (
                   <div key={teacher.id} className="teacher-card">
-                    <div className="teacher-avatar">
-                      <img src={teacher.image} alt={teacher.name} />
+                    <h4>{teacher.name}</h4>
+                    <p className="teacher-subject">{teacher.subject}</p>
+                    <p className="teacher-level">{teacher.level}</p>
+                    <div className="teacher-contact">
+                      <p>📧 {teacher.email}</p>
+                      <p>📞 {teacher.phone}</p>
+                      <p>⏰ {teacher.availability}</p>
+                      <p>🎓 {teacher.experience}</p>
                     </div>
-                    <div className="teacher-info">
-                      <h4>{teacher.name}</h4>
-                      <p className="teacher-subject">{teacher.subject}</p>
-                      <div className="teacher-contact">
-                        <p className="contact-item">📧 {teacher.email}</p>
-                        <p className="contact-item">📞 {teacher.phone}</p>
-                        <p className="contact-item">🏢 {teacher.office}</p>
-                      </div>
-                    </div>
-                    <div className="teacher-actions">
-                      <button className="contact-btn">Send Message</button>
-                      <button className="schedule-btn">Schedule Meeting</button>
-                    </div>
+                    <button className="contact-btn">Send Message</button>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Messages Tab */}
           {activeTab === 'messages' && (
-            <motion.div 
-              className="messages-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="messages-header">
-                <h3>Messages from Teachers</h3>
-                <div className="message-filters">
-                  <button 
-                    className={`filter-btn ${messageFilter === 'all' ? 'active' : ''}`}
-                    onClick={() => setMessageFilter('all')}
-                  >
-                    All Messages
-                  </button>
-                  <button 
-                    className={`filter-btn ${messageFilter === 'unread' ? 'active' : ''}`}
-                    onClick={() => setMessageFilter('unread')}
-                  >
-                    Unread ({unreadCount})
-                  </button>
-                  <button 
-                    className={`filter-btn ${messageFilter === 'priority' ? 'active' : ''}`}
-                    onClick={() => setMessageFilter('priority')}
-                  >
-                    Priority
-                  </button>
-                </div>
-              </div>
-
+            <div className="messages-section">
+              <h3>Messages from Teachers</h3>
               <div className="messages-list">
-                {filteredMessages.map(message => (
-                  <div 
-                    key={message.id} 
-                    className={`message-item ${!message.read ? 'unread' : ''} ${message.priority === 'high' ? 'priority' : ''}`}
-                    onClick={() => openMessageDetail(message)}
-                  >
+                {messages.map(message => (
+                  <div key={message.id} className={`message-card ${!message.read ? 'unread' : ''}`}>
+                    <div className="message-header">
+                      <h4>{message.subject}</h4>
+                      <span className="message-time">{message.date} at {message.time}</span>
+                    </div>
                     <div className="message-from">
-                      <span className="sender-name">{message.from}</span>
-                      <span className="message-date">{new Date(message.date).toLocaleDateString()}</span>
+                      <strong>{message.from}</strong> - {message.student}
                     </div>
-                    <h4 className="message-subject">{message.subject}</h4>
-                    <p className="message-preview">{message.preview}</p>
-                    <div className="message-meta">
-                      {message.priority === 'high' && <span className="priority-badge">Priority</span>}
-                      {!message.read && <span className="unread-badge">New</span>}
+                    <div className="message-content">
+                      <p>{message.content}</p>
                     </div>
+                    <div className="message-actions">
+                      <button className="reply-btn">Reply</button>
+                      {!message.read && (
+                        <button className="mark-read-btn">Mark as Read</button>
+                      )}
+                    </div>
+                    <span className={`priority-badge ${message.priority}`}>
+                      {message.priority} priority
+                    </span>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
       </main>
@@ -455,13 +522,16 @@ const ParentDashboard = () => {
         <div className="notification-list">
           {notifications.map(notification => (
             <div key={notification.id} className={`notification-item ${notification.type}`}>
-              <div className="notification-content">
-                <h4>{notification.title}</h4>
-                <p>{notification.message}</p>
-                <span className="notification-time">{notification.time}</span>
-              </div>
+              <h4>{notification.title}</h4>
+              <p>{notification.message}</p>
+              <span className="notification-time">{notification.time}</span>
             </div>
           ))}
+        </div>
+        <div className="notification-footer">
+          <button className="mark-all-read" onClick={markAllAsRead}>
+            Mark all as read
+          </button>
         </div>
       </div>
 
@@ -472,41 +542,8 @@ const ParentDashboard = () => {
           onClick={() => setShowNotifications(false)}
         />
       )}
-
-      {/* Message Detail Modal */}
-      {showMessageDetail && selectedMessage && (
-        <div className="message-detail-modal">
-          <div className="message-detail-overlay" onClick={closeMessageDetail} />
-          <div className="message-detail-content">
-            <div className="message-detail-header">
-              <div className="message-detail-title">
-                <h2>{selectedMessage.subject}</h2>
-                <span className="message-from">From: {selectedMessage.from}</span>
-              </div>
-              <button className="close-message-detail" onClick={closeMessageDetail}>
-                ×
-              </button>
-            </div>
-            <div className="message-detail-body">
-              <div className="message-meta">
-                <span className="message-date">{new Date(selectedMessage.date).toLocaleDateString()}</span>
-                {selectedMessage.priority === 'high' && (
-                  <span className="priority-badge">Priority</span>
-                )}
-              </div>
-              <div className="message-content">
-                <p>{selectedMessage.content}</p>
-              </div>
-            </div>
-            <div className="message-detail-footer">
-              <button className="reply-btn">Reply</button>
-              <button className="mark-read-btn">Mark as Read</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+  )
+}
 
 export default ParentDashboard;
