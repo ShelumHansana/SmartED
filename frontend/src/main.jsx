@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import LandingPage from './components/LandingPage.jsx'
 import StudentDashboard from './components/StudentDashboard.jsx'
 import TeacherDashboard from './components/TeacherDashboard.jsx'
@@ -19,15 +21,45 @@ import './styles/ParentDashboard.css'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <div className="app-container">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/student-dashboard" element={<StudentDashboard />} />
-          <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/parent-dashboard" element={<ParentDashboard />} />
-        </Routes>
-      </div>
+      <AuthProvider>
+        <div className="app-container">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route 
+              path="/student-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/teacher-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher']}>
+                  <TeacherDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/parent-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <ParentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </div>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

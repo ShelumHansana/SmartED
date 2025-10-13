@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
+import { collection, query, where, getDocs, addDoc, getDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../utils/firebase'
 import './GradeEntry.css'
 
-const GradeEntry = () => {
+const GradeEntry = ({ students: propStudents, teacherId }) => {
+  const { user } = useAuth()
   const [selectedClass, setSelectedClass] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedAssessment, setSelectedAssessment] = useState('')
@@ -15,22 +19,10 @@ const GradeEntry = () => {
     date: new Date().toISOString().split('T')[0]
   })
   const [isSaving, setIsSaving] = useState(false)
-
-  // Sample data - in a real app, this would come from API
-  const classes = [
-    { id: 'AL_M1', name: 'Grade 12 M1 (Physical Science)', level: 'A/L' },
-    { id: 'AL_M2', name: 'Grade 12 M2 (Physical Science)', level: 'A/L' },
-    { id: 'AL_BS', name: 'Grade 12 Bio Science', level: 'A/L' },
-    { id: 'OL_10A', name: 'Grade 10 A', level: 'O/L' },
-    { id: 'OL_10B', name: 'Grade 10 B', level: 'O/L' }
-  ]
-
-  const subjects = [
-    { id: 'MATH_AL', name: 'A/L Mathematics', level: 'A/L' },
-    { id: 'MATH_OL', name: 'O/L Mathematics', level: 'O/L' },
-    { id: 'PHYS_AL', name: 'A/L Physics', level: 'A/L' },
-    { id: 'CHEM_AL', name: 'A/L Chemistry', level: 'A/L' }
-  ]
+  const [classes, setClasses] = useState([])
+  const [subjects, setSubjects] = useState([])
+  const [assessments, setAssessments] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const assessmentTypes = [
     'Term Test',
@@ -42,36 +34,86 @@ const GradeEntry = () => {
     'Monthly Test'
   ]
 
-  const [assessments, setAssessments] = useState([
-    { id: 1, name: 'First Term Test', type: 'Term Test', maxMarks: 100, date: '2025-09-15', subject: 'MATH_AL', class: 'AL_M1' },
-    { id: 2, name: 'Calculus Assignment', type: 'Assignment', maxMarks: 50, date: '2025-09-20', subject: 'MATH_AL', class: 'AL_M1' },
-    { id: 3, name: 'Model Paper 1', type: 'Model Paper', maxMarks: 100, date: '2025-09-25', subject: 'MATH_AL', class: 'AL_M2' }
-  ])
+  // Load teacher's classes and subjects
+  useEffect(() => {
+    const loadTeacherData = async () => {
+      if (!user || !user.id) return
+
+      try {
+        const teacherDoc = await getDoc(doc(db, 'users', user.id))
+        const teacherData = teacherDoc.data()
+        
+        if (teacherData) {
+          // Set classes from teacher's teaching classes
+          const classesData = (teacherData.teachingClasses || []).map(cls => ({
+            id: cls,
+            name: cls,
+            level: cls.includes('12') || cls.includes('13') ? 'A/L' : 'O/L'
+          }))
+          setClasses(classesData)
+          
+          // Set subjects from teacher's subjects
+          const subjectsData = (teacherData.subjects || []).map(subject => ({
+            id: subject,
+            name: subject,
+            level: teacherData.level || 'A/L'
+          }))
+          setSubjects(subjectsData)
+        }
+        
+        setLoading(false)
+      } catch (error) {
+        console.error('Error loading teacher data:', error)
+        setLoading(false)
+      }
+    }
+
+    loadTeacherData()
+  }, [user])
 
   // Load students when class and subject are selected
   useEffect(() => {
     if (selectedClass && selectedSubject) {
-      // Sample student data - in real app, fetch from API
-      const sampleStudents = [
-        { id: 'ST001', name: 'Kamal Perera', admissionNo: 'AL2025001', currentGrade: 'B+' },
-        { id: 'ST002', name: 'Sanduni Silva', admissionNo: 'AL2025002', currentGrade: 'A' },
-        { id: 'ST003', name: 'Tharindu Fernando', admissionNo: 'AL2025003', currentGrade: 'B' },
-        { id: 'ST004', name: 'Nethmini Perera', admissionNo: 'AL2025004', currentGrade: 'A-' },
-        { id: 'ST005', name: 'Ravindu Silva', admissionNo: 'AL2025005', currentGrade: 'B+' },
-        { id: 'ST006', name: 'Ishara Fernando', admissionNo: 'AL2025006', currentGrade: 'A' },
-        { id: 'ST007', name: 'Dilini Wickramasinghe', admissionNo: 'AL2025007', currentGrade: 'B' },
-        { id: 'ST008', name: 'Chamara Perera', admissionNo: 'AL2025008', currentGrade: 'B+' }
-      ]
-      setStudents(sampleStudents)
-
-      // Initialize marks object
-      const initialMarks = {}
-      sampleStudents.forEach(student => {
-        initialMarks[student.id] = ''
-      })
-      setMarks(initialMarks)
+      // Use students from props if available, otherwise filter from propStudents
+      if (propStudents && propStudents.length > 0) {
+        const filteredStudents = propStudents.filter(s => s.class === selectedClass)
+        setStudents(filteredStudents)
+        
+        // Initialize marks object
+        const initialMarks = {}
+        filteredStudents.forEach(student => {
+          initialMarks[student.id] = ''
+        })
+        setMarks(initialMarks)
+      }
     }
-  }, [selectedClass, selectedSubject])
+  }, [selectedClass, selectedSubject, propStudents])
+
+  // Load assessments when class and subject are selected
+  useEffect(() => {
+    const loadAssessments = async () => {
+      if (!selectedClass || !selectedSubject) return
+
+      try {
+        const assessmentsQuery = query(
+          collection(db, 'assessments'),
+          where('class', '==', selectedClass),
+          where('subject', '==', selectedSubject),
+          where('teacherId', '==', teacherId || user.id)
+        )
+        const assessmentsSnapshot = await getDocs(assessmentsQuery)
+        const assessmentsData = assessmentsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setAssessments(assessmentsData)
+      } catch (error) {
+        console.error('Error loading assessments:', error)
+      }
+    }
+
+    loadAssessments()
+  }, [selectedClass, selectedSubject, teacherId, user.id])
 
   const handleMarkChange = (studentId, mark) => {
     setMarks(prev => ({
@@ -95,28 +137,40 @@ const GradeEntry = () => {
     return 'W'
   }
 
-  const handleAddAssessment = () => {
+  const handleAddAssessment = async () => {
     if (!newAssessment.name || !newAssessment.type) {
       alert('Please fill in all required fields')
       return
     }
 
-    const assessment = {
-      id: Date.now(),
-      ...newAssessment,
-      subject: selectedSubject,
-      class: selectedClass
-    }
+    try {
+      const assessment = {
+        name: newAssessment.name,
+        type: newAssessment.type,
+        maxMarks: newAssessment.maxMarks,
+        date: newAssessment.date,
+        subject: selectedSubject,
+        class: selectedClass,
+        teacherId: teacherId || user.id,
+        teacherName: user.fullName,
+        createdAt: serverTimestamp()
+      }
 
-    setAssessments(prev => [...prev, assessment])
-    setNewAssessment({
-      name: '',
-      type: '',
-      maxMarks: 100,
-      date: new Date().toISOString().split('T')[0]
-    })
-    setShowAddAssessment(false)
-    alert('Assessment added successfully!')
+      const docRef = await addDoc(collection(db, 'assessments'), assessment)
+      
+      setAssessments(prev => [...prev, { id: docRef.id, ...assessment }])
+      setNewAssessment({
+        name: '',
+        type: '',
+        maxMarks: 100,
+        date: new Date().toISOString().split('T')[0]
+      })
+      setShowAddAssessment(false)
+      alert('Assessment added successfully!')
+    } catch (error) {
+      console.error('Error adding assessment:', error)
+      alert('Error adding assessment. Please try again.')
+    }
   }
 
   const handleSaveMarks = async () => {
@@ -140,24 +194,35 @@ const GradeEntry = () => {
     setIsSaving(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const currentAssessment = getCurrentAssessment()
+      
+      // Save each student's grade to Firestore
+      const gradePromises = students.map(async (student) => {
+        const mark = marks[student.id]
+        if (mark === '' || mark === undefined) return null
+        
+        const gradeData = {
+          studentId: student.id,
+          studentName: student.fullName || student.name,
+          subject: selectedSubject,
+          class: selectedClass,
+          assessmentId: selectedAssessment,
+          assessmentName: currentAssessment?.name,
+          assessmentType: currentAssessment?.type,
+          marks: parseFloat(mark),
+          maxMarks: currentAssessment?.maxMarks || 100,
+          grade: getGrade(parseFloat(mark), currentAssessment?.maxMarks || 100),
+          teacherId: teacherId || user.id,
+          teacherName: user.fullName,
+          date: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }
+        
+        return addDoc(collection(db, 'grades'), gradeData)
+      })
 
-      // In a real app, this would send data to backend
-      const marksData = {
-        assessmentId: selectedAssessment,
-        classId: selectedClass,
-        subjectId: selectedSubject,
-        marks: Object.entries(marks).map(([studentId, mark]) => ({
-          studentId,
-          marks: parseFloat(mark) || 0,
-          grade: mark ? getGrade(parseFloat(mark), getCurrentAssessment()?.maxMarks || 100) : 'N/A'
-        })),
-        enteredBy: 'Mr. Sunil Perera',
-        timestamp: new Date().toISOString()
-      }
-
-      console.log('Marks saved:', marksData)
+      await Promise.all(gradePromises.filter(Boolean))
+      
       alert('Marks saved successfully!')
 
       // Reset form
@@ -173,7 +238,7 @@ const GradeEntry = () => {
   }
 
   const getCurrentAssessment = () => {
-    return assessments.find(a => a.id === parseInt(selectedAssessment))
+    return assessments.find(a => a.id === selectedAssessment)
   }
 
   const getFilteredAssessments = () => {
@@ -413,11 +478,11 @@ const GradeEntry = () => {
                   
                   return (
                     <tr key={student.id}>
-                      <td className="student-name">{student.name}</td>
-                      <td className="admission-no">{student.admissionNo}</td>
+                      <td className="student-name">{student.fullName || student.name}</td>
+                      <td className="admission-no">{student.indexNumber || student.admissionNo}</td>
                       <td className="current-grade">
-                        <span className={`grade-badge ${student.currentGrade.toLowerCase().replace('+', '-plus').replace('-', '-minus')}`}>
-                          {student.currentGrade}
+                        <span className={`grade-badge ${(student.currentGrade || 'N/A').toLowerCase().replace('+', '-plus').replace('-', '-minus')}`}>
+                          {student.currentGrade || 'N/A'}
                         </span>
                       </td>
                       <td className="marks-input">

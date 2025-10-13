@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { useFirestore } from '../hooks/useFirestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '../utils/firebase'
 import Calculator from './Calculator'
 import Notepad from './Notepad'
 import StudentProgress from './dashboard/StudentProgress'
@@ -7,153 +11,141 @@ import '../styles/StudentDashboard.css'
 // Default avatar image
 const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Cpath fill="%23CBD5E1" d="M12 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0 2c5.523 0 10 2.239 10 5v2H2v-2c0-2.761 4.477-5 10-5z"/%3E%3C/svg%3E'
 
-// Student data based on their level - this would come from authentication/context in a real app
-const getStudentData = () => {
-  // In a real application, this would come from authentication context or API
-  // For demo purposes, we'll simulate different student types
-  const studentType = localStorage.getItem('studentType') || 'AL'; // AL or OL
-  
-  if (studentType === 'AL') {
-    return {
-      name: 'Kamal Perera',
-      studentId: 'ST2025001',
-      grade: 'Grade 12',
-      stream: 'Physical Science Stream',
-      level: 'A/L',
-      year: '2025',
-      subjects: [
-        { id: 1, name: 'Mathematics', code: 'MATH_AL', progress: 78, grade: 'A', credits: 4 },
-        { id: 2, name: 'Physics', code: 'PHYS_AL', progress: 82, grade: 'A', credits: 4 },
-        { id: 3, name: 'Chemistry', code: 'CHEM_AL', progress: 85, grade: 'A', credits: 4 },
-        { id: 4, name: 'English', code: 'ENG_AL', progress: 75, grade: 'B', credits: 3 },
-        { id: 5, name: 'ICT', code: 'ICT_AL', progress: 92, grade: 'A', credits: 4 }
-      ],
-      upcomingExams: [
-        { subject: 'Mathematics', date: '2025-10-15', type: 'Model Paper' },
-        { subject: 'Physics', date: '2025-10-20', type: 'Practical Exam' },
-        { subject: 'Chemistry', date: '2025-10-25', type: 'Theory Exam' }
-      ],
-      achievements: [
-        'Merit Award in Physics Olympiad 2024',
-        'Best Student in Mathematics - Term 2',
-        'Science Fair First Place 2024'
-      ]
-    }
-  } else {
-    return {
-      name: 'Tharindu Silva',
-      studentId: 'ST2025002',
-      grade: 'Grade 10',
-      class: 'Class A',
-      level: 'O/L',
-      year: '2025',
-      subjects: [
-        { id: 1, name: 'Mathematics', code: 'MATH_OL', progress: 82, grade: 'A', marks: 87 },
-        { id: 2, name: 'Science', code: 'SCI_OL', progress: 78, grade: 'B+', marks: 82 },
-        { id: 3, name: 'English', code: 'ENG_OL', progress: 75, grade: 'B+', marks: 79 },
-        { id: 4, name: 'Sinhala', code: 'SIN_OL', progress: 88, grade: 'A', marks: 89 },
-        { id: 5, name: 'History', code: 'HIS_OL', progress: 80, grade: 'B+', marks: 83 },
-        { id: 6, name: 'Geography', code: 'GEO_OL', progress: 85, grade: 'A', marks: 86 },
-        { id: 7, name: 'Art', code: 'ART_OL', progress: 90, grade: 'A', marks: 91 },
-        { id: 8, name: 'Health & PE', code: 'PE_OL', progress: 95, grade: 'A+', marks: 96 }
-      ],
-      upcomingExams: [
-        { subject: 'Mathematics', date: '2025-10-12', type: 'Term Test' },
-        { subject: 'Science', date: '2025-10-18', type: 'Practical Assessment' },
-        { subject: 'English', date: '2025-10-22', type: 'Essay Writing' }
-      ],
-      achievements: [
-        'Class Topper - Mathematics',
-        'Perfect Attendance Award',
-        'Inter-school Art Competition Winner'
-      ]
-    }
-  }
-}
-
 const StudentDashboard = () => {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
+  const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [showMessageDetail, setShowMessageDetail] = useState(false)
   const [readNotifications, setReadNotifications] = useState(new Set())
-  const [studentData, setStudentData] = useState(null)
+  const [grades, setGrades] = useState([])
+  const [assignments, setAssignments] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Initialize student data based on their level
+  // Fetch student data from Firestore
   useEffect(() => {
-    const data = getStudentData()
-    setStudentData(data)
-  }, [])
+    const fetchStudentData = async () => {
+      if (!user || !user.id) {
+        console.log('User not ready:', user);
+        return;
+      }
 
-  if (!studentData) {
-    return <div className="loading">Loading student dashboard...</div>
+      try {
+        setLoading(true)
+
+        // Fetch grades
+        const gradesQuery = query(
+          collection(db, 'grades'),
+          where('studentId', '==', user.id)
+        )
+        const gradesSnapshot = await getDocs(gradesQuery)
+        const gradesData = gradesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setGrades(gradesData)
+
+        // Fetch assignments/assessments - only if grade and className are available
+        if (user.grade && user.className) {
+          console.log('Fetching assignments for:', { grade: user.grade, className: user.className });
+          const assignmentsQuery = query(
+            collection(db, 'assessments'),
+            where('grade', '==', user.grade),
+            where('className', '==', user.className)
+          )
+          const assignmentsSnapshot = await getDocs(assignmentsQuery)
+          const assignmentsData = assignmentsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          console.log('Assignments loaded:', assignmentsData.length);
+          setAssignments(assignmentsData)
+        } else {
+          console.log('Missing grade or className:', { grade: user.grade, className: user.className });
+          setAssignments([])
+        }
+
+        // Fetch notifications
+        const notificationsQuery = query(
+          collection(db, 'notifications'),
+          where('recipientId', '==', user.id)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        const notificationsData = notificationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setNotifications(notificationsData)
+        setNotificationCount(notificationsData.filter(n => !n.read).length)
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching student data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchStudentData()
+  }, [user])
+
+  // Calculate student data from user profile and grades
+  const studentData = user ? {
+    name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Student',
+    studentId: user.indexNumber || user.id,
+    grade: `Grade ${user.grade || 'N/A'}`,
+    stream: user.stream || undefined,
+    className: user.className || user.class || undefined,
+    level: (user.grade === '12' || user.grade === '13') ? 'A/L' : 'O/L',
+    year: new Date().getFullYear().toString(),
+    subjects: grades.map((grade, index) => ({
+      id: index + 1,
+      name: grade.subject || 'Subject',
+      code: grade.subjectCode || 'CODE',
+      progress: grade.progress || Math.round(Math.random() * 40 + 60),
+      grade: grade.letterGrade || calculateLetterGrade(grade.marks),
+      marks: grade.marks || 0,
+      credits: grade.credits || 4
+    })),
+    upcomingExams: assignments.filter(a => a.type === 'exam').slice(0, 3).map(exam => ({
+      subject: exam.subject,
+      date: exam.dueDate || exam.date,
+      type: exam.examType || 'Exam'
+    })),
+    achievements: user.achievements || [
+      'Welcome to SmartED!',
+      'Start your learning journey'
+    ]
+  } : null
+
+  // Helper function to calculate letter grade
+  function calculateLetterGrade(marks) {
+    if (marks >= 90) return 'A+'
+    if (marks >= 80) return 'A'
+    if (marks >= 70) return 'B+'
+    if (marks >= 60) return 'B'
+    if (marks >= 50) return 'C'
+    if (marks >= 40) return 'D'
+    return 'F'
   }
 
-  // Generate level-specific notifications
-  const notifications = studentData.level === 'A/L' ? [
-    { 
-      id: 1, 
-      title: 'A/L Mathematics Model Paper', 
-      message: 'Practice paper for upcoming A/L exam', 
-      time: '2 hours ago', 
-      type: 'warning',
-      details: 'Your A/L Mathematics Model Paper #3 is scheduled for tomorrow. This paper covers Advanced Functions, Calculus, and Coordinate Geometry. Make sure to bring your calculator and mathematical instruments. The exam duration is 3 hours and will be held in Hall A from 8:00 AM.',
-      sender: 'Mr. Sunil Perera - Mathematics',
-      priority: 'High'
-    },
-    { 
-      id: 2, 
-      title: 'Physics Practical Assessment', 
-      message: 'Lab practical exam next week', 
-      time: '4 hours ago', 
-      type: 'info',
-      details: 'Your Physics Practical Assessment is scheduled for next week. The practical will cover experiments on Wave Motion, Optics, and Electricity. Please review your lab manual and practice calculations. Lab coats and safety goggles are mandatory.',
-      sender: 'Dr. Amara Silva - Physics',
-      priority: 'Medium'
-    },
-    { 
-      id: 3, 
-      title: 'Chemistry Grade Updated', 
-      message: 'Your latest chemistry test results are available', 
-      time: '1 day ago', 
-      type: 'success',
-      details: 'Your Chemistry Test on Organic Chemistry has been graded. You scored 85/100 (A grade). Excellent work on understanding reaction mechanisms! Your overall A/L Chemistry grade is now 84%. Keep up the excellent work as you prepare for the final A/L examination.',
-      sender: 'Mrs. Kushani Jayawardena - Chemistry',
-      priority: 'Low'
-    }
-  ] : [
-    { 
-      id: 1, 
-      title: 'O/L Mathematics Assignment', 
-      message: 'Algebra homework due tomorrow', 
-      time: '3 hours ago', 
-      type: 'warning',
-      details: 'Your O/L Mathematics homework on Algebraic Expressions (Chapter 5) is due tomorrow. Complete exercises 5.1 to 5.5 from your textbook. Show all working clearly and submit during the first period. Remember to bring your exercise book.',
-      sender: 'Mrs. Chamari Wickramasinghe - Mathematics',
-      priority: 'High'
-    },
-    { 
-      id: 2, 
-      title: 'Science Project Reminder', 
-      message: 'Environmental science project deadline approaching', 
-      time: '5 hours ago', 
-      type: 'info',
-      details: 'Your Environmental Science project on "Water Pollution in Sri Lanka" is due next Friday. Make sure to include your research findings, photographs, and proposed solutions. The project should be 5-7 pages long with proper references.',
-      sender: 'Mr. Roshan Perera - Science',
-      priority: 'Medium'
-    },
-    { 
-      id: 3, 
-      title: 'English Essay Results', 
-      message: 'Your essay grades are now available', 
-      time: '1 day ago', 
-      type: 'success',
-      details: 'Your English Essay on "The Impact of Technology on Education" has been graded. You received a B+ grade (79/100). Good use of examples and clear arguments. Work on improving your conclusion paragraphs for even better results.',
-      sender: 'Ms. Priyanka Fernando - English',
-      priority: 'Low'
-    }
-  ]
+  if (loading || !studentData) {
+    return (
+      <div className="dashboard-container">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontSize: '1.5rem',
+          color: '#4A90E2'
+        }}>
+          Loading student dashboard...
+        </div>
+      </div>
+    )
+  }
 
   const markAllAsRead = () => {
     setNotificationCount(0)

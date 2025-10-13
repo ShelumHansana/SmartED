@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/firebase'
 
 const Register = ({ onClose }) => {
   const [selectedRole, setSelectedRole] = useState('student')
@@ -7,7 +9,10 @@ const Register = ({ onClose }) => {
   const [selectedStream, setSelectedStream] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState([])
   const [selectedClasses, setSelectedClasses] = useState([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { register } = useAuth()
 
   const handleClassAdd = () => {
     const gradeSelect = document.getElementById('teacherGrade')
@@ -63,13 +68,210 @@ const Register = ({ onClose }) => {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Here you would normally handle registration
-    if (selectedRole === 'student') {
-      navigate('/student-dashboard')
+    setError('')
+    
+    const formData = new FormData(e.target)
+    const password = formData.get('password')
+    const confirmPassword = formData.get('confirmPassword')
+    const email = formData.get('email')
+    
+    // Validation
+    if (!password || !confirmPassword) {
+      setError('Please enter a password')
+      return
     }
-    onClose()
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors[0])
+      return
+    }
+    
+    try {
+      setLoading(true)
+      
+      let userData = { email, password }
+      
+      if (selectedRole === 'student') {
+        const fullName = formData.get('fullName')
+        if (!fullName || fullName.trim() === '') {
+          setError('Please enter your full name')
+          setLoading(false)
+          return
+        }
+        
+        const indexNumber = formData.get('indexNumber')
+        if (!indexNumber || indexNumber.trim() === '') {
+          setError('Please enter your index number')
+          setLoading(false)
+          return
+        }
+        
+        const grade = formData.get('grade')
+        if (!grade) {
+          setError('Please select your grade')
+          setLoading(false)
+          return
+        }
+        
+        const className = formData.get('class')
+        if (!className) {
+          setError('Please select your class')
+          setLoading(false)
+          return
+        }
+        
+        const day = formData.get('birthDay')
+        const month = formData.get('birthMonth')
+        const year = formData.get('birthYear')
+        
+        if (!day || !month || !year) {
+          setError('Please select your complete birthday')
+          setLoading(false)
+          return
+        }
+        
+        const birthday = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        
+        userData = {
+          ...userData,
+          fullName: fullName.trim(),
+          indexNumber,
+          grade,
+          className,
+          stream: selectedStream || undefined,
+          birthday,
+          gender: formData.get('gender'),
+          address: formData.get('address'),
+          phoneNumber: formData.get('contactNumber'),
+          guardianName: formData.get('guardianName'),
+          guardianContact: formData.get('guardianContact'),
+          admissionDate: formData.get('admissionDate')
+        }
+      } else if (selectedRole === 'teacher') {
+        const fullName = formData.get('fullName')
+        if (!fullName || fullName.trim() === '') {
+          setError('Please enter your full name')
+          setLoading(false)
+          return
+        }
+        
+        const teacherIndex = formData.get('teacherIndex')
+        if (!teacherIndex || teacherIndex.trim() === '') {
+          setError('Please enter your teacher index number')
+          setLoading(false)
+          return
+        }
+        
+        const title = formData.get('title')
+        if (!title) {
+          setError('Please select your title')
+          setLoading(false)
+          return
+        }
+        
+        userData = {
+          ...userData,
+          title,
+          fullName: fullName.trim(),
+          teacherIndex,
+          subjects: selectedSubjects,
+          classes: selectedClasses,
+          inChargeType: formData.get('inChargeType') || undefined,
+          inChargeDetails: formData.get('inChargeDetails') || undefined
+        }
+        
+        if (selectedSubjects.length === 0) {
+          setError('Please select at least one subject')
+          setLoading(false)
+          return
+        }
+        
+        if (selectedClasses.length === 0) {
+          setError('Please add at least one teaching class')
+          setLoading(false)
+          return
+        }
+      } else if (selectedRole === 'parent') {
+        const fullName = formData.get('fullName')
+        if (!fullName || fullName.trim() === '') {
+          setError('Please enter your full name')
+          setLoading(false)
+          return
+        }
+        
+        const childName = formData.get('childName')
+        if (!childName || childName.trim() === '') {
+          setError("Please enter your child's full name")
+          setLoading(false)
+          return
+        }
+        
+        const childIndex = formData.get('childIndex')
+        if (!childIndex || childIndex.trim() === '') {
+          setError("Please enter your child's index number")
+          setLoading(false)
+          return
+        }
+        
+        const day = formData.get('birthDay')
+        const month = formData.get('birthMonth')
+        const year = formData.get('birthYear')
+        
+        if (!day || !month || !year) {
+          setError('Please select your complete birthday')
+          setLoading(false)
+          return
+        }
+        
+        const birthday = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        
+        userData = {
+          ...userData,
+          title: formData.get('parentTitle'),
+          fullName: fullName.trim(),
+          relationship: formData.get('relationship'),
+          maritalStatus: formData.get('maritalStatus'),
+          birthday,
+          phoneNumber: formData.get('telephone'),
+          mobileNumber: formData.get('mobile'),
+          children: [{
+            name: childName.trim(),
+            indexNumber: childIndex.trim()
+          }]
+        }
+      }
+      
+      // Register user
+      await register(userData, selectedRole)
+      
+      // Navigate to dashboard
+      const roleRoutes = {
+        student: '/student-dashboard',
+        teacher: '/teacher-dashboard',
+        parent: '/parent-dashboard'
+      }
+      
+      navigate(roleRoutes[selectedRole])
+      onClose()
+      
+    } catch (err) {
+      console.error('Registration error:', err)
+      setError(err.message || 'Registration failed. Please try again.')
+      setLoading(false)
+    }
   }
   
   const handleRoleSelect = (role) => {
@@ -87,6 +289,21 @@ const Register = ({ onClose }) => {
       <div className="modal-content">
         <button className="close-button" onClick={onClose}>&times;</button>
         <h2>Register</h2>
+        
+        {error && (
+          <div style={{
+            padding: '10px',
+            marginBottom: '15px',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c33',
+            fontSize: '0.9rem'
+          }}>
+            {error}
+          </div>
+        )}
+        
         <div className="role-selector">
           <h3>Select Role</h3>
           <div className="role-buttons">
@@ -121,8 +338,10 @@ const Register = ({ onClose }) => {
                   <label htmlFor="fullName">Full Name*</label>
                   <input 
                     type="text" 
-                    id="fullName" 
+                    id="fullName"
+                    name="fullName"
                     placeholder="Enter your full name" 
+                    disabled={loading}
                     required 
                   />
                 </div>
@@ -130,14 +349,16 @@ const Register = ({ onClose }) => {
                   <label htmlFor="email">Email*</label>
                   <input 
                     type="email" 
-                    id="email" 
+                    id="email"
+                    name="email"
                     placeholder="Enter your email" 
+                    disabled={loading}
                     required 
                   />
                 </div>
                 <div className="form-group">
                   <label htmlFor="gender">Gender*</label>
-                  <select id="gender" required>
+                  <select id="gender" name="gender" disabled={loading} required>
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -147,8 +368,10 @@ const Register = ({ onClose }) => {
                   <label htmlFor="indexNumber">Index Number*</label>
                   <input 
                     type="text" 
-                    id="indexNumber" 
+                    id="indexNumber"
+                    name="indexNumber"
                     placeholder="Enter your index number" 
+                    disabled={loading}
                     required 
                   />
                 </div>
@@ -156,19 +379,19 @@ const Register = ({ onClose }) => {
                   <div className="form-group">
                     <label htmlFor="birthDay">Birthday*</label>
                     <div className="date-inputs">
-                      <select id="birthDay" required>
+                      <select id="birthDay" name="birthDay" disabled={loading} required>
                         {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                           <option key={day} value={day}>{day}</option>
                         ))}
                       </select>
-                      <select id="birthMonth" required>
+                      <select id="birthMonth" name="birthMonth" disabled={loading} required>
                         {['January', 'February', 'March', 'April', 'May', 'June', 
                           'July', 'August', 'September', 'October', 'November', 'December'
                         ].map((month, index) => (
                           <option key={month} value={index + 1}>{month}</option>
                         ))}
                       </select>
-                      <select id="birthYear" required>
+                      <select id="birthYear" name="birthYear" disabled={loading} required>
                         {Array.from({length: 20}, (_, i) => new Date().getFullYear() - 20 + i).map(year => (
                           <option key={year} value={year}>{year}</option>
                         ))}
@@ -180,7 +403,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="guardianName">Parent/Guardian's Name*</label>
                   <input 
                     type="text" 
-                    id="guardianName" 
+                    id="guardianName"
+                    name="guardianName"
                     placeholder="Enter parent/guardian's name" 
                     required 
                   />
@@ -189,7 +413,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="password">Password*</label>
                   <input 
                     type="password" 
-                    id="password" 
+                    id="password"
+                    name="password"
                     placeholder="Enter your password" 
                     required 
                   />
@@ -198,7 +423,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="confirmPassword">Confirm Password*</label>
                   <input 
                     type="password" 
-                    id="confirmPassword" 
+                    id="confirmPassword"
+                    name="confirmPassword"
                     placeholder="Confirm your password" 
                     required 
                   />
@@ -209,11 +435,13 @@ const Register = ({ onClose }) => {
                 <div className="form-group">
                   <label htmlFor="grade">Grade*</label>
                   <select 
-                    id="grade" 
+                    id="grade"
+                    name="grade"
                     value={selectedGrade}
                     onChange={handleGradeChange}
                     required
                   >
+                    <option value="">Select Grade</option>
                     {Array.from({length: 13}, (_, i) => i + 1).map(grade => (
                       <option key={grade} value={grade}>Grade {grade}</option>
                     ))}
@@ -223,7 +451,8 @@ const Register = ({ onClose }) => {
                   <div className="form-group">
                     <label htmlFor="stream">Stream*</label>
                     <select 
-                      id="stream" 
+                      id="stream"
+                      name="stream"
                       value={selectedStream}
                       onChange={(e) => setSelectedStream(e.target.value)}
                       required
@@ -239,7 +468,8 @@ const Register = ({ onClose }) => {
                 <div className="form-group">
                   <label htmlFor="class">Class*</label>
                   <select 
-                    id="class" 
+                    id="class"
+                    name="class"
                     required
                     disabled={(selectedGrade === '12' || selectedGrade === '13') && !selectedStream}
                   >
@@ -254,14 +484,16 @@ const Register = ({ onClose }) => {
                 <label htmlFor="admissionDate">Admission Date*</label>
                 <input 
                   type="date" 
-                  id="admissionDate" 
+                  id="admissionDate"
+                  name="admissionDate"
                   required 
                 />
               </div>
               <div className="form-group">
                 <label htmlFor="address">Address*</label>
                 <textarea 
-                  id="address" 
+                  id="address"
+                  name="address"
                   placeholder="Enter your address" 
                   rows="3" 
                   required 
@@ -271,7 +503,8 @@ const Register = ({ onClose }) => {
                 <label htmlFor="contactNumber">Contact Number*</label>
                 <input 
                   type="tel" 
-                  id="contactNumber" 
+                  id="contactNumber"
+                  name="contactNumber"
                   placeholder="Enter your contact number" 
                   required 
                 />
@@ -280,7 +513,8 @@ const Register = ({ onClose }) => {
                 <label htmlFor="guardianContact">Guardian's Contact Number*</label>
                 <input 
                   type="tel" 
-                  id="guardianContact" 
+                  id="guardianContact"
+                  name="guardianContact"
                   placeholder="Enter guardian's contact number" 
                   required 
                 />
@@ -292,7 +526,7 @@ const Register = ({ onClose }) => {
               <div className="form-column">
                 <div className="form-group">
                   <label htmlFor="title">Title*</label>
-                  <select id="title" required>
+                  <select id="title" name="title" required>
                     <option value="">Select Title</option>
                     <option value="Mr">Mr</option>
                     <option value="Mrs">Mrs</option>
@@ -302,15 +536,33 @@ const Register = ({ onClose }) => {
                 </div>
                 <div className="form-group">
                   <label htmlFor="fullName">Full Name*</label>
-                  <input type="text" id="fullName" placeholder="Enter your full name" required />
+                  <input 
+                    type="text" 
+                    id="fullName"
+                    name="fullName"
+                    placeholder="Enter your full name" 
+                    required 
+                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="email">Email*</label>
-                  <input type="email" id="email" placeholder="Enter your email" required />
+                  <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email" 
+                    required 
+                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="teacherIndex">Teacher's Index Number*</label>
-                  <input type="text" id="teacherIndex" placeholder="Enter your teacher's index number" required />
+                  <input 
+                    type="text" 
+                    id="teacherIndex"
+                    name="teacherIndex"
+                    placeholder="Enter your teacher's index number" 
+                    required 
+                  />
                 </div>
                 <div className="form-group">
                   <label>Subjects*</label>
@@ -357,13 +609,13 @@ const Register = ({ onClose }) => {
                   <label htmlFor="teachingClasses">Teaching Classes*</label>
                   <div className="teaching-classes">
                     <div className="form-row">
-                      <select id="teacherGrade">
+                      <select id="teacherGrade" name="teacherGrade">
                         <option value="">Select Grade</option>
                         {Array.from({length: 13}, (_, i) => i + 1).map(grade => (
                           <option key={grade} value={grade}>Grade {grade}</option>
                         ))}
                       </select>
-                      <select id="teacherClass">
+                      <select id="teacherClass" name="teacherClass">
                         <option value="">Select Class</option>
                         {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].map(cls => (
                           <option key={cls} value={cls}>Class {cls}</option>
@@ -402,25 +654,38 @@ const Register = ({ onClose }) => {
                 <div className="form-group">
                   <label htmlFor="inCharge">Class/Sport In Charge (Optional)</label>
                   <div className="form-row">
-                    <select id="inChargeType">
+                    <select id="inChargeType" name="inChargeType">
                       <option value="">Select Type</option>
                       <option value="class">Class</option>
                       <option value="sport">Sport</option>
                     </select>
                     <input 
                       type="text" 
-                      id="inChargeDetails" 
+                      id="inChargeDetails"
+                      name="inChargeDetails"
                       placeholder="Enter class (e.g., 10-A) or sport name" 
                     />
                   </div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="password">Password*</label>
-                  <input type="password" id="password" placeholder="Enter your password" required />
+                  <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password" 
+                    required 
+                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="confirmPassword">Confirm Password*</label>
-                  <input type="password" id="confirmPassword" placeholder="Confirm your password" required />
+                  <input 
+                    type="password" 
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm your password" 
+                    required 
+                  />
                 </div>
               </div>
             </div>
@@ -429,7 +694,7 @@ const Register = ({ onClose }) => {
               <div className="form-column">
                 <div className="form-group">
                   <label htmlFor="parentTitle">Title*</label>
-                  <select id="parentTitle" required>
+                  <select id="parentTitle" name="parentTitle" required>
                     <option value="">Select Title</option>
                     <option value="Mr">Mr</option>
                     <option value="Mrs">Mrs</option>
@@ -439,7 +704,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="fullName">Full Name*</label>
                   <input 
                     type="text" 
-                    id="fullName" 
+                    id="fullName"
+                    name="fullName"
                     placeholder="Enter your full name" 
                     required 
                   />
@@ -448,14 +714,15 @@ const Register = ({ onClose }) => {
                   <label htmlFor="childName">Child's Full Name*</label>
                   <input 
                     type="text" 
-                    id="childName" 
+                    id="childName"
+                    name="childName"
                     placeholder="Enter your child's full name" 
                     required 
                   />
                 </div>
                 <div className="form-group">
                   <label htmlFor="relationship">Parent/Guardian*</label>
-                  <select id="relationship" required>
+                  <select id="relationship" name="relationship" required>
                     <option value="">Select Relationship</option>
                     <option value="father">Father</option>
                     <option value="mother">Mother</option>
@@ -464,7 +731,7 @@ const Register = ({ onClose }) => {
                 </div>
                 <div className="form-group">
                   <label htmlFor="maritalStatus">Marital Status*</label>
-                  <select id="maritalStatus" required>
+                  <select id="maritalStatus" name="maritalStatus" required>
                     <option value="">Select Status</option>
                     <option value="married">Married</option>
                     <option value="unmarried">Unmarried</option>
@@ -475,19 +742,19 @@ const Register = ({ onClose }) => {
                 <div className="form-group">
                   <label htmlFor="birthDay">Birthday*</label>
                   <div className="date-inputs">
-                    <select id="birthDay" required>
+                    <select id="birthDay" name="birthDay" required>
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
                       ))}
                     </select>
-                    <select id="birthMonth" required>
+                    <select id="birthMonth" name="birthMonth" required>
                       {['January', 'February', 'March', 'April', 'May', 'June', 
                         'July', 'August', 'September', 'October', 'November', 'December'
                       ].map((month, index) => (
                         <option key={month} value={index + 1}>{month}</option>
                       ))}
                     </select>
-                    <select id="birthYear" required>
+                    <select id="birthYear" name="birthYear" required>
                       {Array.from({length: 50}, (_, i) => new Date().getFullYear() - 50 + i).map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
@@ -498,7 +765,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="childIndex">Child's Index Number*</label>
                   <input 
                     type="text" 
-                    id="childIndex" 
+                    id="childIndex"
+                    name="childIndex"
                     placeholder="Enter your child's index number" 
                     required 
                   />
@@ -507,7 +775,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="telephone">Telephone Number*</label>
                   <input 
                     type="tel" 
-                    id="telephone" 
+                    id="telephone"
+                    name="telephone"
                     placeholder="Enter your telephone number" 
                     required 
                   />
@@ -516,7 +785,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="mobile">Mobile Number*</label>
                   <input 
                     type="tel" 
-                    id="mobile" 
+                    id="mobile"
+                    name="mobile"
                     placeholder="Enter your mobile number" 
                     required 
                   />
@@ -525,7 +795,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="password">Password*</label>
                   <input 
                     type="password" 
-                    id="password" 
+                    id="password"
+                    name="password"
                     placeholder="Enter your password" 
                     required 
                   />
@@ -534,7 +805,8 @@ const Register = ({ onClose }) => {
                   <label htmlFor="confirmPassword">Confirm Password*</label>
                   <input 
                     type="password" 
-                    id="confirmPassword" 
+                    id="confirmPassword"
+                    name="confirmPassword"
                     placeholder="Confirm your password" 
                     required 
                   />
@@ -542,7 +814,14 @@ const Register = ({ onClose }) => {
               </div>
             </div>
           )}
-          <button type="submit" className="submit-button">Register as {selectedRole}</button>
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={loading}
+            style={{ opacity: loading ? 0.6 : 1 }}
+          >
+            {loading ? 'Registering...' : `Register as ${selectedRole}`}
+          </button>
         </form>
       </div>
     </div>

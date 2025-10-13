@@ -1,35 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../utils/firebase'
 import '../styles/Dashboard.css'
 import '../styles/AdminDashboard.css'
 
 const AdminDashboard = () => {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(4)
+  const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [showMessageDetail, setShowMessageDetail] = useState(false)
   const [readNotifications, setReadNotifications] = useState(new Set())
+  const [loading, setLoading] = useState(true)
   
   // User Management States
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Kamal Perera', email: 'kamal.perera@mahindacollege.lk', role: 'Student', grade: 'Grade 12 M1', status: 'Active', joinDate: '2025-01-15' },
-    { id: 2, name: 'Sanduni Silva', email: 'sanduni.silva@mahindacollege.lk', role: 'Student', grade: 'Grade 10 A', status: 'Active', joinDate: '2024-12-10' },
-    { id: 3, name: 'Mr. Sunil Perera', email: 'sunil.perera@mahindacollege.lk', role: 'Teacher', subject: 'Mathematics', status: 'Active', joinDate: '2020-03-01' },
-    { id: 4, name: 'Dr. Amara Silva', email: 'amara.silva@mahindacollege.lk', role: 'Teacher', subject: 'Physics', status: 'Active', joinDate: '2018-07-15' },
-    { id: 5, name: 'Mrs. Perera (Parent)', email: 'parent.perera@gmail.com', role: 'Parent', children: 'Kamal & Sanduni', status: 'Active', joinDate: '2024-12-10' }
-  ])
+  const [users, setUsers] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [showUserModal, setShowUserModal] = useState(false)
   const [userFilter, setUserFilter] = useState('All')
   
   // Course Management States
-  const [courses, setCourses] = useState([
-    { id: 1, name: 'A/L Mathematics', level: 'A/L', stream: 'Physical Science', teacher: 'Mr. Sunil Perera', students: 24, status: 'Active' },
-    { id: 2, name: 'A/L Physics', level: 'A/L', stream: 'Physical Science', teacher: 'Dr. Amara Silva', students: 22, status: 'Active' },
-    { id: 3, name: 'A/L Chemistry', level: 'A/L', stream: 'Physical Science', teacher: 'Mrs. Kushani Jayawardena', students: 20, status: 'Active' },
-    { id: 4, name: 'O/L Mathematics', level: 'O/L', grade: 'Grade 10', teacher: 'Mrs. Chamari Wickramasinghe', students: 32, status: 'Active' },
-    { id: 5, name: 'O/L Science', level: 'O/L', grade: 'Grade 10', teacher: 'Mr. Roshan Perera', students: 30, status: 'Active' }
-  ])
+  const [courses, setCourses] = useState([])
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showCourseModal, setShowCourseModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -49,60 +42,84 @@ const AdminDashboard = () => {
   })
 
   const [stats, setStats] = useState({
-    totalStudents: 156,
-    totalTeachers: 12,
-    totalCourses: 24,
-    activeUsers: 168
+    totalStudents: 0,
+    totalTeachers: 0,
+    totalCourses: 0,
+    activeUsers: 0
   })
 
-  const [recentActivities] = useState([
-    { id: 1, type: 'New Registration', user: 'John Doe', role: 'Student', time: '2 hours ago' },
-    { id: 2, type: 'Course Added', user: 'Jane Smith', role: 'Teacher', time: '3 hours ago' },
-    { id: 3, type: 'Report Generated', user: 'Admin', role: 'Admin', time: '5 hours ago' }
-  ])
+  const [recentActivities, setRecentActivities] = useState([])
+  const [notifications, setNotifications] = useState([])
 
-  const notifications = [
-    { 
-      id: 1, 
-      title: 'System Maintenance', 
-      message: 'Scheduled maintenance tonight at 2 AM', 
-      time: '30 minutes ago', 
-      type: 'warning',
-      details: 'Scheduled system maintenance will occur tonight from 2:00 AM to 4:00 AM EST. During this time, the system will be temporarily unavailable. This maintenance includes server updates, database optimization, and security patches. Please inform all users to save their work before 2:00 AM.',
-      sender: 'System Administrator',
-      priority: 'High'
-    },
-    { 
-      id: 2, 
-      title: 'New User Registration', 
-      message: '5 new students registered today', 
-      time: '2 hours ago', 
-      type: 'info',
-      details: 'Today we have 5 new student registrations across different grades. The new students are: John Smith (Grade 10), Mary Johnson (Grade 11), David Wilson (Grade 9), Sarah Davis (Grade 12), and Michael Brown (Grade 10). Please ensure their accounts are properly set up and class assignments are completed.',
-      sender: 'Registration System',
-      priority: 'Medium'
-    },
-    { 
-      id: 3, 
-      title: 'Server Alert', 
-      message: 'High CPU usage detected', 
-      time: '4 hours ago', 
-      type: 'warning',
-      details: 'Server monitoring has detected high CPU usage (85%) on the main application server. This may be due to increased user activity during peak hours. Please monitor the situation and consider load balancing if the issue persists. Current active users: 245.',
-      sender: 'Monitoring System',
-      priority: 'High'
-    },
-    { 
-      id: 4, 
-      title: 'Backup Complete', 
-      message: 'Daily backup completed successfully', 
-      time: '1 day ago', 
-      type: 'success',
-      details: 'Daily automated backup has been completed successfully. Backup size: 2.3 GB. All student data, grades, and system configurations have been securely backed up to the cloud storage. Backup verification completed without errors.',
-      sender: 'Backup System',
-      priority: 'Low'
+  // Load all admin data from Firestore
+  useEffect(() => {
+    const loadAdminData = async () => {
+      if (!user || !user.id) return
+
+      try {
+        setLoading(true)
+
+        // Load all users
+        const usersQuery = query(collection(db, 'users'))
+        const usersSnapshot = await getDocs(usersQuery)
+        const usersData = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          name: doc.data().fullName || doc.data().name,
+          joinDate: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toISOString().split('T')[0] : 'N/A'
+        }))
+        setUsers(usersData)
+
+        // Calculate statistics
+        const studentCount = usersData.filter(u => u.role === 'student').length
+        const teacherCount = usersData.filter(u => u.role === 'teacher').length
+        const activeCount = usersData.filter(u => u.status === 'Active' || !u.status).length
+
+        // Load courses
+        const coursesQuery = query(collection(db, 'courses'))
+        const coursesSnapshot = await getDocs(coursesQuery)
+        const coursesData = coursesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setCourses(coursesData)
+
+        setStats({
+          totalStudents: studentCount,
+          totalTeachers: teacherCount,
+          totalCourses: coursesData.length,
+          activeUsers: activeCount
+        })
+
+        // Load notifications
+        const notificationsQuery = query(
+          collection(db, 'notifications'),
+          where('recipientId', '==', user.id)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        const notificationsData = notificationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          time: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toLocaleString() : 'Recently'
+        }))
+        setNotifications(notificationsData)
+        setNotificationCount(notificationsData.filter(n => !n.read).length)
+
+        // Load school settings
+        const settingsDoc = await getDoc(doc(db, 'settings', 'school'))
+        if (settingsDoc.exists()) {
+          setSchoolSettings(settingsDoc.data())
+        }
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error loading admin data:', error)
+        setLoading(false)
+      }
     }
-  ]
+
+    loadAdminData()
+  }, [user])
 
   const markAllAsRead = () => {
     setNotificationCount(0)
@@ -119,84 +136,156 @@ const AdminDashboard = () => {
     setShowMessageDetail(false)
   }
 
-  const markSingleAsRead = (notificationId) => {
-    setReadNotifications(prev => new Set(prev).add(notificationId))
-    setNotificationCount(prev => Math.max(0, prev - 1))
-    closeMessageDetail()
+  const markSingleAsRead = async (notificationId) => {
+    try {
+      await updateDoc(doc(db, 'notifications', notificationId), {
+        read: true
+      })
+      setReadNotifications(prev => new Set(prev).add(notificationId))
+      setNotificationCount(prev => Math.max(0, prev - 1))
+      closeMessageDetail()
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+    }
   }
 
   // ===== ACTION BUTTON HANDLERS =====
 
   // User Management Actions
-  const handleAddUser = (userData) => {
-    const newUser = {
-      id: users.length + 1,
-      ...userData,
-      joinDate: new Date().toISOString().split('T')[0],
-      status: 'Active'
+  const handleAddUser = async (userData) => {
+    try {
+      const newUser = {
+        ...userData,
+        createdAt: serverTimestamp(),
+        status: 'Active'
+      }
+      const docRef = await addDoc(collection(db, 'users'), newUser)
+      
+      setUsers(prev => [...prev, { id: docRef.id, ...newUser }])
+      setStats(prev => ({ 
+        ...prev, 
+        activeUsers: prev.activeUsers + 1,
+        totalStudents: userData.role === 'student' ? prev.totalStudents + 1 : prev.totalStudents,
+        totalTeachers: userData.role === 'teacher' ? prev.totalTeachers + 1 : prev.totalTeachers
+      }))
+      setShowUserModal(false)
+      setSelectedUser(null)
+      alert('User added successfully!')
+    } catch (error) {
+      console.error('Error adding user:', error)
+      alert('Error adding user. Please try again.')
     }
-    setUsers(prev => [...prev, newUser])
-    setStats(prev => ({ ...prev, activeUsers: prev.activeUsers + 1 }))
-    setShowUserModal(false)
-    setSelectedUser(null)
-    console.log('User added:', newUser)
   }
 
-  const handleUpdateUser = (userData) => {
-    setUsers(prev => prev.map(user => 
-      user.id === selectedUser.id ? { ...user, ...userData } : user
-    ))
-    setShowUserModal(false)
-    setSelectedUser(null)
-    console.log('User updated:', userData)
+  const handleUpdateUser = async (userData) => {
+    try {
+      await updateDoc(doc(db, 'users', selectedUser.id), userData)
+      
+      setUsers(prev => prev.map(user => 
+        user.id === selectedUser.id ? { ...user, ...userData } : user
+      ))
+      setShowUserModal(false)
+      setSelectedUser(null)
+      alert('User updated successfully!')
+    } catch (error) {
+      console.error('Error updating user:', error)
+      alert('Error updating user. Please try again.')
+    }
   }
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      setUsers(prev => prev.filter(user => user.id !== userId))
-      setStats(prev => ({ ...prev, activeUsers: prev.activeUsers - 1 }))
-      console.log('User deleted:', userId)
+      try {
+        // Soft delete - set status to Inactive
+        await updateDoc(doc(db, 'users', userId), {
+          status: 'Inactive'
+        })
+        
+        setUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, status: 'Inactive' } : user
+        ))
+        setStats(prev => ({ ...prev, activeUsers: prev.activeUsers - 1 }))
+        alert('User deactivated successfully!')
+      } catch (error) {
+        console.error('Error deleting user:', error)
+        alert('Error deleting user. Please try again.')
+      }
     }
   }
 
-  const handleToggleUserStatus = (userId) => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId 
-        ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
-        : user
-    ))
-    console.log('User status toggled:', userId)
+  const handleToggleUserStatus = async (userId) => {
+    try {
+      const user = users.find(u => u.id === userId)
+      const newStatus = user.status === 'Active' ? 'Inactive' : 'Active'
+      
+      await updateDoc(doc(db, 'users', userId), {
+        status: newStatus
+      })
+      
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, status: newStatus } : u
+      ))
+      
+      setStats(prev => ({
+        ...prev,
+        activeUsers: newStatus === 'Active' ? prev.activeUsers + 1 : prev.activeUsers - 1
+      }))
+    } catch (error) {
+      console.error('Error toggling user status:', error)
+      alert('Error updating user status. Please try again.')
+    }
   }
 
   // Course Management Actions
-  const handleAddCourse = (courseData) => {
-    const newCourse = {
-      id: courses.length + 1,
-      ...courseData,
-      students: 0,
-      status: 'Active'
+  const handleAddCourse = async (courseData) => {
+    try {
+      const newCourse = {
+        ...courseData,
+        students: 0,
+        status: 'Active',
+        createdAt: serverTimestamp()
+      }
+      const docRef = await addDoc(collection(db, 'courses'), newCourse)
+      
+      setCourses(prev => [...prev, { id: docRef.id, ...newCourse }])
+      setStats(prev => ({ ...prev, totalCourses: prev.totalCourses + 1 }))
+      setShowCourseModal(false)
+      setSelectedCourse(null)
+      alert('Course added successfully!')
+    } catch (error) {
+      console.error('Error adding course:', error)
+      alert('Error adding course. Please try again.')
     }
-    setCourses(prev => [...prev, newCourse])
-    setStats(prev => ({ ...prev, totalCourses: prev.totalCourses + 1 }))
-    setShowCourseModal(false)
-    setSelectedCourse(null)
-    console.log('Course added:', newCourse)
   }
 
-  const handleUpdateCourse = (courseData) => {
-    setCourses(prev => prev.map(course => 
-      course.id === selectedCourse.id ? { ...course, ...courseData } : course
-    ))
-    setShowCourseModal(false)
-    setSelectedCourse(null)
-    console.log('Course updated:', courseData)
+  const handleUpdateCourse = async (courseData) => {
+    try {
+      await updateDoc(doc(db, 'courses', selectedCourse.id), courseData)
+      
+      setCourses(prev => prev.map(course => 
+        course.id === selectedCourse.id ? { ...course, ...courseData } : course
+      ))
+      setShowCourseModal(false)
+      setSelectedCourse(null)
+      alert('Course updated successfully!')
+    } catch (error) {
+      console.error('Error updating course:', error)
+      alert('Error updating course. Please try again.')
+    }
   }
 
-  const handleDeleteCourse = (courseId) => {
+  const handleDeleteCourse = async (courseId) => {
     if (window.confirm('Are you sure you want to delete this course? This will affect all enrolled students.')) {
-      setCourses(prev => prev.filter(course => course.id !== courseId))
-      setStats(prev => ({ ...prev, totalCourses: prev.totalCourses - 1 }))
-      console.log('Course deleted:', courseId)
+      try {
+        await deleteDoc(doc(db, 'courses', courseId))
+        
+        setCourses(prev => prev.filter(course => course.id !== courseId))
+        setStats(prev => ({ ...prev, totalCourses: prev.totalCourses - 1 }))
+        alert('Course deleted successfully!')
+      } catch (error) {
+        console.error('Error deleting course:', error)
+        alert('Error deleting course. Please try again.')
+      }
     }
   }
 
@@ -213,15 +302,19 @@ const AdminDashboard = () => {
   }
 
   // Settings Actions
-  const handleSaveSettings = () => {
-    // In a real app, this would make an API call
-    console.log('Settings saved:', schoolSettings)
-    alert('Settings saved successfully!')
+  const handleSaveSettings = async () => {
+    try {
+      await updateDoc(doc(db, 'settings', 'school'), schoolSettings)
+      alert('Settings saved successfully!')
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      alert('Error saving settings. Please try again.')
+    }
   }
 
-  const handleResetSettings = () => {
+  const handleResetSettings = async () => {
     if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
-      setSchoolSettings({
+      const defaultSettings = {
         schoolName: 'Mahinda College',
         address: 'Colombo 07, Sri Lanka',
         phone: '+94 11 269 1731',
@@ -230,9 +323,16 @@ const AdminDashboard = () => {
         terms: 3,
         gradingSystem: 'A/B/C/S/W',
         languages: ['English', 'Sinhala', 'Tamil']
-      })
-      console.log('Settings reset to defaults')
-      alert('Settings reset to defaults!')
+      }
+      
+      try {
+        await updateDoc(doc(db, 'settings', 'school'), defaultSettings)
+        setSchoolSettings(defaultSettings)
+        alert('Settings reset to defaults!')
+      } catch (error) {
+        console.error('Error resetting settings:', error)
+        alert('Error resetting settings. Please try again.')
+      }
     }
   }
 
@@ -328,6 +428,14 @@ const AdminDashboard = () => {
     }, 500)
   }
 
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading-state">Loading admin dashboard...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="dashboard-container admin-dashboard">
       <aside className="dashboard-sidebar">
@@ -335,9 +443,9 @@ const AdminDashboard = () => {
           <div className="profile-image">
             <img src="/admin-avatar.svg" alt="Admin" />
           </div>
-          <h3>System Admin</h3>
+          <h3>{user?.fullName || 'System Admin'}</h3>
           <p>Administrator</p>
-          <p>Mahinda College</p>
+          <p>{schoolSettings.schoolName}</p>
         </div>
         <nav className="dashboard-nav">
           <button 

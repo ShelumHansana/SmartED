@@ -1,100 +1,115 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '../utils/firebase'
 import '../styles/ParentDashboard.css'
 
 const ParentDashboard = () => {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedStudent, setSelectedStudent] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
+  const [notificationCount, setNotificationCount] = useState(0)
+  const [children, setChildren] = useState([])
+  const [childrenGrades, setChildrenGrades] = useState({})
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch parent's children and their data
+  useEffect(() => {
+    const fetchParentData = async () => {
+      if (!user || !user.id) return
+
+      try {
+        setLoading(true)
+
+        // Fetch children based on parent's children array
+        if (user.children && user.children.length > 0) {
+          const childrenPromises = user.children.map(async (child) => {
+            // Find student by index number
+            const studentQuery = query(
+              collection(db, 'users'),
+              where('role', '==', 'student'),
+              where('indexNumber', '==', child.indexNumber)
+            )
+            const studentSnapshot = await getDocs(studentQuery)
+            
+            if (!studentSnapshot.empty) {
+              const studentData = {
+                id: studentSnapshot.docs[0].id,
+                ...studentSnapshot.docs[0].data()
+              }
+
+              // Fetch grades for this child
+              const gradesQuery = query(
+                collection(db, 'grades'),
+                where('studentId', '==', studentData.id)
+              )
+              const gradesSnapshot = await getDocs(gradesQuery)
+              const grades = gradesSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }))
+
+              return {
+                ...studentData,
+                grades,
+                level: (studentData.grade === '12' || studentData.grade === '13') ? 'A/L' : 'O/L'
+              }
+            }
+            return null
+          })
+
+          const childrenData = (await Promise.all(childrenPromises)).filter(Boolean)
+          setChildren(childrenData)
+
+          // Organize grades by child
+          const gradesMap = {}
+          childrenData.forEach(child => {
+            gradesMap[child.id] = child.grades || []
+          })
+          setChildrenGrades(gradesMap)
+        }
+
+        // Fetch notifications
+        const notificationsQuery = query(
+          collection(db, 'notifications'),
+          where('recipientId', '==', user.id)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        const notificationsData = notificationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setNotifications(notificationsData)
+        setNotificationCount(notificationsData.filter(n => !n.read).length)
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching parent data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchParentData()
+  }, [user])
 
   const markAllAsRead = () => {
     setNotificationCount(0)
     setShowNotifications(false)
   }
 
-  // Sri Lankan students data - Both O/L and A/L children
-  const students = [
-    {
-      id: 1,
-      name: 'Kamal Bandara Perera',
-      class: 'Grade 12 M1',
-      stream: 'Physical Science',
-      level: 'A/L',
-      admissionNo: 'AL2025001',
-      overallGrade: 'A',
-      gpa: '3.8',
-      attendance: 92,
-      subjects: 5,
-      nextExam: 'First Term Test',
-      school: 'Mahinda College, Colombo 07'
-    },
-    {
-      id: 2,
-      name: 'Sanduni Perera',
-      class: 'Grade 10 A',
-      level: 'O/L',
-      admissionNo: 'OL2025045',
-      overallGrade: 'A',
-      attendance: 95,
-      subjects: 8,
-      nextExam: 'Monthly Test',
-      school: 'Mahinda College, Colombo 07'
-    }
-  ]
-
-  // Sri Lankan teachers data
-  const teachers = [
-    {
-      id: 1,
-      name: 'Mr. Sunil Perera',
-      subject: 'Mathematics',
-      email: 'sunil.perera@mahindacollege.lk',
-      phone: '+94 77 123 4567',
-      experience: '12 years',
-      availability: 'Mon-Fri 8AM-3PM',
-      level: 'A/L Physical Science & Bio Science'
-    },
-    {
-      id: 2,
-      name: 'Dr. Amara Silva',
-      subject: 'Physics',
-      email: 'amara.silva@mahindacollege.lk',
-      phone: '+94 76 234 5678',
-      experience: '15 years',
-      availability: 'Mon-Fri 9AM-4PM',
-      level: 'A/L Physical Science & Bio Science'
-    },
-    {
-      id: 3,
-      name: 'Mrs. Kushani Jayawardena',
-      subject: 'Chemistry',
-      email: 'kushani.j@mahindacollege.lk',
-      phone: '+94 75 345 6789',
-      experience: '10 years',
-      availability: 'Mon-Fri 8AM-3PM',
-      level: 'A/L Physical Science & Bio Science'
-    },
-    {
-      id: 4,
-      name: 'Mr. Nimal Rajapaksa',
-      subject: 'English',
-      email: 'nimal.rajapaksa@mahindacollege.lk',
-      phone: '+94 78 456 7890',
-      experience: '8 years',
-      availability: 'Mon-Fri 9AM-4PM',
-      level: 'All A/L Streams & O/L'
-    },
-    {
-      id: 5,
-      name: 'Mrs. Chamari Wickramasinghe',
-      subject: 'Mathematics (O/L)',
-      email: 'chamari.w@mahindacollege.lk',
-      phone: '+94 77 567 8901',
-      experience: '7 years',
-      availability: 'Mon-Fri 8AM-3PM',
-      level: 'O/L Grades 6-11'
-    }
-  ]
+  // Helper function to calculate average grade
+  const calculateAverageGrade = (grades) => {
+    if (!grades || grades.length === 0) return 'N/A'
+    const total = grades.reduce((sum, grade) => sum + (parseFloat(grade.marks) || 0), 0)
+    const average = total / grades.length
+    if (average >= 75) return 'A'
+    if (average >= 65) return 'B'
+    if (average >= 50) return 'C'
+    if (average >= 35) return 'S'
+    return 'W'
+  }
 
   // Academic progress data for selected student
   const getSubjectsProgress = (studentLevel) => {
@@ -216,35 +231,26 @@ const ParentDashboard = () => {
     }
   }
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Parent-Teacher Meeting',
-      message: 'Scheduled for October 5th at 2:00 PM',
-      time: '2 hours ago',
-      type: 'info'
-    },
-    {
-      id: 2,
-      title: 'School Fee Payment',
-      message: 'Third term fees due by October 10th',
-      time: '1 day ago',
-      type: 'warning'
-    },
-    {
-      id: 3,
-      title: 'Academic Achievement',
-      message: 'Sanduni selected for English competition',
-      time: '2 days ago',
-      type: 'success'
-    }
-  ]
+  // Use loaded data
+  const currentStudent = children[selectedStudent]
+  const currentSubjects = currentStudent ? getSubjectsProgress(currentStudent.level) : []
+  const currentTests = currentStudent ? getRecentTests(currentStudent.level) : []
 
-  const currentStudent = students[selectedStudent]
-  const currentSubjects = getSubjectsProgress(currentStudent.level)
-  const currentTests = getRecentTests(currentStudent.level)
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading-state">Loading parent data...</div>
+      </div>
+    )
+  }
 
-
+  if (!currentStudent) {
+    return (
+      <div className="dashboard-container">
+        <div className="no-data">No children data available</div>
+      </div>
+    )
+  }
 
   return (
     <div className="dashboard-container">
@@ -253,22 +259,22 @@ const ParentDashboard = () => {
           <div className="profile-image">
             <img src="/parent-avatar.svg" alt="Parent" />
           </div>
-          <h3>Mr. & Mrs. Perera</h3>
+          <h3>{user.fullName || 'Parent'}</h3>
           <p>Parent Portal</p>
-          <p>Mahinda College</p>
+          <p>{user.school || 'Mahinda College'}</p>
         </div>
         
         <div className="student-selector">
           <h4>Select Child</h4>
           <div className="student-tabs">
-            {students.map((student, index) => (
+            {children.map((student, index) => (
               <button
                 key={student.id}
                 className={`student-tab ${selectedStudent === index ? 'active' : ''}`}
                 onClick={() => setSelectedStudent(index)}
               >
                 <div className="student-tab-info">
-                  <span className="student-name">{student.name.split(' ')[0]}</span>
+                  <span className="student-name">{student.fullName?.split(' ')[0] || student.name?.split(' ')[0]}</span>
                   <span className="student-class">{student.class}</span>
                   <span className="student-level">{student.level}</span>
                 </div>
@@ -303,10 +309,10 @@ const ParentDashboard = () => {
         <header className="dashboard-header">
           <div className="header-info">
             <h2>
-              {currentStudent.name} - {currentStudent.class}
+              {currentStudent.fullName || currentStudent.name} - {currentStudent.class}
               {currentStudent.stream && ` (${currentStudent.stream})`}
             </h2>
-            <p>{currentStudent.school}</p>
+            <p>{currentStudent.school || user.school || 'Mahinda College'}</p>
           </div>
           <div className="header-actions">
             <button 
@@ -327,37 +333,50 @@ const ParentDashboard = () => {
               <div className="student-stats">
                 <div className="stat-card">
                   <h3>Overall Grade</h3>
-                  <div className="stat-value grade">{currentStudent.overallGrade}</div>
+                  <div className="stat-value grade">
+                    {childrenGrades[currentStudent.id]?.length > 0 
+                      ? calculateAverageGrade(childrenGrades[currentStudent.id])
+                      : 'N/A'}
+                  </div>
                   {currentStudent.gpa && <p>GPA: {currentStudent.gpa}</p>}
                 </div>
                 <div className="stat-card">
                   <h3>Attendance</h3>
-                  <div className="stat-value attendance">{currentStudent.attendance}%</div>
-                  <p>Above average</p>
+                  <div className="stat-value attendance">
+                    {currentStudent.attendance || 'N/A'}%
+                  </div>
+                  <p>{currentStudent.attendance >= 90 ? 'Excellent' : 'Above average'}</p>
                 </div>
                 <div className="stat-card">
                   <h3>Active Subjects</h3>
-                  <div className="stat-value subjects">{currentStudent.subjects}</div>
+                  <div className="stat-value subjects">
+                    {currentStudent.subjects?.length || childrenGrades[currentStudent.id]?.length || 0}
+                  </div>
                   <p>All enrolled</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Next Exam</h3>
-                  <div className="stat-value exam">{currentStudent.nextExam}</div>
-                  <p>Coming up</p>
+                  <h3>Grade Level</h3>
+                  <div className="stat-value exam">{currentStudent.level}</div>
+                  <p>Grade {currentStudent.grade}</p>
                 </div>
               </div>
 
               <div className="recent-tests">
                 <h3>Recent Test Results</h3>
                 <div className="test-list">
-                  {currentTests.map((test, index) => (
+                  {childrenGrades[currentStudent.id]?.slice(0, 5).map((grade, index) => (
                     <div key={index} className="test-item">
-                      <div className="test-subject">{test.subject}</div>
-                      <div className="test-score">{test.score}</div>
-                      <div className="test-grade">{test.grade}</div>
-                      <div className="test-date">{test.date}</div>
+                      <div className="test-subject">{grade.subject}</div>
+                      <div className="test-score">{grade.marks}%</div>
+                      <div className="test-grade">{grade.grade}</div>
+                      <div className="test-date">
+                        {grade.date ? new Date(grade.date.seconds * 1000).toLocaleDateString() : 'N/A'}
+                      </div>
                     </div>
                   ))}
+                  {(!childrenGrades[currentStudent.id] || childrenGrades[currentStudent.id].length === 0) && (
+                    <p>No test results available yet</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -367,7 +386,7 @@ const ParentDashboard = () => {
             <div className="progress-section">
               <h3>Academic Progress - {currentStudent.level} Level</h3>
               <div className="subjects-grid">
-                {currentSubjects.map((subject, index) => {
+                {childrenGrades[currentStudent.id]?.map((grade, index) => {
                   const getSubjectIcon = (subjectName) => {
                     const icons = {
                       'Mathematics': '📐',
@@ -384,8 +403,8 @@ const ParentDashboard = () => {
                     return icons[subjectName] || '📖';
                   };
 
-                  const getPerformanceLevel = (progress) => {
-                    if (progress >= 95) return 'excellent';
+                  const getPerformanceLevel = (marks) => {
+                    if (marks >= 75) return 'excellent';
                     return 'normal';
                   };
 
@@ -393,25 +412,25 @@ const ParentDashboard = () => {
                     <div 
                       key={index} 
                       className="subject-card"
-                      data-performance={getPerformanceLevel(subject.progress)}
+                      data-performance={getPerformanceLevel(grade.marks)}
                       tabIndex="0"
                     >
                       <div className="subject-header">
-                        <h4 data-subject-icon={getSubjectIcon(subject.subject)}>
-                          {subject.subject}
+                        <h4 data-subject-icon={getSubjectIcon(grade.subject)}>
+                          {grade.subject}
                         </h4>
                         <span 
                           className="subject-grade" 
-                          data-grade={subject.grade}
+                          data-grade={grade.grade}
                         >
-                          {subject.grade}
+                          {grade.grade}
                         </span>
                       </div>
                       <div 
                         className="progress-bar"
                         style={{ 
                           height: '14px', 
-                          width: subject.progress < 25 ? 'calc(100% - 50px)' : '100%', 
+                          width: grade.marks < 25 ? 'calc(100% - 50px)' : '100%', 
                           position: 'relative',
                           display: 'block'
                         }}
@@ -419,7 +438,7 @@ const ParentDashboard = () => {
                         <div 
                           className="progress-fill"
                           style={{ 
-                            width: `${subject.progress}%`, 
+                            width: `${grade.marks}%`, 
                             height: '14px',
                             position: 'absolute',
                             top: '0',
@@ -428,43 +447,44 @@ const ParentDashboard = () => {
                           }}
                         ></div>
                         <span 
-                          className={`progress-percentage ${subject.progress < 25 ? 'outside' : ''}`}
+                          className={`progress-percentage ${grade.marks < 25 ? 'outside' : ''}`}
                           style={{
-                            background: subject.progress >= 25 ? 'rgba(255, 255, 255, 0.95)' : undefined,
-                            color: subject.progress >= 25 ? '#1e293b' : undefined,
-                            padding: subject.progress >= 25 ? '2px 8px' : undefined,
-                            borderRadius: subject.progress >= 25 ? '12px' : undefined
+                            background: grade.marks >= 25 ? 'rgba(255, 255, 255, 0.95)' : undefined,
+                            color: grade.marks >= 25 ? '#1e293b' : undefined,
+                            padding: grade.marks >= 25 ? '2px 8px' : undefined,
+                            borderRadius: grade.marks >= 25 ? '12px' : undefined
                           }}
                         >
-                          {subject.progress}%
+                          {grade.marks}%
                         </span>
                       </div>
                       <div className="subject-info">
-                        <p>Teacher: {subject.teacher}</p>
-                        <p>Assignments: {subject.completed}/{subject.assignments}</p>
-                        <p>Next: {subject.upcoming}</p>
+                        <p>Teacher: {grade.teacherName || 'N/A'}</p>
+                        <p>Assessment: {grade.assessmentType || 'Test'}</p>
+                        <p>Date: {grade.date ? new Date(grade.date.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
+              {(!childrenGrades[currentStudent.id] || childrenGrades[currentStudent.id].length === 0) && (
+                <p className="no-data">No grade data available for this student yet</p>
+              )}
             </div>
           )}
 
           {activeTab === 'teachers' && (
             <div className="teachers-section">
               <h3>Teachers Directory</h3>
+              <p className="info-message">Contact your child's teachers for more information about their progress.</p>
               <div className="teachers-grid">
-                {teachers.map(teacher => (
-                  <div key={teacher.id} className="teacher-card">
-                    <h4>{teacher.name}</h4>
-                    <p className="teacher-subject">{teacher.subject}</p>
-                    <p className="teacher-level">{teacher.level}</p>
+                {currentStudent.subjects?.map((subject, index) => (
+                  <div key={index} className="teacher-card">
+                    <h4>Subject Teacher</h4>
+                    <p className="teacher-subject">{subject}</p>
+                    <p className="teacher-level">{currentStudent.level}</p>
                     <div className="teacher-contact">
-                      <p>📧 {teacher.email}</p>
-                      <p>📞 {teacher.phone}</p>
-                      <p>⏰ {teacher.availability}</p>
-                      <p>🎓 {teacher.experience}</p>
+                      <p>Contact school administration for teacher contact details</p>
                     </div>
                   </div>
                 ))}
@@ -486,13 +506,19 @@ const ParentDashboard = () => {
           </button>
         </div>
         <div className="notification-list">
-          {notifications.map(notification => (
-            <div key={notification.id} className={`notification-item ${notification.type}`}>
-              <h4>{notification.title}</h4>
-              <p>{notification.message}</p>
-              <span className="notification-time">{notification.time}</span>
-            </div>
-          ))}
+          {notifications.length > 0 ? (
+            notifications.map(notification => (
+              <div key={notification.id} className={`notification-item ${notification.type || 'info'}`}>
+                <h4>{notification.title}</h4>
+                <p>{notification.message}</p>
+                <span className="notification-time">
+                  {notification.createdAt ? new Date(notification.createdAt.seconds * 1000).toLocaleString() : 'Recently'}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="no-notifications">No notifications at this time</p>
+          )}
         </div>
         <div className="notification-footer">
           <button className="mark-all-read" onClick={markAllAsRead}>

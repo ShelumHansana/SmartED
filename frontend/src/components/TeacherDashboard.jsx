@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '../utils/firebase'
 import StudentList from './teacher/StudentList'
 import MessageBoard from './teacher/MessageBoard'
 import Notepad from './Notepad'
@@ -9,65 +12,70 @@ import GradeAnalytics from './teacher/GradeAnalytics'
 import '../styles/TeacherDashboard.css'
 
 const TeacherDashboard = () => {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('students')
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(5)
+  const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [showMessageDetail, setShowMessageDetail] = useState(false)
   const [readNotifications, setReadNotifications] = useState(new Set())
+  const [students, setStudents] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
   
-  const notifications = [
-    { 
-      id: 1, 
-      title: 'New Student Registration', 
-      message: 'Kamal Perera has registered for your A/L Mathematics class', 
-      time: '1 hour ago', 
-      type: 'info',
-      details: 'Student Kamal Perera (Admission No: AL2025001) has successfully registered for your Advanced Level Mathematics class for Physical Science stream. Please review his O/L results and add him to your Grade 12 M1 class roster. His contact information and guardian details are available in the student management system.',
-      sender: 'Registration System',
-      priority: 'Medium'
-    },
-    { 
-      id: 2, 
-      title: 'Assignment Submitted', 
-      message: '18 students have submitted their Calculus homework', 
-      time: '3 hours ago', 
-      type: 'success',
-      details: 'A total of 18 students have submitted their Mathematics Assignment on Differential Calculus. The submission deadline was today at 11:59 PM. You can now review and grade these submissions in the assignments section. This covers Grade 12 Physical Science and Bio Science streams.',
-      sender: 'Assignment System',
-      priority: 'Low'
-    },
-    { 
-      id: 3, 
-      title: 'Parent Message', 
-      message: 'Mrs. Sanduni Silva sent you a message about her daughter', 
-      time: '5 hours ago', 
-      type: 'warning',
-      details: 'Dear Mr. Sunil Perera, I am writing to discuss my daughter Tharika\'s recent performance in your A/L Mathematics class. She has been struggling with the Integration topics and I would appreciate if we could schedule a meeting to discuss how we can support her learning at home. Please let me know your available times this week. Thank you for your dedication to teaching our children.',
-      sender: 'Mrs. Sanduni Silva',
-      priority: 'High'
-    },
-    { 
-      id: 4, 
-      title: 'Term Test Deadline', 
-      message: 'Reminder: First Term marks due this Friday', 
-      time: '1 day ago', 
-      type: 'warning',
-      details: 'This is a reminder that all marks for the First Term Test must be submitted by Friday, September 30th, 2025 at 5:00 PM. Please ensure all A/L Mathematics tests for Grade 12 and Grade 13 are graded and entered into the system. Late submissions may affect the term report generation.',
-      sender: 'Academic Office - Mahinda College',
-      priority: 'High'
-    },
-    { 
-      id: 5, 
-      title: 'A/L Syllabus Update', 
-      message: 'New A/L Mathematics syllabus features available', 
-      time: '2 days ago', 
-      type: 'info',
-      details: 'The Department of Education has released updates to the A/L Mathematics syllabus including: new topics in Applied Mathematics, revised marking schemes for practical assessments, and enhanced university entrance preparation materials. Please check the syllabus section for detailed guides.',
-      sender: 'Department of Education',
-      priority: 'Low'
+  // Fetch teacher data from Firestore
+  useEffect(() => {
+    const fetchTeacherData = async () => {
+      if (!user || !user.id) return
+
+      try {
+        setLoading(true)
+
+        // Fetch students for teacher's classes
+        if (user.classes && user.classes.length > 0) {
+          const studentsPromises = user.classes.map(async (classInfo) => {
+            const [grade, className] = classInfo.split('-')
+            const studentsQuery = query(
+              collection(db, 'users'),
+              where('role', '==', 'student'),
+              where('grade', '==', grade),
+              where('className', '==', className)
+            )
+            const snapshot = await getDocs(studentsQuery)
+            return snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              class: classInfo
+            }))
+          })
+          
+          const studentsArrays = await Promise.all(studentsPromises)
+          const allStudents = studentsArrays.flat()
+          setStudents(allStudents)
+        }
+
+        // Fetch notifications for teacher
+        const notificationsQuery = query(
+          collection(db, 'notifications'),
+          where('recipientId', '==', user.id)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        const notificationsData = notificationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setNotifications(notificationsData)
+        setNotificationCount(notificationsData.filter(n => !n.read).length)
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching teacher data:', error)
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchTeacherData()
+  }, [user])
 
   const markAllAsRead = () => {
     setNotificationCount(0)
@@ -90,16 +98,36 @@ const TeacherDashboard = () => {
     closeMessageDetail()
   }
 
+  if (loading || !user) {
+    return (
+      <div className="dashboard-container">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontSize: '1.5rem',
+          color: '#4A90E2'
+        }}>
+          Loading teacher dashboard...
+        </div>
+      </div>
+    )
+  }
+
+  const teacherName = user.fullName ? `${user.title || ''} ${user.fullName}`.trim() : `${user.title || 'Mr.'} ${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Teacher'
+  const teacherSubjects = user.subjects?.join(', ') || 'No subjects assigned'
+
   return (
     <div className="dashboard-container">
       <aside className="dashboard-sidebar">
         <div className="teacher-profile">
           <div className="profile-image">
-            <img src="/teacher-avatar.svg" alt="Teacher" />
+            <img src={user.profileImage || "/teacher-avatar.svg"} alt="Teacher" />
           </div>
-          <h3>Mr. Sunil Perera</h3>
-          <p>Mathematics Teacher</p>
-          <p>A/L Physical Science</p>
+          <h3>{teacherName}</h3>
+          <p>{teacherSubjects}</p>
+          <p>{user.classes?.length || 0} Classes</p>
         </div>
         <nav className="dashboard-nav">
           <button 
@@ -143,7 +171,7 @@ const TeacherDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h2>Welcome back, Mr. Sunil Perera!</h2>
+          <h2>Welcome back, {teacherName}!</h2>
           <div className="header-actions">
             <button 
               className="notification-btn"
@@ -158,11 +186,11 @@ const TeacherDashboard = () => {
         </header>
 
         <div className="dashboard-content">
-          {activeTab === 'students' && <StudentList />}
-          {activeTab === 'grades' && <GradeEntry />}
-          {activeTab === 'analytics' && <GradeAnalytics />}
-          {activeTab === 'messages' && <MessageBoard />}
-          {activeTab === 'activities' && <ActivityUpload />}
+          {activeTab === 'students' && <StudentList students={students} teacherClasses={user.classes || []} />}
+          {activeTab === 'grades' && <GradeEntry students={students} teacherId={user.id} />}
+          {activeTab === 'analytics' && <GradeAnalytics students={students} teacher={user} />}
+          {activeTab === 'messages' && <MessageBoard teacher={user} />}
+          {activeTab === 'activities' && <ActivityUpload teacher={user} />}
           {activeTab === 'tools' && (
             <div className="tools-section">
               <Notepad />
