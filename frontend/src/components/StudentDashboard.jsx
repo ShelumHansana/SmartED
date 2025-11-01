@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useFirestore } from '../hooks/useFirestore'
 import { collection, query, where, getDocs } from 'firebase/firestore'
@@ -12,7 +13,8 @@ import '../styles/StudentDashboard.css'
 const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Cpath fill="%23CBD5E1" d="M12 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0 2c5.523 0 10 2.239 10 5v2H2v-2c0-2.761 4.477-5 10-5z"/%3E%3C/svg%3E'
 
 const StudentDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -31,6 +33,15 @@ const StudentDashboard = () => {
         console.log('User not ready:', user);
         return;
       }
+
+      console.log('StudentDashboard - User data:', {
+        id: user.id,
+        grade: user.grade,
+        className: user.className,
+        class: user.class,
+        fullName: user.fullName,
+        indexNumber: user.indexNumber
+      });
 
       try {
         setLoading(true)
@@ -96,7 +107,8 @@ const StudentDashboard = () => {
     studentId: user.indexNumber || user.id,
     grade: `Grade ${user.grade || 'N/A'}`,
     stream: user.stream || undefined,
-    className: user.className || user.class || undefined,
+    className: user.className || user.class || 'N/A',
+    class: user.className || user.class || 'N/A', // Added for backward compatibility
     level: (user.grade === '12' || user.grade === '13') ? 'A/L' : 'O/L',
     year: new Date().getFullYear().toString(),
     subjects: grades.map((grade, index) => ({
@@ -167,6 +179,15 @@ const StudentDashboard = () => {
     setNotificationCount(prev => Math.max(0, prev - 1))
     closeMessageDetail()
   }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
   
 
 
@@ -178,13 +199,15 @@ const StudentDashboard = () => {
             <img src={defaultAvatar} alt="Student" />
           </div>
           <h3>{studentData.name}</h3>
-          <p className="student-id">ID: {studentData.studentId}</p>
-          <p className="student-level">
-            {studentData.level === 'A/L' 
-              ? `${studentData.grade} - ${studentData.stream}` 
-              : `${studentData.grade} - ${studentData.class}`
-            }
-          </p>
+          <div className="student-info">
+            <p className="student-id">ID: {studentData.studentId}</p>
+            <p className="student-grade">
+              {studentData.level === 'A/L' 
+                ? `${studentData.grade} - ${studentData.stream || 'Stream'}` 
+                : `${studentData.grade} - Class ${studentData.className || 'N/A'}`
+              }
+            </p>
+          </div>
           <div className="level-badge">
             <span className={`badge ${studentData.level.toLowerCase().replace('/', '-')}`}>
               {studentData.level} Student
@@ -252,6 +275,13 @@ const StudentDashboard = () => {
                 <span className="notification-badge">{notificationCount}</span>
               )}
               Notifications
+            </button>
+            <button 
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              🚪 Logout
             </button>
           </div>
         </header>

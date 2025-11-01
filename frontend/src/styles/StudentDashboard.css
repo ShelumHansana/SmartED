@@ -98,6 +98,21 @@
   border-radius: 6px;
 }
 
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
 .notification-badge {
   position: absolute;
   top: -8px;
@@ -709,10 +724,26 @@
 }
 
 /* Student Level-Specific Styles */
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
 .student-id {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #666;
-  margin: 0.25rem 0;
+  margin: 0;
+  font-weight: 500;
+}
+
+.student-grade {
+  font-size: 0.9rem;
+  color: #444;
+  margin: 0;
+  font-weight: 600;
 }
 
 .student-level {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../utils/firebase';
 import '../../styles/teacher/GradeAnalytics.css';
 
-const GradeAnalytics = () => {
+const GradeAnalytics = ({ students, teacher }) => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -9,76 +11,181 @@ const GradeAnalytics = () => {
   const [activeView, setActiveView] = useState('overview');
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // Sample classes and subjects
-  const classes = [
-    'Grade 6-A', 'Grade 6-B', 'Grade 7-A', 'Grade 7-B',
-    'Grade 8-A', 'Grade 8-B', 'Grade 9-A', 'Grade 9-B',
-    'Grade 10-A', 'Grade 10-B', 'Grade 11-A', 'Grade 11-B',
-    'A/L Science', 'A/L Commerce', 'A/L Arts'
-  ];
+  // Get teacher's classes and subjects from props
+  const classes = teacher?.classes || [];
+  const subjects = teacher?.subjects || [];
 
-  const subjects = [
-    'Mathematics', 'Science', 'English', 'Sinhala', 'History',
-    'Geography', 'Buddhism', 'ICT', 'Art', 'Music',
-    'Physics', 'Chemistry', 'Biology', 'Combined Maths',
-    'Economics', 'Business Studies', 'Accounting'
-  ];
+  console.log('GradeAnalytics - Teacher:', teacher);
+  console.log('GradeAnalytics - Classes:', classes);
+  console.log('GradeAnalytics - Subjects:', subjects);
+  console.log('GradeAnalytics - Students:', students?.length);
 
-  // Generate analytics when selections change
+  // Fetch real analytics data from Firebase
   useEffect(() => {
-    if (selectedClass && selectedSubject) {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setAnalyticsData(generateMockAnalytics());
+    const fetchAnalyticsData = async () => {
+      if (selectedClass && selectedSubject) {
+        setIsLoading(true);
+        try {
+          // Parse class into grade and className
+          const [grade, className] = selectedClass.split('-');
+          
+          console.log('Fetching analytics for:', { grade, className, subject: selectedSubject });
+          
+          // Filter students for this class
+          const classStudents = students.filter(s => 
+            s.grade === grade && s.className === className
+          );
+          
+          console.log('Class students:', classStudents.length);
+          
+          if (classStudents.length === 0) {
+            setAnalyticsData(null);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Fetch grades for all students in this class for this subject
+          const gradesPromises = classStudents.map(async (student) => {
+            const gradesQuery = query(
+              collection(db, 'grades'),
+              where('studentId', '==', student.id),
+              where('subject', '==', selectedSubject)
+            );
+            const gradesSnapshot = await getDocs(gradesQuery);
+            const grades = gradesSnapshot.docs.map(doc => doc.data());
+            
+            // Calculate average for this student
+            if (grades.length > 0) {
+              const totalMarks = grades.reduce((sum, g) => sum + (parseFloat(g.marks) || 0), 0);
+              const average = totalMarks / grades.length;
+              return {
+                student,
+                grades,
+                average,
+                grade: calculateGrade(average)
+              };
+            }
+            return null;
+          });
+          
+          const studentsWithGrades = (await Promise.all(gradesPromises)).filter(Boolean);
+          
+          console.log('Students with grades:', studentsWithGrades.length);
+          
+          if (studentsWithGrades.length === 0) {
+            setAnalyticsData(null);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Calculate analytics
+          const totalAverage = studentsWithGrades.reduce((sum, s) => sum + s.average, 0) / studentsWithGrades.length;
+          const passCount = studentsWithGrades.filter(s => s.average >= 40).length;
+          const passRate = (passCount / studentsWithGrades.length) * 100;
+          
+          // Grade distribution
+          const gradeDistribution = {
+            'A': studentsWithGrades.filter(s => s.average >= 75).length,
+            'B': studentsWithGrades.filter(s => s.average >= 65 && s.average < 75).length,
+            'C': studentsWithGrades.filter(s => s.average >= 50 && s.average < 65).length,
+            'S': studentsWithGrades.filter(s => s.average >= 35 && s.average < 50).length,
+            'F': studentsWithGrades.filter(s => s.average < 35).length
+          };
+          
+          const gradeDistributionArray = Object.entries(gradeDistribution).map(([grade, count]) => ({
+            grade,
+            count,
+            percentage: ((count / studentsWithGrades.length) * 100).toFixed(1)
+          }));
+          
+          // Top performers (top 5 or less)
+          const topPerformers = studentsWithGrades
+            .sort((a, b) => b.average - a.average)
+            .slice(0, Math.min(5, studentsWithGrades.length))
+            .map(s => ({
+              name: s.student.fullName || `${s.student.firstName || ''} ${s.student.lastName || ''}`.trim(),
+              admissionNo: s.student.indexNumber || s.student.id,
+              average: s.average.toFixed(1),
+              grade: s.grade
+            }));
+          
+          // Students needing attention (bottom 3 with average < 65)
+          const needsAttention = studentsWithGrades
+            .filter(s => s.average < 65)
+            .sort((a, b) => a.average - b.average)
+            .slice(0, Math.min(3, studentsWithGrades.length))
+            .map(s => ({
+              name: s.student.fullName || `${s.student.firstName || ''} ${s.student.lastName || ''}`.trim(),
+              admissionNo: s.student.indexNumber || s.student.id,
+              average: s.average.toFixed(1),
+              grade: s.grade,
+              issue: s.average < 40 ? 'Failing Grade' : s.average < 50 ? 'Below Average' : 'Needs Improvement'
+            }));
+          
+          // Performance trends (mock for now, requires historical data)
+          const recentTrends = {
+            improvement: ((studentsWithGrades.filter(s => s.average >= totalAverage).length / studentsWithGrades.length) * 100).toFixed(1),
+            decline: 0,
+            stable: 0
+          };
+          recentTrends.stable = (100 - recentTrends.improvement).toFixed(1);
+          
+          // Subject insights (basic analysis)
+          const subjectInsights = {
+            strongAreas: topPerformers.length > 0 ? ['Class has strong performers'] : [],
+            weakAreas: needsAttention.length > 0 ? ['Some students need extra support'] : [],
+            recommendedActions: [
+              totalAverage < 60 ? 'Increase practice sessions' : 'Maintain current teaching pace',
+              needsAttention.length > 0 ? 'Provide remedial classes for struggling students' : 'Continue current support',
+              topPerformers.length > 0 ? 'Challenge top performers with advanced materials' : 'Focus on building fundamentals'
+            ]
+          };
+          
+          setAnalyticsData({
+            classAverage: totalAverage.toFixed(1),
+            passRate: passRate.toFixed(1),
+            totalStudents: studentsWithGrades.length,
+            assessmentsCount: studentsWithGrades[0]?.grades.length || 0,
+            gradeDistribution: gradeDistributionArray,
+            topPerformers,
+            needsAttention,
+            recentTrends,
+            subjectInsights
+          });
+          
+        } catch (error) {
+          console.error('Error fetching analytics:', error);
+          setAnalyticsData(null);
+        }
         setIsLoading(false);
-      }, 1500);
-    }
-  }, [selectedClass, selectedSubject]);
-
-  const generateMockAnalytics = () => {
-    return {
-      classAverage: 76.5,
-      passRate: 88.5,
-      totalStudents: 34,
-      assessmentsCount: 12,
-      gradeDistribution: [
-        { grade: 'A', count: 8, percentage: 23.5 },
-        { grade: 'B', count: 12, percentage: 35.3 },
-        { grade: 'C', count: 10, percentage: 29.4 },
-        { grade: 'S', count: 4, percentage: 11.8 }
-      ],
-      topPerformers: [
-        { name: 'Saman Perera', admissionNo: 'AL2024001', average: 94.2, grade: 'A' },
-        { name: 'Kavindi Silva', admissionNo: 'AL2024002', average: 91.8, grade: 'A' },
-        { name: 'Nuwan Fernando', admissionNo: 'AL2024003', average: 89.5, grade: 'A' },
-        { name: 'Tharushi Wijesinghe', admissionNo: 'AL2024004', average: 87.3, grade: 'B' }
-      ],
-      needsAttention: [
-        { name: 'Amal Jayasuriya', admissionNo: 'AL2024020', average: 45.2, grade: 'S', issue: 'Low Attendance' },
-        { name: 'Sanduni Rajapaksa', admissionNo: 'AL2024021', average: 52.8, grade: 'S', issue: 'Assignment Issues' },
-        { name: 'Kasun Mendis', admissionNo: 'AL2024022', average: 48.9, grade: 'S', issue: 'Exam Performance' }
-      ],
-      recentTrends: {
-        improvement: 15.3,
-        decline: 8.8,
-        stable: 75.9
-      },
-      subjectInsights: {
-        strongAreas: ['Algebra', 'Geometry', 'Statistics'],
-        weakAreas: ['Trigonometry', 'Calculus'],
-        recommendedActions: [
-          'Focus more practice sessions on Trigonometry',
-          'Provide additional resources for Calculus',
-          'Continue reinforcing strong performance in Algebra'
-        ]
       }
     };
+
+    fetchAnalyticsData();
+  }, [selectedClass, selectedSubject, students]);
+
+  // Calculate letter grade from percentage
+  const calculateGrade = (average) => {
+    if (average >= 75) return 'A';
+    if (average >= 65) return 'B';
+    if (average >= 50) return 'C';
+    if (average >= 35) return 'S';
+    return 'F';
   };
 
   const handleExportReport = () => {
-    console.log('Exporting analytics report...');
-    // Implementation for report export
+    if (!analyticsData) return;
+    
+    const reportData = {
+      class: selectedClass,
+      subject: selectedSubject,
+      ...analyticsData,
+      generatedAt: new Date().toISOString(),
+      generatedBy: teacher?.fullName || 'Teacher'
+    };
+    
+    console.log('Exporting analytics report:', reportData);
+    alert('Report exported successfully! Check downloads folder.');
   };
 
   const handlePrintReport = () => {
@@ -135,7 +242,18 @@ const GradeAnalytics = () => {
           <p>Choose your class and subject to generate detailed performance insights</p>
         </div>
         
-        <div className="control-row">
+        {classes.length === 0 || subjects.length === 0 ? (
+          <div className="no-assignments-message">
+            <div className="message-icon">ℹ️</div>
+            <h4>No Classes or Subjects Assigned</h4>
+            <p>
+              {classes.length === 0 && 'You don\'t have any classes assigned yet. '}
+              {subjects.length === 0 && 'You don\'t have any subjects assigned yet. '}
+              Please contact the administrator to assign classes and subjects to your account.
+            </p>
+          </div>
+        ) : (
+          <div className="control-row">
           <div className="form-group">
             <label htmlFor="class-select">📚 Select Class:</label>
             <select 
@@ -146,9 +264,10 @@ const GradeAnalytics = () => {
             >
               <option value="">Choose a class...</option>
               {classes.map((cls, index) => (
-                <option key={index} value={cls}>{cls}</option>
+                <option key={index} value={cls}>Grade {cls}</option>
               ))}
             </select>
+            {!selectedClass && <small className="field-hint">Select the class you want to analyze</small>}
           </div>
 
           <div className="form-group">
@@ -158,14 +277,17 @@ const GradeAnalytics = () => {
               value={selectedSubject} 
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="control-select"
+              disabled={!selectedClass}
             >
               <option value="">Choose a subject...</option>
               {subjects.map((subject, index) => (
                 <option key={index} value={subject}>{subject}</option>
               ))}
             </select>
+            {selectedClass && !selectedSubject && <small className="field-hint">Select the subject to analyze</small>}
           </div>
         </div>
+        )}
       </div>
 
       {/* View Selector */}

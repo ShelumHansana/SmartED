@@ -1,11 +1,13 @@
 ﻿import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 import '../styles/ParentDashboard.css'
 
 const ParentDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedStudent, setSelectedStudent] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -18,80 +20,144 @@ const ParentDashboard = () => {
   // Fetch parent's children and their data
   useEffect(() => {
     const fetchParentData = async () => {
-      if (!user || !user.id) return
+      if (!user || !user.id) {
+        console.log('ParentDashboard: No user found');
+        return;
+      }
+
+      console.log('=== ParentDashboard: Fetching Parent Data ===');
+      console.log('Full user object:', user);
+      console.log('Parent children data:', user.children);
+      console.log('Parent parentData:', user.parentData);
 
       try {
-        setLoading(true)
+        setLoading(true);
+
+        // Get children array from either flattened user or nested parentData
+        const childrenArray = user.children || user.parentData?.children || [];
+        console.log('Children array to fetch:', childrenArray);
 
         // Fetch children based on parent's children array
-        if (user.children && user.children.length > 0) {
-          const childrenPromises = user.children.map(async (child) => {
-            // Find student by index number
-            const studentQuery = query(
-              collection(db, 'users'),
-              where('role', '==', 'student'),
-              where('indexNumber', '==', child.indexNumber)
-            )
-            const studentSnapshot = await getDocs(studentQuery)
-            
-            if (!studentSnapshot.empty) {
-              const studentData = {
-                id: studentSnapshot.docs[0].id,
-                ...studentSnapshot.docs[0].data()
+        if (childrenArray && childrenArray.length > 0) {
+          console.log(`Fetching data for ${childrenArray.length} children`);
+
+          const childrenPromises = childrenArray.map(async (child, index) => {
+            try {
+              console.log(`\n--- Fetching child ${index + 1} ---`);
+              console.log('Child data:', child);
+
+              // Handle both object format {indexNumber: "..."} and string format "indexNumber"
+              const childIndexNumber = typeof child === 'string' ? child : child.indexNumber || child;
+              console.log('Looking for student with index number:', childIndexNumber);
+
+              if (!childIndexNumber) {
+                console.warn('No index number provided for child:', child);
+                return null;
               }
 
-              // Fetch grades for this child
-              const gradesQuery = query(
-                collection(db, 'grades'),
-                where('studentId', '==', studentData.id)
-              )
-              const gradesSnapshot = await getDocs(gradesQuery)
-              const grades = gradesSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }))
+              // Query student by index number in nested studentData
+              const studentQuery = query(
+                collection(db, 'users'),
+                where('role', '==', 'student'),
+                where('studentData.indexNumber', '==', childIndexNumber)
+              );
+              
+              console.log('Executing Firestore query for indexNumber:', childIndexNumber);
+              const studentSnapshot = await getDocs(studentQuery);
+              console.log(`Query returned ${studentSnapshot.docs.length} results`);
 
-              return {
-                ...studentData,
-                grades,
-                level: (studentData.grade === '12' || studentData.grade === '13') ? 'A/L' : 'O/L'
+              if (!studentSnapshot.empty) {
+                const studentDoc = studentSnapshot.docs[0];
+                const studentFirestoreData = studentDoc.data();
+                console.log('Found student:', studentFirestoreData.fullName || studentFirestoreData.email);
+
+                // Flatten student data
+                const studentData = {
+                  id: studentDoc.id,
+                  ...studentFirestoreData,
+                  ...(studentFirestoreData.studentData || {}),
+                  level: (studentFirestoreData.studentData?.grade === '12' || 
+                         studentFirestoreData.studentData?.grade === '13') ? 'A/L' : 'O/L'
+                };
+
+                console.log('Flattened student data:', {
+                  id: studentData.id,
+                  name: studentData.fullName,
+                  grade: studentData.grade,
+                  class: studentData.className || studentData.class,
+                  level: studentData.level
+                });
+
+                // Fetch grades for this child
+                console.log('Fetching grades for student ID:', studentData.id);
+                const gradesQuery = query(
+                  collection(db, 'grades'),
+                  where('studentId', '==', studentData.id)
+                );
+                const gradesSnapshot = await getDocs(gradesQuery);
+                const grades = gradesSnapshot.docs.map(doc => ({
+                  id: doc.id,
+                  ...doc.data()
+                }));
+                console.log(`Found ${grades.length} grades for student`);
+
+                return {
+                  ...studentData,
+                  grades
+                };
+              } else {
+                console.warn(`No student found with index number: ${childIndexNumber}`);
+                return null;
               }
+            } catch (error) {
+              console.error(`Error fetching child ${index + 1}:`, error);
+              return null;
             }
-            return null
-          })
+          });
 
-          const childrenData = (await Promise.all(childrenPromises)).filter(Boolean)
-          setChildren(childrenData)
+          const childrenData = (await Promise.all(childrenPromises)).filter(Boolean);
+          console.log(`\n=== Successfully loaded ${childrenData.length} children ===`);
+          console.log('Children data:', childrenData);
+          setChildren(childrenData);
 
           // Organize grades by child
-          const gradesMap = {}
+          const gradesMap = {};
           childrenData.forEach(child => {
-            gradesMap[child.id] = child.grades || []
-          })
-          setChildrenGrades(gradesMap)
+            gradesMap[child.id] = child.grades || [];
+            console.log(`Child ${child.fullName}: ${child.grades?.length || 0} grades`);
+          });
+          setChildrenGrades(gradesMap);
+        } else {
+          console.warn('No children found in parent data');
+          console.log('Available user fields:', Object.keys(user));
+          setChildren([]);
+          setChildrenGrades({});
         }
 
         // Fetch notifications
+        console.log('\n--- Fetching notifications ---');
         const notificationsQuery = query(
           collection(db, 'notifications'),
           where('recipientId', '==', user.id)
-        )
-        const notificationsSnapshot = await getDocs(notificationsQuery)
+        );
+        const notificationsSnapshot = await getDocs(notificationsQuery);
         const notificationsData = notificationsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }))
-        setNotifications(notificationsData)
-        setNotificationCount(notificationsData.filter(n => !n.read).length)
+        }));
+        console.log(`Found ${notificationsData.length} notifications`);
+        setNotifications(notificationsData);
+        setNotificationCount(notificationsData.filter(n => !n.read).length);
 
-        setLoading(false)
+        setLoading(false);
+        console.log('=== ParentDashboard: Data Fetch Complete ===\n');
       } catch (error) {
-        console.error('Error fetching parent data:', error)
-        setLoading(false)
+        console.error('Error fetching parent data:', error);
+        setLoading(false);
       }
     }
 
-    fetchParentData()
+    fetchParentData();
   }, [user])
 
   const markAllAsRead = () => {
@@ -236,6 +302,15 @@ const ParentDashboard = () => {
   const currentSubjects = currentStudent ? getSubjectsProgress(currentStudent.level) : []
   const currentTests = currentStudent ? getRecentTests(currentStudent.level) : []
 
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -323,6 +398,13 @@ const ParentDashboard = () => {
                 <span className="notification-badge">{notificationCount}</span>
               )}
               Notifications
+            </button>
+            <button 
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              🚪 Logout
             </button>
           </div>
         </header>

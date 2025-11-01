@@ -29,6 +29,21 @@ export const AuthProvider = ({ children }) => {
 
   // Listen to authentication state changes
   useEffect(() => {
+    // Check for hardcoded admin in localStorage first
+    const hardcodedAdmin = localStorage.getItem('hardcodedAdmin');
+    if (hardcodedAdmin) {
+      try {
+        const adminData = JSON.parse(hardcodedAdmin);
+        console.log('Restoring hardcoded admin from localStorage:', adminData);
+        setUser(adminData);
+        setLoading(false);
+        return; // Don't set up Firebase listener for hardcoded admin
+      } catch (err) {
+        console.error('Error parsing hardcoded admin from localStorage:', err);
+        localStorage.removeItem('hardcodedAdmin');
+      }
+    }
+
     const unsubscribe = onAuthStateChange(async (firebaseUser) => {
       if (firebaseUser) {
         try {
@@ -42,15 +57,34 @@ export const AuthProvider = ({ children }) => {
             email: userData.email,
             role: userData.role,
             fullName: userData.fullName,
+            title: userData.title,
             // Flatten nested userData fields for direct access
             ...(userData.userData?.studentData || {}),
             ...(userData.userData?.teacherData || {}),
             ...(userData.userData?.parentData || {}),
-            // Ensure className is set (override if needed)
+            // Ensure className is set for students (override if needed)
             className: userData.userData?.studentData?.className || userData.userData?.studentData?.class || undefined,
+            // Also set class field for backward compatibility
+            class: userData.userData?.studentData?.className || userData.userData?.studentData?.class || undefined,
+            // Ensure teacher-specific fields are accessible
+            subjects: userData.subjects || userData.userData?.teacherData?.subjects || [],
+            classes: userData.classes || userData.userData?.teacherData?.teachingClasses || [],
+            teacherIndex: userData.teacherIndex || userData.userData?.teacherData?.teacherIndex || undefined,
+            // Ensure parent-specific fields are accessible
+            children: userData.children || userData.userData?.parentData?.children || [],
             // Keep the original nested structure as well
             userData: userData.userData
           };
+          
+          console.log('AuthContext - Flattened user:', {
+            id: flattenedUser.id,
+            role: flattenedUser.role,
+            grade: flattenedUser.grade,
+            className: flattenedUser.className,
+            class: flattenedUser.class,
+            children: flattenedUser.children,
+            studentData: userData.userData?.studentData
+          });
           
           setUser(flattenedUser);
         } catch (err) {
@@ -81,18 +115,41 @@ export const AuthProvider = ({ children }) => {
         email: response.email,
         role: response.role,
         fullName: response.fullName,
+        title: response.title,
+        // Check if this is the hardcoded admin
+        isHardcodedAdmin: response.userData?.isHardcodedAdmin || false,
         // Flatten nested userData fields for direct access
         ...(response.userData?.studentData || {}),
         ...(response.userData?.teacherData || {}),
         ...(response.userData?.parentData || {}),
-        // Ensure className is set (override if needed)
+        // Ensure className is set for students (override if needed)
         className: response.userData?.studentData?.className || response.userData?.studentData?.class || undefined,
+        // Also set class field for backward compatibility
+        class: response.userData?.studentData?.className || response.userData?.studentData?.class || undefined,
+        // Ensure teacher-specific fields are accessible
+        subjects: response.subjects || response.userData?.teacherData?.subjects || [],
+        classes: response.classes || response.userData?.teacherData?.teachingClasses || [],
+        teacherIndex: response.teacherIndex || response.userData?.teacherData?.teacherIndex || undefined,
+        // Ensure parent-specific fields are accessible
+        children: response.children || response.userData?.parentData?.children || [],
         // Keep the original nested structure as well
         userData: response.userData
       };
       
-      console.log('Login - Flattened user:', flattenedUser);
-      console.log('Login - className:', flattenedUser.className);
+      console.log('Login - Flattened user:', {
+        id: flattenedUser.id,
+        role: flattenedUser.role,
+        isHardcodedAdmin: flattenedUser.isHardcodedAdmin,
+        grade: flattenedUser.grade,
+        className: flattenedUser.className,
+        class: flattenedUser.class,
+        children: flattenedUser.children
+      });
+      
+      // Store hardcoded admin in localStorage to persist across refreshes
+      if (flattenedUser.isHardcodedAdmin) {
+        localStorage.setItem('hardcodedAdmin', JSON.stringify(flattenedUser));
+      }
       
       setUser(flattenedUser);
       return flattenedUser;
@@ -109,8 +166,17 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      await logoutUser();
-      setUser(null);
+      
+      // Check if this is hardcoded admin
+      if (user?.isHardcodedAdmin) {
+        console.log('Logging out hardcoded admin');
+        localStorage.removeItem('hardcodedAdmin');
+        setUser(null);
+      } else {
+        // Regular Firebase logout
+        await logoutUser();
+        setUser(null);
+      }
     } catch (err) {
       setError(err.message);
       throw err;
@@ -147,20 +213,29 @@ export const AuthProvider = ({ children }) => {
         email: response.userData.email,
         role: response.userData.role,
         fullName: response.userData.fullName,
+        title: response.userData.title,
         // Flatten nested userData fields for direct access
         ...(response.userData?.studentData || {}),
         ...(response.userData?.teacherData || {}),
         ...(response.userData?.parentData || {}),
-        // Ensure className is set (override if needed)
+        // Ensure className is set for students (override if needed)
         className: response.userData?.studentData?.className || response.userData?.studentData?.class || undefined,
+        // Ensure teacher-specific fields are accessible
+        subjects: response.userData.subjects || response.userData?.teacherData?.subjects || [],
+        classes: response.userData.classes || response.userData?.teacherData?.teachingClasses || [],
+        teacherIndex: response.userData.teacherIndex || response.userData?.teacherData?.teacherIndex || undefined,
+        // Ensure parent-specific fields are accessible
+        children: response.userData.children || response.userData?.parentData?.children || [],
         // Keep the original nested structure as well
         userData: response.userData
       };
       
-      console.log('Register - Flattened user:', flattenedUser);
-      console.log('Register - className:', flattenedUser.className);
+      console.log('Register - User registered successfully:', flattenedUser.email);
       
-      setUser(flattenedUser);
+      // Don't set user - require manual login
+      // This ensures proper authentication flow
+      // setUser(flattenedUser);
+      
       return flattenedUser;
     } catch (err) {
       setError(err.message);

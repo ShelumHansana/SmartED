@@ -478,9 +478,12 @@ const GradeAnalytics = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
-          {/* Student Focus View */}
-          {activeView === 'students' && (
+      {/* Student Focus View */}
+      {activeView === 'students' && (
             <div className="students-view">
               <h3>👥 Individual Student Performance</h3>
               

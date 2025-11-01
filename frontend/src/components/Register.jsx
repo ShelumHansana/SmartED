@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/firebase'
 
-const Register = ({ onClose }) => {
+const Register = ({ onClose, onLoginClick }) => {
   const [selectedRole, setSelectedRole] = useState('student')
   const [selectedGrade, setSelectedGrade] = useState('1')
   const [selectedStream, setSelectedStream] = useState('')
@@ -12,7 +12,7 @@ const Register = ({ onClose }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const { register } = useAuth()
+  const { register, logout } = useAuth()
 
   const handleClassAdd = () => {
     const gradeSelect = document.getElementById('teacherGrade')
@@ -257,15 +257,17 @@ const Register = ({ onClose }) => {
       // Register user
       await register(userData, selectedRole)
       
-      // Navigate to dashboard
-      const roleRoutes = {
-        student: '/student-dashboard',
-        teacher: '/teacher-dashboard',
-        parent: '/parent-dashboard'
-      }
+      // Logout to force manual login
+      await logout()
       
-      navigate(roleRoutes[selectedRole])
+      // Show success message and redirect to login
+      alert(`Registration successful! Please login with your email and password.`)
+      
+      // Close registration modal
       onClose()
+      
+      // Navigate to login page (LandingPage with login modal)
+      navigate('/')
       
     } catch (err) {
       console.error('Registration error:', err)
@@ -281,6 +283,14 @@ const Register = ({ onClose }) => {
   const handleModalClick = (e) => {
     if (e.target.className === 'auth-modal') {
       onClose()
+    }
+  }
+
+  const handleLoginClick = (e) => {
+    e.preventDefault()
+    onClose() // Close register modal
+    if (onLoginClick) {
+      onLoginClick() // Open login modal
     }
   }
 
@@ -711,6 +721,16 @@ const Register = ({ onClose }) => {
                   />
                 </div>
                 <div className="form-group">
+                  <label htmlFor="email">Email Address*</label>
+                  <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email address" 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
                   <label htmlFor="childName">Child's Full Name*</label>
                   <input 
                     type="text" 
@@ -823,6 +843,10 @@ const Register = ({ onClose }) => {
             {loading ? 'Registering...' : `Register as ${selectedRole}`}
           </button>
         </form>
+        
+        <p style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
+          Already have an account? <a href="#" onClick={handleLoginClick} style={{ color: '#4A90E2', textDecoration: 'none', cursor: 'pointer' }}>Login</a>
+        </p>
       </div>
     </div>
   )

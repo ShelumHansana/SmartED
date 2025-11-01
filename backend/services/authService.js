@@ -106,6 +106,10 @@ export const registerTeacher = async (userData) => {
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
       profileImage: '',
+      // Store frequently accessed fields at top level
+      subjects: userData.subjects || [],
+      classes: userData.classes || userData.teachingClasses || [],
+      teacherIndex: userData.teacherIndex,
       teacherData: {
         title: userData.title,
         teacherIndex: userData.teacherIndex,
@@ -166,6 +170,8 @@ export const registerParent = async (userData) => {
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
       profileImage: '',
+      // Store children at top level for easy access
+      children: userData.children || [],
       parentData: {
         title: userData.title,
         children: userData.children || [],
@@ -207,6 +213,29 @@ export const registerParent = async (userData) => {
  */
 export const loginUser = async (email, password) => {
   try {
+    // Check for hardcoded admin account
+    if (email === 'admin@gmail.com' && password === '12345') {
+      console.log('Admin login detected with hardcoded credentials');
+      
+      // Return admin user data without Firebase authentication
+      return {
+        success: true,
+        userId: 'admin-hardcoded-001',
+        email: 'admin@gmail.com',
+        role: 'admin',
+        fullName: 'System Administrator',
+        userData: {
+          email: 'admin@gmail.com',
+          role: 'admin',
+          fullName: 'System Administrator',
+          title: 'Admin',
+          status: 'Active',
+          isHardcodedAdmin: true
+        }
+      };
+    }
+
+    // Regular login flow for other users
     // Sign in with Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;

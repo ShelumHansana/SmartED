@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../utils/firebase'
@@ -12,7 +13,8 @@ import GradeAnalytics from './teacher/GradeAnalytics'
 import '../styles/TeacherDashboard.css'
 
 const TeacherDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('students')
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -26,51 +28,112 @@ const TeacherDashboard = () => {
   // Fetch teacher data from Firestore
   useEffect(() => {
     const fetchTeacherData = async () => {
-      if (!user || !user.id) return
+      if (!user || !user.id) {
+        console.log('No user or user.id found');
+        return;
+      }
+
+      console.log('=== Teacher Dashboard Data Fetch ===');
+      console.log('Full user object:', user);
+      console.log('Teacher ID:', user.id);
+      console.log('Teacher classes:', user.classes);
+      console.log('Teacher subjects:', user.subjects);
+      console.log('Teacher Index:', user.teacherIndex);
+      console.log('Teacher Title:', user.title);
+      console.log('Teacher Full Name:', user.fullName);
 
       try {
         setLoading(true)
 
         // Fetch students for teacher's classes
-        if (user.classes && user.classes.length > 0) {
-          const studentsPromises = user.classes.map(async (classInfo) => {
-            const [grade, className] = classInfo.split('-')
-            const studentsQuery = query(
-              collection(db, 'users'),
-              where('role', '==', 'student'),
-              where('grade', '==', grade),
-              where('className', '==', className)
-            )
-            const snapshot = await getDocs(studentsQuery)
-            return snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-              class: classInfo
-            }))
-          })
+        if (user.classes && Array.isArray(user.classes) && user.classes.length > 0) {
+          console.log('Fetching students for classes:', user.classes);
           
-          const studentsArrays = await Promise.all(studentsPromises)
-          const allStudents = studentsArrays.flat()
-          setStudents(allStudents)
+          const studentsPromises = user.classes.map(async (classInfo) => {
+            try {
+              // Handle both "Grade-Class" format (e.g., "10-A") and plain class names
+              let grade, className;
+              
+              if (classInfo.includes('-')) {
+                [grade, className] = classInfo.split('-');
+              } else {
+                // If no hyphen, treat as className and try to extract grade
+                className = classInfo;
+                // Try to extract grade from format like "10A" or "Grade 10"
+                const gradeMatch = classInfo.match(/(\d+)/);
+                grade = gradeMatch ? gradeMatch[1] : null;
+              }
+
+              console.log(`Querying students for grade: ${grade}, class: ${className}`);
+
+              if (!grade || !className) {
+                console.warn(`Invalid class format: ${classInfo}`);
+                return [];
+              }
+
+              const studentsQuery = query(
+                collection(db, 'users'),
+                where('role', '==', 'student'),
+                where('studentData.grade', '==', grade),
+                where('studentData.className', '==', className)
+              );
+              
+              const snapshot = await getDocs(studentsQuery);
+              console.log(`Found ${snapshot.docs.length} students for class ${classInfo}`);
+              
+              return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  ...data,
+                  // Flatten student data for easier access
+                  ...(data.studentData || {}),
+                  class: classInfo,
+                  originalClassInfo: classInfo
+                };
+              });
+            } catch (error) {
+              console.error(`Error fetching students for class ${classInfo}:`, error);
+              return [];
+            }
+          });
+          
+          const studentsArrays = await Promise.all(studentsPromises);
+          const allStudents = studentsArrays.flat();
+          console.log('Total students fetched:', allStudents.length);
+          console.log('Students data:', allStudents);
+          setStudents(allStudents);
+        } else {
+          console.warn('No classes assigned to teacher or classes format is incorrect');
+          console.log('Classes value:', user.classes);
+          setStudents([]);
         }
 
         // Fetch notifications for teacher
-        const notificationsQuery = query(
-          collection(db, 'notifications'),
-          where('recipientId', '==', user.id)
-        )
-        const notificationsSnapshot = await getDocs(notificationsQuery)
-        const notificationsData = notificationsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        setNotifications(notificationsData)
-        setNotificationCount(notificationsData.filter(n => !n.read).length)
+        try {
+          const notificationsQuery = query(
+            collection(db, 'notifications'),
+            where('recipientId', '==', user.id)
+          );
+          const notificationsSnapshot = await getDocs(notificationsQuery);
+          const notificationsData = notificationsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          console.log('Notifications fetched:', notificationsData.length);
+          setNotifications(notificationsData);
+          setNotificationCount(notificationsData.filter(n => !n.read).length);
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+          setNotifications([]);
+          setNotificationCount(0);
+        }
 
-        setLoading(false)
+        setLoading(false);
+        console.log('=== Teacher Dashboard Data Fetch Complete ===');
       } catch (error) {
-        console.error('Error fetching teacher data:', error)
-        setLoading(false)
+        console.error('Error fetching teacher data:', error);
+        setLoading(false);
       }
     }
 
@@ -113,6 +176,15 @@ const TeacherDashboard = () => {
         </div>
       </div>
     )
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const teacherName = user.fullName ? `${user.title || ''} ${user.fullName}`.trim() : `${user.title || 'Mr.'} ${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Teacher'
@@ -181,6 +253,13 @@ const TeacherDashboard = () => {
                 <span className="notification-badge">{notificationCount}</span>
               )}
               Notifications
+            </button>
+            <button 
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              🚪 Logout
             </button>
           </div>
         </header>

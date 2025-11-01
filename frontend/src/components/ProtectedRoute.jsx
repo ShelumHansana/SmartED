@@ -14,7 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 const ProtectedRoute = ({ 
   children, 
   allowedRoles = [], 
-  redirectTo = '/login' 
+  redirectTo = '/' 
 }) => {
   const { user, loading, isAuthenticated } = useAuth();
 
@@ -34,7 +34,7 @@ const ProtectedRoute = ({
     );
   }
 
-  // Not authenticated - redirect to login
+  // Not authenticated - redirect to home page
   if (!isAuthenticated) {
     return <Navigate to={redirectTo} replace />;
   }

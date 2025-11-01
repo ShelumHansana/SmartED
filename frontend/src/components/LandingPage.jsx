@@ -14,8 +14,8 @@ const LandingPage = () => {
         onLoginClick={() => setShowLogin(true)}
         onSignupClick={() => setShowSignup(true)}
       />
-      {showLogin && <Login onClose={() => setShowLogin(false)} />}
-      {showSignup && <Register onClose={() => setShowSignup(false)} />}
+      {showLogin && <Login onClose={() => setShowLogin(false)} onSignupClick={() => setShowSignup(true)} />}
+      {showSignup && <Register onClose={() => setShowSignup(false)} onLoginClick={() => setShowLogin(true)} />}
 
       <main className="main-content">
         <div className="hero-section">

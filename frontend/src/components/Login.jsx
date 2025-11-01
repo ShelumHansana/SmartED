@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const Login = ({ onClose }) => {
+const Login = ({ onClose, onSignupClick }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -50,6 +50,14 @@ const Login = ({ onClose }) => {
   const handleModalClick = (e) => {
     if (e.target.className === 'auth-modal') {
       onClose()
+    }
+  }
+
+  const handleSignupClick = (e) => {
+    e.preventDefault()
+    onClose() // Close login modal
+    if (onSignupClick) {
+      onSignupClick() // Open signup modal
     }
   }
 
@@ -109,7 +117,7 @@ const Login = ({ onClose }) => {
         </form>
         
         <p style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
-          Don't have an account? <a href="#" style={{ color: '#4A90E2', textDecoration: 'none' }}>Sign up</a>
+          Don't have an account? <a href="#" onClick={handleSignupClick} style={{ color: '#4A90E2', textDecoration: 'none', cursor: 'pointer' }}>Sign up</a>
         </p>
       </div>
     </div>

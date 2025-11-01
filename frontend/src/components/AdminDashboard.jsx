@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../utils/firebase'
@@ -6,7 +7,8 @@ import '../styles/Dashboard.css'
 import '../styles/AdminDashboard.css'
 
 const AdminDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -428,6 +430,15 @@ const AdminDashboard = () => {
     }, 500)
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -493,6 +504,13 @@ const AdminDashboard = () => {
                 <span className="notification-badge">{notificationCount}</span>
               )}
               Notifications
+            </button>
+            <button 
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              🚪 Logout
             </button>
           </div>
         </header>

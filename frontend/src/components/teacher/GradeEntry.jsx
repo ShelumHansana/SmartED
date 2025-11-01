@@ -37,62 +37,112 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
   // Load teacher's classes and subjects
   useEffect(() => {
     const loadTeacherData = async () => {
-      if (!user || !user.id) return
+      if (!user || !user.id) {
+        console.log('GradeEntry: No user found');
+        return;
+      }
+
+      console.log('=== GradeEntry: Loading Teacher Data ===');
+      console.log('User object:', user);
 
       try {
-        const teacherDoc = await getDoc(doc(db, 'users', user.id))
-        const teacherData = teacherDoc.data()
-        
-        if (teacherData) {
-          // Set classes from teacher's teaching classes
-          const classesData = (teacherData.teachingClasses || []).map(cls => ({
-            id: cls,
-            name: cls,
-            level: cls.includes('12') || cls.includes('13') ? 'A/L' : 'O/L'
-          }))
-          setClasses(classesData)
-          
-          // Set subjects from teacher's subjects
-          const subjectsData = (teacherData.subjects || []).map(subject => ({
-            id: subject,
-            name: subject,
-            level: teacherData.level || 'A/L'
-          }))
-          setSubjects(subjectsData)
+        setLoading(true);
+
+        // Use classes and subjects directly from user object (already flattened in AuthContext)
+        const teacherClasses = user.classes || user.teachingClasses || [];
+        const teacherSubjects = user.subjects || [];
+
+        console.log('Teacher classes:', teacherClasses);
+        console.log('Teacher subjects:', teacherSubjects);
+
+        // Map classes to proper format
+        const classesData = teacherClasses.map(cls => ({
+          id: cls,
+          name: cls,
+          level: cls.includes('12') || cls.includes('13') ? 'A/L' : 'O/L'
+        }));
+        setClasses(classesData);
+        console.log('Formatted classes:', classesData);
+
+        // Map subjects to proper format
+        const subjectsData = teacherSubjects.map(subject => ({
+          id: subject,
+          name: subject,
+          level: 'A/L' // Default, can be adjusted based on class
+        }));
+        setSubjects(subjectsData);
+        console.log('Formatted subjects:', subjectsData);
+
+        // Set default selections if available
+        if (classesData.length > 0 && !selectedClass) {
+          setSelectedClass(classesData[0].id);
         }
-        
-        setLoading(false)
+        if (subjectsData.length > 0 && !selectedSubject) {
+          setSelectedSubject(subjectsData[0].id);
+        }
+
+        setLoading(false);
+        console.log('=== GradeEntry: Teacher Data Loaded ===');
       } catch (error) {
-        console.error('Error loading teacher data:', error)
-        setLoading(false)
+        console.error('Error loading teacher data:', error);
+        setLoading(false);
       }
     }
 
-    loadTeacherData()
+    loadTeacherData();
   }, [user])
 
   // Load students when class and subject are selected
   useEffect(() => {
     if (selectedClass && selectedSubject) {
-      // Use students from props if available, otherwise filter from propStudents
+      console.log('=== GradeEntry: Filtering Students ===');
+      console.log('Selected class:', selectedClass);
+      console.log('Selected subject:', selectedSubject);
+      console.log('Available students:', propStudents?.length || 0);
+
+      // Use students from props if available
       if (propStudents && propStudents.length > 0) {
-        const filteredStudents = propStudents.filter(s => s.class === selectedClass)
-        setStudents(filteredStudents)
+        // Filter students by matching class
+        const filteredStudents = propStudents.filter(s => {
+          const studentClass = s.originalClassInfo || s.class;
+          const matches = studentClass === selectedClass;
+          console.log(`Student ${s.fullName || s.name}: class=${studentClass}, matches=${matches}`);
+          return matches;
+        });
+
+        console.log(`Filtered ${filteredStudents.length} students for class ${selectedClass}`);
+        setStudents(filteredStudents);
         
         // Initialize marks object
-        const initialMarks = {}
+        const initialMarks = {};
         filteredStudents.forEach(student => {
-          initialMarks[student.id] = ''
-        })
-        setMarks(initialMarks)
+          initialMarks[student.id] = '';
+        });
+        setMarks(initialMarks);
+      } else {
+        console.warn('No students available from props');
+        setStudents([]);
+        setMarks({});
       }
+    } else {
+      console.log('GradeEntry: Class or subject not selected yet');
+      setStudents([]);
+      setMarks({});
     }
   }, [selectedClass, selectedSubject, propStudents])
 
   // Load assessments when class and subject are selected
   useEffect(() => {
     const loadAssessments = async () => {
-      if (!selectedClass || !selectedSubject) return
+      if (!selectedClass || !selectedSubject) {
+        console.log('GradeEntry: Class or subject not selected, skipping assessment load');
+        return;
+      }
+
+      console.log('=== GradeEntry: Loading Assessments ===');
+      console.log('Class:', selectedClass);
+      console.log('Subject:', selectedSubject);
+      console.log('Teacher ID:', teacherId || user?.id);
 
       try {
         const assessmentsQuery = query(
@@ -100,20 +150,24 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
           where('class', '==', selectedClass),
           where('subject', '==', selectedSubject),
           where('teacherId', '==', teacherId || user.id)
-        )
-        const assessmentsSnapshot = await getDocs(assessmentsQuery)
+        );
+        const assessmentsSnapshot = await getDocs(assessmentsQuery);
         const assessmentsData = assessmentsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }))
-        setAssessments(assessmentsData)
+        }));
+
+        console.log(`Found ${assessmentsData.length} assessments`);
+        console.log('Assessments:', assessmentsData);
+        setAssessments(assessmentsData);
       } catch (error) {
-        console.error('Error loading assessments:', error)
+        console.error('Error loading assessments:', error);
+        setAssessments([]);
       }
     }
 
-    loadAssessments()
-  }, [selectedClass, selectedSubject, teacherId, user.id])
+    loadAssessments();
+  }, [selectedClass, selectedSubject, teacherId, user?.id])
 
   const handleMarkChange = (studentId, mark) => {
     setMarks(prev => ({
@@ -139,101 +193,126 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
 
   const handleAddAssessment = async () => {
     if (!newAssessment.name || !newAssessment.type) {
-      alert('Please fill in all required fields')
-      return
+      alert('Please fill in all required fields');
+      return;
     }
+
+    console.log('=== GradeEntry: Adding Assessment ===');
+    console.log('Assessment data:', newAssessment);
+    console.log('Class:', selectedClass);
+    console.log('Subject:', selectedSubject);
 
     try {
       const assessment = {
         name: newAssessment.name,
         type: newAssessment.type,
-        maxMarks: newAssessment.maxMarks,
+        maxMarks: parseInt(newAssessment.maxMarks) || 100,
         date: newAssessment.date,
         subject: selectedSubject,
         class: selectedClass,
         teacherId: teacherId || user.id,
-        teacherName: user.fullName,
+        teacherName: user.fullName || user.name,
         createdAt: serverTimestamp()
-      }
+      };
 
-      const docRef = await addDoc(collection(db, 'assessments'), assessment)
+      console.log('Saving assessment:', assessment);
+      const docRef = await addDoc(collection(db, 'assessments'), assessment);
+      console.log('Assessment saved with ID:', docRef.id);
       
-      setAssessments(prev => [...prev, { id: docRef.id, ...assessment }])
+      setAssessments(prev => [...prev, { id: docRef.id, ...assessment }]);
       setNewAssessment({
         name: '',
         type: '',
         maxMarks: 100,
         date: new Date().toISOString().split('T')[0]
-      })
-      setShowAddAssessment(false)
-      alert('Assessment added successfully!')
+      });
+      setShowAddAssessment(false);
+      alert('Assessment added successfully!');
     } catch (error) {
-      console.error('Error adding assessment:', error)
-      alert('Error adding assessment. Please try again.')
+      console.error('Error adding assessment:', error);
+      alert('Error adding assessment. Please try again.');
     }
   }
 
   const handleSaveMarks = async () => {
     if (!selectedAssessment) {
-      alert('Please select an assessment')
-      return
+      alert('Please select an assessment');
+      return;
     }
+
+    console.log('=== GradeEntry: Saving Marks ===');
+    console.log('Assessment ID:', selectedAssessment);
+    console.log('Students:', students.length);
+    console.log('Marks:', marks);
 
     // Validate that all marks are entered
     const emptyMarks = students.filter(student => 
       marks[student.id] === '' || marks[student.id] === undefined
-    )
+    );
 
     if (emptyMarks.length > 0) {
+      console.log(`${emptyMarks.length} students without marks`);
       const proceed = window.confirm(
         `${emptyMarks.length} students don't have marks entered. Do you want to save anyway?`
-      )
-      if (!proceed) return
+      );
+      if (!proceed) return;
     }
 
-    setIsSaving(true)
+    setIsSaving(true);
 
     try {
-      const currentAssessment = getCurrentAssessment()
+      const currentAssessment = getCurrentAssessment();
+      console.log('Current assessment:', currentAssessment);
       
       // Save each student's grade to Firestore
       const gradePromises = students.map(async (student) => {
-        const mark = marks[student.id]
-        if (mark === '' || mark === undefined) return null
+        const mark = marks[student.id];
+        if (mark === '' || mark === undefined || isNaN(mark)) {
+          console.log(`Skipping student ${student.fullName}: no valid mark`);
+          return null;
+        }
         
+        const numericMark = parseFloat(mark);
+        const maxMarks = currentAssessment?.maxMarks || 100;
+        const calculatedGrade = getGrade(numericMark, maxMarks);
+
         const gradeData = {
           studentId: student.id,
           studentName: student.fullName || student.name,
           subject: selectedSubject,
           class: selectedClass,
+          grade: student.grade || selectedClass.split('-')[0], // Extract grade from class
           assessmentId: selectedAssessment,
           assessmentName: currentAssessment?.name,
           assessmentType: currentAssessment?.type,
-          marks: parseFloat(mark),
-          maxMarks: currentAssessment?.maxMarks || 100,
-          grade: getGrade(parseFloat(mark), currentAssessment?.maxMarks || 100),
+          marks: numericMark,
+          maxMarks: maxMarks,
+          grade: calculatedGrade,
+          percentage: ((numericMark / maxMarks) * 100).toFixed(2),
           teacherId: teacherId || user.id,
-          teacherName: user.fullName,
+          teacherName: user.fullName || user.name,
           date: serverTimestamp(),
           createdAt: serverTimestamp()
-        }
+        };
         
-        return addDoc(collection(db, 'grades'), gradeData)
-      })
+        console.log(`Saving grade for ${student.fullName}:`, gradeData);
+        return addDoc(collection(db, 'grades'), gradeData);
+      });
 
-      await Promise.all(gradePromises.filter(Boolean))
+      const results = await Promise.all(gradePromises.filter(Boolean));
+      console.log(`Successfully saved ${results.length} grades`);
       
-      alert('Marks saved successfully!')
+      alert(`Marks saved successfully for ${results.length} students!`);
 
       // Reset form
-      setMarks({})
-      setSelectedAssessment('')
+      setMarks({});
+      setSelectedAssessment('');
 
     } catch (error) {
-      console.error('Error saving marks:', error)
-      alert('Error saving marks. Please try again.')
+      console.error('Error saving marks:', error);
+      alert('Error saving marks. Please try again.');
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
@@ -273,69 +352,95 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
         <p>Enter and manage student marks for assessments</p>
       </div>
 
-      {/* Selection Controls */}
-      <div className="selection-controls">
-        <div className="control-row">
-          <div className="form-group">
-            <label>📚 Select Class</label>
-            <select 
-              value={selectedClass} 
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="form-select"
-            >
-              <option value="">Choose a class...</option>
-              {classes.map(cls => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {loading ? (
+        <div style={{ 
+          padding: '3rem', 
+          textAlign: 'center', 
+          color: '#666',
+          fontSize: '1.2rem'
+        }}>
+          <div>⏳ Loading teacher data...</div>
+        </div>
+      ) : (
+        <>
+          {/* Selection Controls */}
+          <div className="selection-controls">
+            <div className="control-row">
+              <div className="form-group">
+                <label>📚 Select Class</label>
+                <select 
+                  value={selectedClass} 
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="">Choose a class...</option>
+                  {classes.map(cls => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </option>
+                  ))}
+                </select>
+                {classes.length === 0 && (
+                  <small style={{ color: '#e74c3c', fontSize: '0.85rem' }}>
+                    No classes assigned. Please contact admin.
+                  </small>
+                )}
+              </div>
 
-          <div className="form-group">
-            <label>📖 Select Subject</label>
-            <select 
-              value={selectedSubject} 
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="form-select"
-            >
-              <option value="">Choose a subject...</option>
-              {subjects.map(subject => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className="form-group">
+                <label>📖 Select Subject</label>
+                <select 
+                  value={selectedSubject} 
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="">Choose a subject...</option>
+                  {subjects.map(subject => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+                {subjects.length === 0 && (
+                  <small style={{ color: '#e74c3c', fontSize: '0.85rem' }}>
+                    No subjects assigned. Please contact admin.
+                  </small>
+                )}
+              </div>
 
-          <div className="form-group">
-            <label>📝 Select Assessment</label>
-            <div className="assessment-select-group">
-              <select 
-                value={selectedAssessment} 
-                onChange={(e) => setSelectedAssessment(e.target.value)}
-                className="form-select"
-                disabled={!selectedClass || !selectedSubject}
-              >
-                <option value="">Choose an assessment...</option>
-                {getFilteredAssessments().map(assessment => (
-                  <option key={assessment.id} value={assessment.id}>
-                    {assessment.name} ({assessment.type}) - {assessment.maxMarks} marks
-                  </option>
-                ))}
-              </select>
-              <button 
-                className="add-assessment-btn"
-                onClick={() => setShowAddAssessment(true)}
-                disabled={!selectedClass || !selectedSubject}
-                title="Add new assessment"
-              >
-                ➕
-              </button>
+              <div className="form-group">
+                <label>📝 Select Assessment</label>
+                <div className="assessment-select-group">
+                  <select 
+                    value={selectedAssessment} 
+                    onChange={(e) => setSelectedAssessment(e.target.value)}
+                    className="form-select"
+                    disabled={!selectedClass || !selectedSubject}
+                  >
+                    <option value="">Choose an assessment...</option>
+                    {getFilteredAssessments().map(assessment => (
+                      <option key={assessment.id} value={assessment.id}>
+                        {assessment.name} ({assessment.type}) - {assessment.maxMarks} marks
+                      </option>
+                    ))}
+                  </select>
+                  <button 
+                    className="add-assessment-btn"
+                    onClick={() => setShowAddAssessment(true)}
+                    disabled={!selectedClass || !selectedSubject}
+                    title="Add new assessment"
+                  >
+                    ➕
+                  </button>
+                </div>
+                {selectedClass && selectedSubject && getFilteredAssessments().length === 0 && (
+                  <small style={{ color: '#3498db', fontSize: '0.85rem' }}>
+                    No assessments found. Click ➕ to create one.
+                  </small>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
       {/* Add Assessment Modal */}
       {showAddAssessment && (
@@ -569,6 +674,8 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
           </div>
         </div>
       ) : null}
+        </>
+      )}
     </div>
   )
 }
