@@ -324,6 +324,38 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.section-actions .search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+}
+
+.section-actions .search-field {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s;
+}
+
+.section-actions .search-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.section-actions .search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  pointer-events: none;
 }
 
 .filter-select {
@@ -332,6 +364,18 @@
   border-radius: 6px;
   background: white;
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.filter-select:hover {
+  border-color: #9ca3af;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .add-btn {
@@ -342,11 +386,24 @@
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .add-btn:hover {
   background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.add-btn:active {
+  transform: translateY(0);
+}
+
+.add-btn .btn-icon {
+  font-size: 1rem;
 }
 
 .users-grid {
@@ -1856,6 +1913,19 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.3s;
+  position: relative;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.report-card .report-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: inline-block;
 }
 
 .report-card h5 {
@@ -1870,23 +1940,58 @@
   font-size: 0.9rem;
   margin: 0 0 1rem 0;
   line-height: 1.5;
+  min-height: 60px;
+}
+
+.report-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.report-meta .meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
 }
 
 .report-actions {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
-.generate-btn, .download-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+.report-actions .generate-btn {
+  width: 100%;
+}
+
+.download-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .generate-btn {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: #3b82f6;
   color: white;
   border: none;
@@ -1894,16 +1999,54 @@
 
 .generate-btn:hover {
   background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .download-btn {
-  background: #f3f4f6;
-  color: #374151;
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: 1px solid #d1d5db;
+  min-width: 80px;
 }
 
-.download-btn:hover {
-  background: #e5e7eb;
+.download-btn.pdf {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.download-btn.pdf:hover {
+  background: #fecaca;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
+.download-btn.excel {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.download-btn.excel:hover {
+  background: #bbf7d0;
+  border-color: #4ade80;
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
 }
 
 .analytics-grid {
