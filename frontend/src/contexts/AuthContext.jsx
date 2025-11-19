@@ -7,7 +7,7 @@ import {
   registerParent,
   getCurrentUser,
   onAuthStateChange 
-} from '../services/authService';
+} from '../../../backend';
 
 // Create Auth Context
 const AuthContext = createContext();
