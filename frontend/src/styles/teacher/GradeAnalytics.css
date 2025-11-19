@@ -231,71 +231,86 @@
 }
 
 /* Quick Stats */
+/* Quick Stats - Matching GradeEntry Style */
 .quick-stats {
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
 }
 
 .quick-stats h3 {
-  margin: 0 0 20px 0;
-  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+  color: #1e40af;
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
 }
 
 .stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
+  gap: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .stat-card.primary {
-  background: linear-gradient(135deg, #4a90e2, #357abd);
-  color: white;
+  border-color: #3b82f6;
 }
 
 .stat-card.success {
-  background: linear-gradient(135deg, #27ae60, #219a52);
-  color: white;
+  border-color: #10b981;
 }
 
 .stat-card.info {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
+  border-color: #8b5cf6;
 }
 
 .stat-card.warning {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
-  color: white;
+  border-color: #f59e0b;
 }
 
 .stat-icon {
-  font-size: 2rem;
-  opacity: 0.9;
+  font-size: 3rem;
+  line-height: 1;
 }
 
-.stat-number {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 4px;
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  opacity: 0.9;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
 }
 
 /* Chart Section */
@@ -1048,7 +1063,7 @@
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .insights-grid {

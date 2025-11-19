@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/firebase'
+import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/validation'
 
 const Register = ({ onClose, onLoginClick }) => {
   const [selectedRole, setSelectedRole] = useState('student')
