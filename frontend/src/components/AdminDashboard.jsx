@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { 
-  getAllUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  adminToggleUserStatus,
-  getAllCourses,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  getCourseStatistics
-} from '../../../backend'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 import '../styles/Dashboard.css'
