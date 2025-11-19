@@ -1,0 +1,15 @@
+node_modules/
+.cache/
+backend/
+*.log
+.DS_Store
+.env
+.env.local
+.env.production
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.git/
+.github/
+README.md
+PROJECT_DOCUMENTATION.tex

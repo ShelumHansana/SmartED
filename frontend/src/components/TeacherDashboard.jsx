@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs } from 'firebase/firestore'
@@ -24,6 +24,23 @@ const TeacherDashboard = () => {
   const [students, setStudents] = useState([])
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Toast notification state
+  const [toasts, setToasts] = useState([])
+  const toastIdRef = useRef(0)
+  
+  // Show toast notification
+  const showToast = (message, type = 'info') => {
+    toastIdRef.current += 1
+    const id = toastIdRef.current
+    const newToast = { id, message, type }
+    setToasts(prev => [...prev, newToast])
+    
+    // Auto dismiss after 3 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 3000)
+  }
   
   // Fetch teacher data from Firestore
   useEffect(() => {
@@ -195,11 +212,17 @@ const TeacherDashboard = () => {
       <aside className="dashboard-sidebar">
         <div className="teacher-profile">
           <div className="profile-image">
-            <img src={user.profileImage || "/teacher-avatar.svg"} alt="Teacher" />
+            {user.profileImage ? (
+              <img src={user.profileImage} alt="Teacher" />
+            ) : (
+              <div className="profile-avatar-letter">
+                {teacherName.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <h3>{teacherName}</h3>
-          <p>{teacherSubjects}</p>
-          <p>{user.classes?.length || 0} Classes</p>
+          <p className="teacher-subject">{teacherSubjects}</p>
+          <p className="teacher-classes">{user.classes?.length || 0} Classes Assigned</p>
         </div>
         <nav className="dashboard-nav">
           <button 
@@ -266,10 +289,10 @@ const TeacherDashboard = () => {
 
         <div className="dashboard-content">
           {activeTab === 'students' && <StudentList students={students} teacherClasses={user.classes || []} />}
-          {activeTab === 'grades' && <GradeEntry students={students} teacherId={user.id} />}
+          {activeTab === 'grades' && <GradeEntry students={students} teacherId={user.id} showToast={showToast} />}
           {activeTab === 'analytics' && <GradeAnalytics students={students} teacher={user} />}
           {activeTab === 'messages' && <MessageBoard teacher={user} />}
-          {activeTab === 'activities' && <ActivityUpload teacher={user} />}
+          {activeTab === 'activities' && <ActivityUpload teacher={user} showToast={showToast} />}
           {activeTab === 'tools' && (
             <div className="tools-section">
               <Notepad />
@@ -367,6 +390,21 @@ const TeacherDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            <span className="toast-icon">
+              {toast.type === 'success' && '✅'}
+              {toast.type === 'error' && '❌'}
+              {toast.type === 'warning' && '⚠️'}
+              {toast.type === 'info' && 'ℹ️'}
+            </span>
+            <span className="toast-message">{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

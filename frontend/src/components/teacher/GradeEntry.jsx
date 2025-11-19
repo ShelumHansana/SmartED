@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { collection, query, where, getDocs, addDoc, getDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, getDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../../utils/firebase'
 import './GradeEntry.css'
 
-const GradeEntry = ({ students: propStudents, teacherId }) => {
+const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
   const { user } = useAuth()
   const [selectedClass, setSelectedClass] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
@@ -12,6 +12,7 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
   const [students, setStudents] = useState([])
   const [marks, setMarks] = useState({})
   const [showAddAssessment, setShowAddAssessment] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [newAssessment, setNewAssessment] = useState({
     name: '',
     type: '',
@@ -169,6 +170,50 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
     loadAssessments();
   }, [selectedClass, selectedSubject, teacherId, user?.id])
 
+  // Load existing grades when assessment is selected
+  useEffect(() => {
+    const loadExistingGrades = async () => {
+      if (!selectedAssessment || !students || students.length === 0) {
+        return
+      }
+
+      console.log('=== GradeEntry: Loading Existing Grades ===')
+      console.log('Assessment ID:', selectedAssessment)
+      console.log('Students:', students.length)
+
+      try {
+        const gradesQuery = query(
+          collection(db, 'grades'),
+          where('assessmentId', '==', selectedAssessment)
+        )
+        const gradesSnapshot = await getDocs(gradesQuery)
+        const existingGrades = {}
+        
+        gradesSnapshot.docs.forEach(doc => {
+          const gradeData = doc.data()
+          existingGrades[gradeData.studentId] = gradeData.marks
+        })
+
+        console.log('Loaded existing grades:', existingGrades)
+        
+        if (Object.keys(existingGrades).length > 0) {
+          setMarks(existingGrades)
+        } else {
+          // Initialize empty marks for all students
+          const initialMarks = {}
+          students.forEach(student => {
+            initialMarks[student.id] = ''
+          })
+          setMarks(initialMarks)
+        }
+      } catch (error) {
+        console.error('Error loading existing grades:', error)
+      }
+    }
+
+    loadExistingGrades()
+  }, [selectedAssessment])
+
   const handleMarkChange = (studentId, mark) => {
     setMarks(prev => ({
       ...prev,
@@ -177,7 +222,7 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
   }
 
   const getGrade = (marks, maxMarks) => {
-    const percentage = (marks / maxMarks) * 100
+    const percentage = (parseFloat(marks) / parseFloat(maxMarks)) * 100
     if (percentage >= 90) return 'A+'
     if (percentage >= 85) return 'A'
     if (percentage >= 80) return 'A-'
@@ -193,14 +238,18 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
 
   const handleAddAssessment = async () => {
     if (!newAssessment.name || !newAssessment.type) {
-      alert('Please fill in all required fields');
-      return;
+      if (showToast) {
+        showToast('Please fill in all required fields', 'error')
+      } else {
+        alert('Please fill in all required fields')
+      }
+      return
     }
 
-    console.log('=== GradeEntry: Adding Assessment ===');
-    console.log('Assessment data:', newAssessment);
-    console.log('Class:', selectedClass);
-    console.log('Subject:', selectedSubject);
+    console.log('=== GradeEntry: Adding Assessment ===')
+    console.log('Assessment data:', newAssessment)
+    console.log('Class:', selectedClass)
+    console.log('Subject:', selectedSubject)
 
     try {
       const assessment = {
@@ -213,106 +262,143 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
         teacherId: teacherId || user.id,
         teacherName: user.fullName || user.name,
         createdAt: serverTimestamp()
-      };
+      }
 
-      console.log('Saving assessment:', assessment);
-      const docRef = await addDoc(collection(db, 'assessments'), assessment);
-      console.log('Assessment saved with ID:', docRef.id);
+      console.log('Saving assessment:', assessment)
+      const docRef = await addDoc(collection(db, 'assessments'), assessment)
+      console.log('Assessment saved with ID:', docRef.id)
       
-      setAssessments(prev => [...prev, { id: docRef.id, ...assessment }]);
+      setAssessments(prev => [...prev, { id: docRef.id, ...assessment }])
       setNewAssessment({
         name: '',
         type: '',
         maxMarks: 100,
         date: new Date().toISOString().split('T')[0]
-      });
-      setShowAddAssessment(false);
-      alert('Assessment added successfully!');
+      })
+      setShowAddAssessment(false)
+      
+      if (showToast) {
+        showToast('Assessment added successfully!', 'success')
+      } else {
+        alert('Assessment added successfully!')
+      }
     } catch (error) {
-      console.error('Error adding assessment:', error);
-      alert('Error adding assessment. Please try again.');
+      console.error('Error adding assessment:', error)
+      if (showToast) {
+        showToast('Error adding assessment. Please try again.', 'error')
+      } else {
+        alert('Error adding assessment. Please try again.')
+      }
     }
   }
 
   const handleSaveMarks = async () => {
     if (!selectedAssessment) {
-      alert('Please select an assessment');
-      return;
+      if (showToast) {
+        showToast('Please select an assessment', 'error')
+      } else {
+        alert('Please select an assessment')
+      }
+      return
     }
 
-    console.log('=== GradeEntry: Saving Marks ===');
-    console.log('Assessment ID:', selectedAssessment);
-    console.log('Students:', students.length);
-    console.log('Marks:', marks);
+    console.log('=== GradeEntry: Saving Marks ===')
+    console.log('Assessment ID:', selectedAssessment)
+    console.log('Students:', students.length)
+    console.log('Marks:', marks)
 
     // Validate that all marks are entered
     const emptyMarks = students.filter(student => 
       marks[student.id] === '' || marks[student.id] === undefined
-    );
+    )
 
     if (emptyMarks.length > 0) {
-      console.log(`${emptyMarks.length} students without marks`);
+      console.log(`${emptyMarks.length} students without marks`)
       const proceed = window.confirm(
         `${emptyMarks.length} students don't have marks entered. Do you want to save anyway?`
-      );
-      if (!proceed) return;
+      )
+      if (!proceed) return
     }
 
-    setIsSaving(true);
+    setIsSaving(true)
 
     try {
-      const currentAssessment = getCurrentAssessment();
-      console.log('Current assessment:', currentAssessment);
+      const currentAssessment = getCurrentAssessment()
+      console.log('Current assessment:', currentAssessment)
       
       // Save each student's grade to Firestore
       const gradePromises = students.map(async (student) => {
-        const mark = marks[student.id];
+        const mark = marks[student.id]
         if (mark === '' || mark === undefined || isNaN(mark)) {
-          console.log(`Skipping student ${student.fullName}: no valid mark`);
-          return null;
+          console.log(`Skipping student ${student.fullName}: no valid mark`)
+          return null
         }
         
-        const numericMark = parseFloat(mark);
-        const maxMarks = currentAssessment?.maxMarks || 100;
-        const calculatedGrade = getGrade(numericMark, maxMarks);
+        const numericMark = parseFloat(mark)
+        const maxMarks = currentAssessment?.maxMarks || 100
+        const calculatedGrade = getGrade(numericMark, maxMarks)
 
         const gradeData = {
           studentId: student.id,
           studentName: student.fullName || student.name,
           subject: selectedSubject,
           class: selectedClass,
-          grade: student.grade || selectedClass.split('-')[0], // Extract grade from class
+          gradeLevel: student.grade || selectedClass.split('-')[0], // Extract grade from class
           assessmentId: selectedAssessment,
           assessmentName: currentAssessment?.name,
           assessmentType: currentAssessment?.type,
           marks: numericMark,
           maxMarks: maxMarks,
-          grade: calculatedGrade,
+          letterGrade: calculatedGrade,
           percentage: ((numericMark / maxMarks) * 100).toFixed(2),
           teacherId: teacherId || user.id,
           teacherName: user.fullName || user.name,
           date: serverTimestamp(),
-          createdAt: serverTimestamp()
-        };
+          updatedAt: serverTimestamp()
+        }
         
-        console.log(`Saving grade for ${student.fullName}:`, gradeData);
-        return addDoc(collection(db, 'grades'), gradeData);
-      });
+        // Check if grade already exists for this student and assessment
+        const existingGradeQuery = query(
+          collection(db, 'grades'),
+          where('studentId', '==', student.id),
+          where('assessmentId', '==', selectedAssessment)
+        )
+        const existingGradeSnapshot = await getDocs(existingGradeQuery)
+        
+        if (!existingGradeSnapshot.empty) {
+          // Update existing grade
+          const existingGradeDoc = existingGradeSnapshot.docs[0]
+          console.log(`Updating existing grade for ${student.fullName}`)
+          return setDoc(doc(db, 'grades', existingGradeDoc.id), gradeData, { merge: true })
+        } else {
+          // Create new grade
+          console.log(`Creating new grade for ${student.fullName}`)
+          gradeData.createdAt = serverTimestamp()
+          return addDoc(collection(db, 'grades'), gradeData)
+        }
+      })
 
-      const results = await Promise.all(gradePromises.filter(Boolean));
-      console.log(`Successfully saved ${results.length} grades`);
+      const results = await Promise.all(gradePromises.filter(Boolean))
+      console.log(`Successfully saved ${results.length} grades`)
       
-      alert(`Marks saved successfully for ${results.length} students!`);
+      if (showToast) {
+        showToast(`Marks saved successfully for ${results.length} students!`, 'success')
+      } else {
+        alert(`Marks saved successfully for ${results.length} students!`)
+      }
 
-      // Reset form
-      setMarks({});
-      setSelectedAssessment('');
+      // Keep the form data - don't reset after saving
+      // This allows teachers to review saved marks and make edits if needed
 
     } catch (error) {
-      console.error('Error saving marks:', error);
-      alert('Error saving marks. Please try again.');
+      console.error('Error saving marks:', error)
+      if (showToast) {
+        showToast('Error saving marks. Please try again.', 'error')
+      } else {
+        alert('Error saving marks. Please try again.')
+      }
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
   }
 
@@ -540,35 +626,55 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
                 </span>
               </div>
             </div>
-            
-            {Object.values(marks).some(mark => mark !== '' && !isNaN(mark)) && (
-              <div className="class-stats">
-                <h4>📈 Class Statistics</h4>
-                <div className="stats-grid">
-                  <div className="stat-item">
-                    <span className="stat-label">Average</span>
-                    <span className="stat-value">{getClassStats().average}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Highest</span>
-                    <span className="stat-value">{getClassStats().highest}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Lowest</span>
-                    <span className="stat-value">{getClassStats().lowest}</span>
-                  </div>
+          </div>
+
+          {/* Class Statistics - Always visible */}
+          <div className="class-stats-section">
+            <h4>📊 Class Performance Statistics</h4>
+            <div className="stats-cards">
+              <div className="stat-card stat-average">
+                <div className="stat-icon">📈</div>
+                <div className="stat-info">
+                  <span className="stat-label">Class Average</span>
+                  <span className="stat-value">{getClassStats().average}</span>
+                  <span className="stat-unit">marks</span>
                 </div>
               </div>
-            )}
+              <div className="stat-card stat-highest">
+                <div className="stat-icon">🏆</div>
+                <div className="stat-info">
+                  <span className="stat-label">Highest Score</span>
+                  <span className="stat-value">{getClassStats().highest}</span>
+                  <span className="stat-unit">marks</span>
+                </div>
+              </div>
+              <div className="stat-card stat-lowest">
+                <div className="stat-icon">📉</div>
+                <div className="stat-info">
+                  <span className="stat-label">Lowest Score</span>
+                  <span className="stat-value">{getClassStats().lowest}</span>
+                  <span className="stat-unit">marks</span>
+                </div>
+              </div>
+              <div className="stat-card stat-entries">
+                <div className="stat-icon">✅</div>
+                <div className="stat-info">
+                  <span className="stat-label">Entries Filled</span>
+                  <span className="stat-value">
+                    {Object.values(marks).filter(m => m !== '' && !isNaN(m)).length}/{students.length}
+                  </span>
+                  <span className="stat-unit">students</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grade-table-container">
             <table className="grade-table">
               <thead>
                 <tr>
-                  <th>Student</th>
+                  <th>Student Name</th>
                   <th>Admission No</th>
-                  <th>Current Grade</th>
                   <th>Marks ({getCurrentAssessment()?.maxMarks})</th>
                   <th>Percentage</th>
                   <th>Grade</th>
@@ -578,25 +684,22 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
                 {students.map(student => {
                   const mark = marks[student.id]
                   const maxMarks = getCurrentAssessment()?.maxMarks || 100
-                  const percentage = mark && !isNaN(mark) ? ((parseFloat(mark) / maxMarks) * 100).toFixed(1) : '-'
-                  const grade = mark && !isNaN(mark) ? getGrade(parseFloat(mark), maxMarks) : '-'
+                  const numericMark = parseFloat(mark)
+                  const hasValidMark = mark !== '' && mark !== undefined && !isNaN(numericMark)
+                  const percentage = hasValidMark ? ((numericMark / maxMarks) * 100).toFixed(1) : '-'
+                  const grade = hasValidMark ? getGrade(numericMark, maxMarks) : '-'
                   
                   return (
                     <tr key={student.id}>
                       <td className="student-name">{student.fullName || student.name}</td>
                       <td className="admission-no">{student.indexNumber || student.admissionNo}</td>
-                      <td className="current-grade">
-                        <span className={`grade-badge ${(student.currentGrade || 'N/A').toLowerCase().replace('+', '-plus').replace('-', '-minus')}`}>
-                          {student.currentGrade || 'N/A'}
-                        </span>
-                      </td>
                       <td className="marks-input">
                         <input
                           type="number"
                           min="0"
                           max={maxMarks}
                           step="0.5"
-                          value={mark}
+                          value={mark || ''}
                           onChange={(e) => handleMarkChange(student.id, e.target.value)}
                           placeholder="0"
                           className="mark-input"
@@ -607,7 +710,7 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
                       </td>
                       <td className="calculated-grade">
                         {grade !== '-' && (
-                          <span className={`grade-badge ${grade.toLowerCase().replace('+', '-plus').replace('-', '-minus')}`}>
+                          <span className={`grade-badge ${grade.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}>
                             {grade}
                           </span>
                         )}
@@ -622,20 +725,19 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
           <div className="grade-entry-actions">
             <div className="action-buttons">
               <button 
-                className="preview-btn"
-                onClick={() => {
-                  const stats = getClassStats()
-                  alert(`Class Performance Summary:\nAverage: ${stats.average}\nHighest: ${stats.highest}\nLowest: ${stats.lowest}\nEntries: ${Object.values(marks).filter(m => m !== '' && !isNaN(m)).length}/${students.length}`)
-                }}
+                className="action-btn preview-btn"
+                onClick={() => setShowPreviewModal(true)}
               >
-                👁️ Preview Results
+                <span className="btn-icon">👁️</span>
+                <span className="btn-text">Preview Results</span>
               </button>
               <button 
-                className="save-btn primary"
+                className="action-btn save-btn primary"
                 onClick={handleSaveMarks}
                 disabled={isSaving}
               >
-                {isSaving ? '💾 Saving...' : '💾 Save Marks'}
+                <span className="btn-icon">{isSaving ? '⏳' : '💾'}</span>
+                <span className="btn-text">{isSaving ? 'Saving...' : 'Save Marks'}</span>
               </button>
             </div>
           </div>
@@ -675,6 +777,106 @@ const GradeEntry = ({ students: propStudents, teacherId }) => {
         </div>
       ) : null}
         </>
+      )}
+
+      {/* Preview Results Modal */}
+      {showPreviewModal && (
+        <div className="modal-overlay" onClick={() => setShowPreviewModal(false)}>
+          <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📊 Class Performance Summary</h3>
+              <button 
+                className="close-modal"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="preview-stats">
+                <div className="preview-stat-card">
+                  <div className="preview-icon">📈</div>
+                  <div className="preview-info">
+                    <h4>Class Average</h4>
+                    <p className="preview-value">{getClassStats().average} marks</p>
+                    <p className="preview-percentage">
+                      {((getClassStats().average / (getCurrentAssessment()?.maxMarks || 100)) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <div className="preview-stat-card">
+                  <div className="preview-icon">🏆</div>
+                  <div className="preview-info">
+                    <h4>Highest Score</h4>
+                    <p className="preview-value">{getClassStats().highest} marks</p>
+                    <p className="preview-grade">
+                      Grade: {getGrade(getClassStats().highest, getCurrentAssessment()?.maxMarks || 100)}
+                    </p>
+                  </div>
+                </div>
+                <div className="preview-stat-card">
+                  <div className="preview-icon">📉</div>
+                  <div className="preview-info">
+                    <h4>Lowest Score</h4>
+                    <p className="preview-value">{getClassStats().lowest} marks</p>
+                    <p className="preview-grade">
+                      Grade: {getGrade(getClassStats().lowest, getCurrentAssessment()?.maxMarks || 100)}
+                    </p>
+                  </div>
+                </div>
+                <div className="preview-stat-card">
+                  <div className="preview-icon">✅</div>
+                  <div className="preview-info">
+                    <h4>Completion Status</h4>
+                    <p className="preview-value">
+                      {Object.values(marks).filter(m => m !== '' && !isNaN(m)).length} / {students.length}
+                    </p>
+                    <p className="preview-percentage">
+                      {((Object.values(marks).filter(m => m !== '' && !isNaN(m)).length / students.length) * 100).toFixed(0)}% Complete
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grade-distribution">
+                <h4>📊 Grade Distribution</h4>
+                <div className="distribution-bars">
+                  {['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'S', 'W'].map(gradeLevel => {
+                    const count = Object.values(marks)
+                      .filter(mark => mark !== '' && !isNaN(mark))
+                      .filter(mark => getGrade(parseFloat(mark), getCurrentAssessment()?.maxMarks || 100) === gradeLevel)
+                      .length
+                    const total = Object.values(marks).filter(m => m !== '' && !isNaN(m)).length
+                    const percentage = total > 0 ? (count / total) * 100 : 0
+                    
+                    return (
+                      <div key={gradeLevel} className="distribution-row">
+                        <span className={`dist-grade grade-badge ${gradeLevel.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}>
+                          {gradeLevel}
+                        </span>
+                        <div className="dist-bar-container">
+                          <div 
+                            className={`dist-bar dist-${gradeLevel.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="dist-count">{count} ({percentage.toFixed(0)}%)</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="close-btn"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
