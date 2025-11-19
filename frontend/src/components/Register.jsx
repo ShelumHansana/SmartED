@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/validation'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '../utils/firebase'
 
 const Register = ({ onClose, onLoginClick }) => {
   const [selectedRole, setSelectedRole] = useState('student')
@@ -11,8 +13,46 @@ const Register = ({ onClose, onLoginClick }) => {
   const [selectedClasses, setSelectedClasses] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [availableStudents, setAvailableStudents] = useState([])
+  const [selectedChildren, setSelectedChildren] = useState([])
   const navigate = useNavigate()
   const { register, logout } = useAuth()
+
+  // Fetch all students when parent role is selected
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (selectedRole === 'parent') {
+        try {
+          const studentsQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student')
+          )
+          const studentsSnapshot = await getDocs(studentsQuery)
+          const studentsList = studentsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            ...(doc.data().studentData || {})
+          }))
+          setAvailableStudents(studentsList)
+        } catch (error) {
+          console.error('Error fetching students:', error)
+        }
+      }
+    }
+    fetchStudents()
+  }, [selectedRole])
+
+  const handleChildSelect = (e) => {
+    const selectedIndexNumber = e.target.value
+    if (selectedIndexNumber && !selectedChildren.includes(selectedIndexNumber)) {
+      setSelectedChildren(prev => [...prev, selectedIndexNumber])
+      e.target.value = ''
+    }
+  }
+
+  const handleChildRemove = (indexNumber) => {
+    setSelectedChildren(prev => prev.filter(idx => idx !== indexNumber))
+  }
 
   const handleClassAdd = () => {
     const gradeSelect = document.getElementById('teacherGrade')
@@ -212,16 +252,8 @@ const Register = ({ onClose, onLoginClick }) => {
           return
         }
         
-        const childName = formData.get('childName')
-        if (!childName || childName.trim() === '') {
-          setError("Please enter your child's full name")
-          setLoading(false)
-          return
-        }
-        
-        const childIndex = formData.get('childIndex')
-        if (!childIndex || childIndex.trim() === '') {
-          setError("Please enter your child's index number")
+        if (selectedChildren.length === 0) {
+          setError("Please select at least one child")
           setLoading(false)
           return
         }
@@ -247,10 +279,7 @@ const Register = ({ onClose, onLoginClick }) => {
           birthday,
           phoneNumber: formData.get('telephone'),
           mobileNumber: formData.get('mobile'),
-          children: [{
-            name: childName.trim(),
-            indexNumber: childIndex.trim()
-          }]
+          children: selectedChildren
         }
       }
       
@@ -407,19 +436,22 @@ const Register = ({ onClose, onLoginClick }) => {
                   <div className="form-group">
                     <label htmlFor="birthDay">Birthday*</label>
                     <div className="date-inputs">
-                      <select id="birthDay" name="birthDay" disabled={loading} required>
+                      <select id="birthDay" name="birthDay" disabled={loading} required defaultValue="">
+                        <option value="">Day</option>
                         {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                           <option key={day} value={day}>{day}</option>
                         ))}
                       </select>
-                      <select id="birthMonth" name="birthMonth" disabled={loading} required>
+                      <select id="birthMonth" name="birthMonth" disabled={loading} required defaultValue="">
+                        <option value="">Month</option>
                         {['January', 'February', 'March', 'April', 'May', 'June', 
                           'July', 'August', 'September', 'October', 'November', 'December'
                         ].map((month, index) => (
                           <option key={month} value={index + 1}>{month}</option>
                         ))}
                       </select>
-                      <select id="birthYear" name="birthYear" disabled={loading} required>
+                      <select id="birthYear" name="birthYear" disabled={loading} required defaultValue="">
+                        <option value="">Year</option>
                         {Array.from({length: 20}, (_, i) => new Date().getFullYear() - 20 + i).map(year => (
                           <option key={year} value={year}>{year}</option>
                         ))}
@@ -749,14 +781,41 @@ const Register = ({ onClose, onLoginClick }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="childName">Child's Full Name*</label>
-                  <input 
-                    type="text" 
-                    id="childName"
-                    name="childName"
-                    placeholder="Enter your child's full name" 
-                    required 
-                  />
+                  <label htmlFor="childSelect">Select Children*</label>
+                  <select 
+                    id="childSelect"
+                    onChange={handleChildSelect}
+                    defaultValue=""
+                  >
+                    <option value="">Select a student to add</option>
+                    {availableStudents
+                      .filter(student => !selectedChildren.includes(student.indexNumber))
+                      .map(student => (
+                        <option key={student.id} value={student.indexNumber}>
+                          {student.fullName || student.name} - {student.indexNumber} (Grade {student.grade})
+                        </option>
+                      ))
+                    }
+                  </select>
+                  {selectedChildren.length > 0 && (
+                    <div className="selected-children">
+                      {selectedChildren.map(indexNumber => {
+                        const student = availableStudents.find(s => s.indexNumber === indexNumber)
+                        return student ? (
+                          <div key={indexNumber} className="selected-child-item">
+                            <span>{student.fullName || student.name} ({student.indexNumber})</span>
+                            <button 
+                              type="button"
+                              onClick={() => handleChildRemove(indexNumber)}
+                              className="remove-child-btn"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="relationship">Parent/Guardian*</label>
@@ -780,34 +839,27 @@ const Register = ({ onClose, onLoginClick }) => {
                 <div className="form-group">
                   <label htmlFor="birthDay">Birthday*</label>
                   <div className="date-inputs">
-                    <select id="birthDay" name="birthDay" required>
+                    <select id="birthDay" name="birthDay" required defaultValue="">
+                      <option value="">Day</option>
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
                       ))}
                     </select>
-                    <select id="birthMonth" name="birthMonth" required>
+                    <select id="birthMonth" name="birthMonth" required defaultValue="">
+                      <option value="">Month</option>
                       {['January', 'February', 'March', 'April', 'May', 'June', 
                         'July', 'August', 'September', 'October', 'November', 'December'
                       ].map((month, index) => (
                         <option key={month} value={index + 1}>{month}</option>
                       ))}
                     </select>
-                    <select id="birthYear" name="birthYear" required>
+                    <select id="birthYear" name="birthYear" required defaultValue="">
+                      <option value="">Year</option>
                       {Array.from({length: 50}, (_, i) => new Date().getFullYear() - 50 + i).map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
                   </div>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="childIndex">Child's Index Number*</label>
-                  <input 
-                    type="text" 
-                    id="childIndex"
-                    name="childIndex"
-                    placeholder="Enter your child's index number" 
-                    required 
-                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="telephone">Telephone Number*</label>

@@ -14,12 +14,52 @@ export const validateEmail = (email) => {
 /**
  * Validate password strength
  * @param {string} password - Password to validate
- * @returns {boolean} - True if valid, false otherwise
+ * @returns {Object} Validation result with message
  */
 export const validatePassword = (password) => {
-  if (!password) return false;
-  // Minimum 6 characters
-  return password.length >= 6;
+  if (!password || password.length < 6) {
+    return {
+      isValid: false,
+      errors: ['Password must be at least 6 characters long'],
+      message: 'Password must be at least 6 characters long'
+    };
+  }
+
+  if (password.length < 8) {
+    return {
+      isValid: true,
+      message: 'Password is acceptable but consider using 8+ characters',
+      strength: 'weak'
+    };
+  }
+
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const strengthScore = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
+    .filter(Boolean).length;
+
+  if (strengthScore >= 3) {
+    return {
+      isValid: true,
+      message: 'Strong password',
+      strength: 'strong'
+    };
+  } else if (strengthScore >= 2) {
+    return {
+      isValid: true,
+      message: 'Medium strength password',
+      strength: 'medium'
+    };
+  } else {
+    return {
+      isValid: true,
+      message: 'Weak password - consider adding uppercase, numbers, or special characters',
+      strength: 'weak'
+    };
+  }
 };
 
 /**
