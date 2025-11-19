@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [courses, setCourses] = useState([])
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showCourseModal, setShowCourseModal] = useState(false)
+  const [courseLevel, setCourseLevel] = useState('O/L')
   const [searchQuery, setSearchQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -377,6 +378,7 @@ const AdminDashboard = () => {
       
       setShowCourseModal(false)
       setSelectedCourse(null)
+      setCourseLevel('O/L')
       showToast('Course added successfully!', 'success')
     } catch (error) {
       console.error('Error adding course:', error)
@@ -411,6 +413,7 @@ const AdminDashboard = () => {
       
       setShowCourseModal(false)
       setSelectedCourse(null)
+      setCourseLevel('O/L')
       showToast('Course updated successfully!', 'success')
     } catch (error) {
       console.error('Error updating course:', error)
@@ -449,6 +452,7 @@ const AdminDashboard = () => {
 
   const handleEditCourse = (course) => {
     setSelectedCourse(course)
+    setCourseLevel(course.level || 'O/L')
     setShowCourseModal(true)
     console.log('Editing course:', course)
   }
@@ -1860,6 +1864,7 @@ const AdminDashboard = () => {
                   </button>
                   <button className="add-new-btn" onClick={() => {
                     setSelectedCourse(null)
+                    setCourseLevel('O/L')
                     setShowCourseModal(true)
                   }} title="Add a new course">
                     <span className="btn-icon">➕</span>
@@ -2719,6 +2724,7 @@ const AdminDashboard = () => {
                 onClick={() => {
                   setShowCourseModal(false)
                   setSelectedCourse(null)
+                  setCourseLevel('O/L')
                 }}
               >
                 ×
@@ -2731,8 +2737,12 @@ const AdminDashboard = () => {
                 name: formData.get('name'),
                 level: formData.get('level'),
                 teacher: formData.get('teacher'),
-                status: formData.get('status'),
-                stream: formData.get('stream') || ''
+                status: formData.get('status')
+              }
+              
+              // Only add stream for A/L courses
+              if (courseData.level === 'A/L') {
+                courseData.stream = formData.get('stream') || ''
               }
               
               console.log('Course form submitted with data:', courseData)
@@ -2759,25 +2769,29 @@ const AdminDashboard = () => {
                   <select 
                     name="level"
                     defaultValue={selectedCourse?.level || 'O/L'}
+                    onChange={(e) => setCourseLevel(e.target.value)}
                     required
                   >
                     <option value="O/L">O/L (Ordinary Level)</option>
                     <option value="A/L">A/L (Advanced Level)</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Stream (For A/L)</label>
-                  <select 
-                    name="stream"
-                    defaultValue={selectedCourse?.stream || ''}
-                  >
-                    <option value="">Select Stream</option>
-                    <option value="Physical Science">Physical Science</option>
-                    <option value="Biological Science">Biological Science</option>
-                    <option value="Commerce">Commerce</option>
-                    <option value="Arts">Arts</option>
-                  </select>
-                </div>
+                {courseLevel === 'A/L' && (
+                  <div className="form-group">
+                    <label>Stream *</label>
+                    <select 
+                      name="stream"
+                      defaultValue={selectedCourse?.stream || ''}
+                      required={courseLevel === 'A/L'}
+                    >
+                      <option value="">Select Stream</option>
+                      <option value="Physical Science">Physical Science</option>
+                      <option value="Biological Science">Biological Science</option>
+                      <option value="Commerce">Commerce</option>
+                      <option value="Arts">Arts</option>
+                    </select>
+                  </div>
+                )}
                 <div className="form-group">
                   <label>Teacher *</label>
                   <select 
@@ -2832,6 +2846,7 @@ const AdminDashboard = () => {
                 onClick={() => {
                   setShowCourseModal(false)
                   setSelectedCourse(null)
+                  setCourseLevel('O/L')
                 }}
               >
                 <span className="btn-icon">❌</span>

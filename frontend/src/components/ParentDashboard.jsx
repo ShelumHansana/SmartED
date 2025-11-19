@@ -176,6 +176,61 @@ const ParentDashboard = () => {
     fetchParentData();
   }, [user])
 
+  // Poll for new notifications for all children every 30 seconds
+  useEffect(() => {
+    if (!children || children.length === 0) return
+
+    const pollNotifications = async () => {
+      try {
+        // Fetch notifications for each child
+        const allNotifications = []
+        
+        for (const child of children) {
+          const notificationsQuery = query(
+            collection(db, 'notifications'),
+            where('recipientId', '==', child.id)
+          )
+          const notificationsSnapshot = await getDocs(notificationsQuery)
+          const childNotifications = notificationsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            childName: child.fullName || child.name,
+            childId: child.id
+          }))
+          allNotifications.push(...childNotifications)
+        }
+
+        // Sort by date descending
+        allNotifications.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0)
+          const dateB = b.createdAt?.toDate?.() || new Date(0)
+          return dateB - dateA
+        })
+
+        setNotifications(allNotifications)
+        setNotificationCount(allNotifications.filter(n => !n.read).length)
+        
+        console.log(`📬 ParentDashboard - Fetched ${allNotifications.length} notifications for ${children.length} children`)
+        console.log('Notification breakdown:', {
+          total: allNotifications.length,
+          unread: allNotifications.filter(n => !n.read).length,
+          byChild: children.map(child => ({
+            name: child.fullName || child.name,
+            count: allNotifications.filter(n => n.childId === child.id).length
+          }))
+        })
+      } catch (error) {
+        console.error('Error polling notifications:', error)
+      }
+    }
+
+    // Poll immediately, then every 30 seconds
+    pollNotifications()
+    const interval = setInterval(pollNotifications, 30000)
+    
+    return () => clearInterval(interval)
+  }, [children])
+
   const markAllAsRead = () => {
     setNotificationCount(0)
     setShowNotifications(false)
@@ -946,15 +1001,54 @@ const ParentDashboard = () => {
         </div>
         <div className="notification-list">
           {notifications.length > 0 ? (
-            notifications.map(notification => (
-              <div key={notification.id} className={`notification-item ${notification.type || 'info'}`}>
-                <h4>{notification.title}</h4>
-                <p>{notification.message}</p>
-                <span className="notification-time">
-                  {notification.createdAt ? new Date(notification.createdAt.seconds * 1000).toLocaleString() : 'Recently'}
-                </span>
-              </div>
-            ))
+            notifications.map(notification => {
+              // Format timestamp
+              const formatTimestamp = (timestamp) => {
+                if (!timestamp) return 'Just now'
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000)
+                const now = new Date()
+                const diffMs = now - date
+                const diffMins = Math.floor(diffMs / 60000)
+                const diffHours = Math.floor(diffMs / 3600000)
+                const diffDays = Math.floor(diffMs / 86400000)
+                
+                if (diffMins < 1) return 'Just now'
+                if (diffMins < 60) return `${diffMins}m ago`
+                if (diffHours < 24) return `${diffHours}h ago`
+                if (diffDays === 1) return 'Yesterday'
+                if (diffDays < 7) return `${diffDays}d ago`
+                return date.toLocaleDateString()
+              }
+
+              return (
+                <div key={notification.id} className={`notification-item ${notification.type || 'info'} ${notification.read ? 'read' : 'unread'}`}>
+                  <div className="notification-icon">
+                    {notification.type === 'message' ? '💬' : notification.type === 'activity' ? '📚' : notification.type === 'grade' ? '📊' : '🔔'}
+                  </div>
+                  <div className="notification-content">
+                    <div className="notification-child-badge">
+                      👤 {notification.childName}
+                    </div>
+                    <h4>{notification.title}</h4>
+                    <p>{notification.message}</p>
+                    <div className="notification-meta">
+                      {notification.teacherName && (
+                        <small className="notification-teacher">👨‍🏫 {notification.teacherName}</small>
+                      )}
+                      {notification.subject && (
+                        <small className="notification-subject">📖 {notification.subject}</small>
+                      )}
+                      {notification.dueDate && (
+                        <small className="notification-due-date">📅 Due: {notification.dueDate}</small>
+                      )}
+                    </div>
+                    <span className="notification-time">
+                      {formatTimestamp(notification.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })
           ) : (
             <p className="no-notifications">No notifications at this time</p>
           )}

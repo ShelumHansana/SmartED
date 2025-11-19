@@ -23,6 +23,8 @@ const StudentDashboard = () => {
   const [readNotifications, setReadNotifications] = useState(new Set())
   const [grades, setGrades] = useState([])
   const [assignments, setAssignments] = useState([])
+  const [activities, setActivities] = useState([])
+  const [messages, setMessages] = useState([])
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -58,13 +60,50 @@ const StudentDashboard = () => {
         }))
         setGrades(gradesData)
 
+        // Get student's class in the format teachers use: "grade-className" (e.g., "10-D")
+        const className = user.className || user.class
+        const studentClass = user.grade && className ? `${user.grade}-${className}` : (user.originalClassInfo || className)
+
+        console.log('Student class format for queries:', studentClass);
+
+        // Fetch activities for student's class
+        if (studentClass) {
+          const activitiesQuery = query(
+            collection(db, 'activities'),
+            where('class', '==', studentClass)
+          )
+          const activitiesSnapshot = await getDocs(activitiesQuery)
+          const activitiesData = activitiesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          console.log('Activities loaded:', activitiesData.length);
+          setActivities(activitiesData)
+        }
+
+        // Fetch messages for student's class
+        if (studentClass) {
+          const messagesQuery = query(
+            collection(db, 'messages'),
+            where('class', '==', studentClass)
+          )
+          const messagesSnapshot = await getDocs(messagesQuery)
+          const messagesData = messagesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+          }))
+          console.log('Messages loaded:', messagesData.length);
+          setMessages(messagesData)
+        }
+
         // Fetch assignments/assessments - only if grade and className are available
-        if (user.grade && user.className) {
-          console.log('Fetching assignments for:', { grade: user.grade, className: user.className });
+        if (user.grade && studentClass) {
+          console.log('Fetching assignments for:', { grade: user.grade, className: studentClass });
           const assignmentsQuery = query(
             collection(db, 'assessments'),
             where('grade', '==', user.grade),
-            where('className', '==', user.className)
+            where('className', '==', studentClass)
           )
           const assignmentsSnapshot = await getDocs(assignmentsQuery)
           const assignmentsData = assignmentsSnapshot.docs.map(doc => ({
@@ -74,11 +113,11 @@ const StudentDashboard = () => {
           console.log('Assignments loaded:', assignmentsData.length);
           setAssignments(assignmentsData)
         } else {
-          console.log('Missing grade or className:', { grade: user.grade, className: user.className });
+          console.log('Missing grade or className:', { grade: user.grade, className: studentClass });
           setAssignments([])
         }
 
-        // Fetch notifications
+        // Fetch notifications (all types: messages, activities, grades)
         const notificationsQuery = query(
           collection(db, 'notifications'),
           where('recipientId', '==', user.id)
@@ -86,10 +125,29 @@ const StudentDashboard = () => {
         const notificationsSnapshot = await getDocs(notificationsQuery)
         const notificationsData = notificationsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
         }))
+        // Sort by createdAt descending (newest first)
+        notificationsData.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0)
+          const dateB = b.createdAt?.toDate?.() || new Date(0)
+          return dateB - dateA
+        })
         setNotifications(notificationsData)
         setNotificationCount(notificationsData.filter(n => !n.read).length)
+
+        console.log(`📬 StudentDashboard - Fetched ${notificationsData.length} notifications`)
+        console.log('Notification breakdown:', {
+          total: notificationsData.length,
+          unread: notificationsData.filter(n => !n.read).length,
+          messages: notificationsData.filter(n => n.type === 'message').length,
+          activities: notificationsData.filter(n => n.type === 'activity').length,
+          grades: notificationsData.filter(n => n.type === 'grade').length
+        })
+        if (notificationsData.length > 0) {
+          console.log('Latest notification:', notificationsData[0])
+        }
 
         setLoading(false)
       } catch (error) {
@@ -100,6 +158,43 @@ const StudentDashboard = () => {
 
     fetchStudentData()
   }, [user])
+
+  // Poll for new notifications every 30 seconds
+  useEffect(() => {
+    if (!user?.id) return
+
+    const pollNotifications = async () => {
+      try {
+        const notificationsQuery = query(
+          collection(db, 'notifications'),
+          where('recipientId', '==', user.id)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        const notificationsData = notificationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
+        }))
+        // Sort by createdAt descending
+        notificationsData.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0)
+          const dateB = b.createdAt?.toDate?.() || new Date(0)
+          return dateB - dateA
+        })
+        setNotifications(notificationsData)
+        setNotificationCount(notificationsData.filter(n => !n.read).length)
+        
+        console.log(`🔄 StudentDashboard - Polled notifications: ${notificationsData.length} total, ${notificationsData.filter(n => !n.read).length} unread`)
+      } catch (error) {
+        console.error('Error polling notifications:', error)
+      }
+    }
+
+    // Poll immediately, then every 30 seconds
+    const interval = setInterval(pollNotifications, 30000)
+    
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   // Calculate student data from user profile and grades
   const studentData = user ? {
@@ -322,6 +417,103 @@ const StudentDashboard = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Activities/Assignments Section */}
+              <div className="activities-section modern-section">
+                <div className="section-header-modern">
+                  <div className="header-icon-wrapper activity-icon">
+                    <span className="header-icon">📚</span>
+                  </div>
+                  <div className="header-text">
+                    <h3>Recent Activities & Assignments</h3>
+                    <p>{activities.length} total activities</p>
+                  </div>
+                </div>
+                <div className="modern-cards-grid">
+                  {activities.length === 0 ? (
+                    <div className="empty-state-modern">
+                      <span className="empty-icon">📭</span>
+                      <p>No activities assigned yet</p>
+                    </div>
+                  ) : (
+                    activities.slice(0, 5).map(activity => (
+                      <div key={activity.id} className="modern-activity-card">
+                        <div className="card-ribbon">
+                          <span className={`ribbon-badge ribbon-${activity.type}`}>
+                            {activity.type?.replace('-', ' ')}
+                          </span>
+                        </div>
+                        <div className="modern-card-header">
+                          <h4 className="card-title">{activity.title}</h4>
+                          <div className="due-date-badge">
+                            <span className="date-icon">📅</span>
+                            <span className="date-text">{activity.dueDate}</span>
+                          </div>
+                        </div>
+                        <p className="card-description">{activity.description}</p>
+                        <div className="card-footer-meta">
+                          {activity.teacherName && (
+                            <div className="meta-item">
+                              <span className="meta-icon">👨‍🏫</span>
+                              <span className="meta-text">{activity.teacherName}</span>
+                            </div>
+                          )}
+                          {activity.subject && (
+                            <div className="meta-item">
+                              <span className="meta-icon">📖</span>
+                              <span className="meta-text">{activity.subject}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Messages Section */}
+              <div className="messages-section modern-section">
+                <div className="section-header-modern">
+                  <div className="header-icon-wrapper message-icon">
+                    <span className="header-icon">💬</span>
+                  </div>
+                  <div className="header-text">
+                    <h3>Recent Messages</h3>
+                    <p>{messages.length} unread messages</p>
+                  </div>
+                </div>
+                <div className="modern-messages-list">
+                  {messages.length === 0 ? (
+                    <div className="empty-state-modern">
+                      <span className="empty-icon">📪</span>
+                      <p>No messages yet</p>
+                    </div>
+                  ) : (
+                    messages.slice(0, 5).map(message => (
+                      <div key={message.id} className="modern-message-card">
+                        <div className="message-card-avatar">
+                          <div className="avatar-circle">
+                            {(message.teacherName || 'T').charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="message-card-content">
+                          <div className="message-card-header">
+                            <strong className="sender-name">{message.teacherName || 'Teacher'}</strong>
+                            <span className="message-timestamp">{message.date}</span>
+                          </div>
+                          <p className="message-text">{message.content}</p>
+                          {message.subject && (
+                            <div className="message-subject-tag">
+                              <span className="tag-icon">📖</span>
+                              <span className="tag-text">{message.subject}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
               
               <div className="tools-section">
                 <Calculator />
@@ -492,7 +684,7 @@ const StudentDashboard = () => {
       {/* Notification Panel */}
       <div className={`notification-panel ${showNotifications ? 'open' : ''}`}>
         <div className="notification-header">
-          <h3>Notifications</h3>
+          <h3>🔔 Notifications</h3>
           <button 
             className="close-notifications"
             onClick={() => setShowNotifications(false)}
@@ -501,25 +693,94 @@ const StudentDashboard = () => {
           </button>
         </div>
         <div className="notification-list">
-          {notifications.map(notification => (
-            <div 
-              key={notification.id} 
-              className={`notification-item ${notification.type} ${readNotifications.has(notification.id) ? 'read' : ''}`}
-              onClick={() => openMessageDetail(notification)}
-            >
-              <div className="notification-content">
-                <h4>{notification.title}</h4>
-                <p>{notification.message}</p>
-                <span className="notification-time">{notification.time}</span>
-              </div>
+          {notifications.length === 0 ? (
+            <div className="no-notifications">
+              <div className="empty-notification-icon">📭</div>
+              <p>No notifications yet</p>
             </div>
-          ))}
+          ) : (
+            notifications.map(notification => {
+              // Determine icon based on notification type
+              const getNotificationIcon = (type) => {
+                switch(type) {
+                  case 'message': return '💬'
+                  case 'activity': return '📚'
+                  case 'grade': return '📊'
+                  default: return '🔔'
+                }
+              }
+
+              // Format the timestamp
+              const formatTimestamp = (date) => {
+                if (!date) return 'Just now'
+                
+                const now = new Date()
+                const notifDate = typeof date === 'string' ? new Date(date) : date
+                const diffMs = now - notifDate
+                const diffMins = Math.floor(diffMs / 60000)
+                const diffHours = Math.floor(diffMs / 3600000)
+                const diffDays = Math.floor(diffMs / 86400000)
+                
+                if (diffMins < 1) return 'Just now'
+                if (diffMins < 60) return `${diffMins}m ago`
+                if (diffHours < 24) return `${diffHours}h ago`
+                if (diffDays === 1) return 'Yesterday'
+                if (diffDays < 7) return `${diffDays}d ago`
+                
+                return notifDate.toLocaleDateString()
+              }
+
+              return (
+                <div 
+                  key={notification.id} 
+                  className={`notification-item notification-${notification.type} ${notification.read ? 'read' : 'unread'}`}
+                >
+                  <div className="notification-icon-wrapper">
+                    <span className="notification-icon-emoji">
+                      {getNotificationIcon(notification.type)}
+                    </span>
+                  </div>
+                  <div className="notification-content-wrapper">
+                    <div className="notification-content">
+                      <h4 className="notification-title">{notification.title}</h4>
+                      <p className="notification-message">{notification.message}</p>
+                      <div className="notification-meta">
+                        {notification.teacherName && (
+                          <span className="notification-teacher">
+                            <span className="meta-icon">👨‍🏫</span>
+                            {notification.teacherName}
+                          </span>
+                        )}
+                        {notification.subject && (
+                          <span className="notification-subject">
+                            <span className="meta-icon">📖</span>
+                            {notification.subject}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="notification-timestamp">
+                      {formatTimestamp(notification.createdAt?.toDate?.() || notification.date)}
+                    </span>
+                  </div>
+                  {!notification.read && (
+                    <div className="unread-indicator"></div>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
-        <div className="notification-footer">
-          <button className="mark-all-read" onClick={markAllAsRead}>
-            Mark all as read
-          </button>
-        </div>
+        {notifications.length > 0 && (
+          <div className="notification-footer">
+            <button 
+              className="mark-all-read"
+              onClick={markAllAsRead}
+            >
+              ✓ Mark all as read
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Overlay */}

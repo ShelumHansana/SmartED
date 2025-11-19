@@ -381,6 +381,42 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
       const results = await Promise.all(gradePromises.filter(Boolean))
       console.log(`Successfully saved ${results.length} grades`)
       
+      // Create notifications for students about their new grades
+      try {
+        const notificationPromises = students.map(async (student) => {
+          const mark = marks[student.id]
+          if (mark === '' || mark === undefined || isNaN(mark)) {
+            return null
+          }
+          
+          const numericMark = parseFloat(mark)
+          const maxMarks = currentAssessment?.maxMarks || 100
+          const calculatedGrade = getGrade(numericMark, maxMarks)
+          
+          return addDoc(collection(db, 'notifications'), {
+            recipientId: student.id,
+            type: 'grade',
+            title: `New Grade Posted: ${selectedSubject}`,
+            message: `${currentAssessment?.name}: ${numericMark}/${maxMarks} (Grade: ${calculatedGrade})`,
+            subject: selectedSubject,
+            class: selectedClass,
+            marks: numericMark,
+            grade: calculatedGrade,
+            assessmentName: currentAssessment?.name,
+            teacherId: teacherId || user.id,
+            teacherName: user.fullName || user.name,
+            read: false,
+            createdAt: serverTimestamp()
+          })
+        })
+        
+        await Promise.all(notificationPromises.filter(Boolean))
+        console.log(`Created notifications for ${students.length} students`)
+      } catch (notificationError) {
+        console.error('Error creating notifications:', notificationError)
+        // Don't fail the entire operation if notifications fail
+      }
+      
       if (showToast) {
         showToast(`Marks saved successfully for ${results.length} students!`, 'success')
       } else {

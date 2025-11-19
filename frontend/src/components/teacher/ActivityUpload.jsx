@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore'
+import { db } from '../../utils/firebase'
 
 const ActivityUpload = ({ showToast }) => {
   const { user } = useAuth()
   const [selectedClass, setSelectedClass] = useState('')
   const [activityType, setActivityType] = useState('assignment')
   const [activities, setActivities] = useState([])
+  const [loading, setLoading] = useState(false)
 
   // Get teacher's classes dynamically
   const teacherClasses = user?.classes || []
@@ -16,11 +19,39 @@ const ActivityUpload = ({ showToast }) => {
   }))
 
   // Set default selected class
-  useState(() => {
+  useEffect(() => {
     if (classes.length > 0 && !selectedClass) {
-      setSelectedClass(classes[0].id)
+      setSelectedClass(classes[0].value)
     }
   }, [classes])
+
+  // Fetch activities when class changes
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!selectedClass || !user?.id) return
+
+      try {
+        const activitiesQuery = query(
+          collection(db, 'activities'),
+          where('class', '==', selectedClass),
+          where('teacherId', '==', user.id)
+        )
+        const activitiesSnapshot = await getDocs(activitiesQuery)
+        const activitiesData = activitiesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().getTime() : 0
+        }))
+        // Sort client-side by timestamp descending
+        activitiesData.sort((a, b) => b.timestamp - a.timestamp)
+        setActivities(activitiesData)
+      } catch (error) {
+        console.error('Error fetching activities:', error)
+      }
+    }
+
+    fetchActivities()
+  }, [selectedClass, user?.id])
 
   const activityTypes = [
     { id: 'assignment', name: 'Assignment' },
@@ -41,28 +72,123 @@ const ActivityUpload = ({ showToast }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [activityToDelete, setActivityToDelete] = useState(null)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (newActivity.title && newActivity.description && newActivity.dueDate && selectedClass) {
-      const selectedClassName = classes.find(cls => cls.id === selectedClass)?.name || selectedClass
-      setActivities([
-        {
-          id: activities.length + 1,
+      setLoading(true)
+      try {
+        // Parse the selected class format (e.g., "10-D" -> grade: 10, className: D)
+        let grade, className
+        if (selectedClass.includes('-')) {
+          [grade, className] = selectedClass.split('-')
+        } else {
+          className = selectedClass
+          grade = null
+        }
+
+        // Get all students in the selected class
+        let studentsQuery
+        if (grade && className) {
+          studentsQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('studentData.grade', '==', grade),
+            where('studentData.className', '==', className)
+          )
+        } else {
+          studentsQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('studentData.className', '==', className)
+          )
+        }
+        
+        const studentsSnapshot = await getDocs(studentsQuery)
+        const studentIds = studentsSnapshot.docs.map(doc => doc.id)
+
+        console.log(`Found ${studentIds.length} students in class ${selectedClass}`)
+
+        // Save activity to Firestore
+        const activityData = {
           class: selectedClass,
-          className: selectedClassName,
           type: activityType,
-          ...newActivity
-        },
-        ...activities
-      ])
-      setNewActivity({
-        title: '',
-        description: '',
-        dueDate: '',
-        file: null
-      })
-      if (showToast) {
-        showToast('Activity uploaded successfully!', 'success')
+          title: newActivity.title,
+          description: newActivity.description,
+          dueDate: newActivity.dueDate,
+          fileName: newActivity.file?.name || null,
+          teacherId: user.id,
+          teacherName: user.fullName || user.name || 'Teacher',
+          subject: user.subjects?.[0] || 'General',
+          createdAt: serverTimestamp(),
+          studentIds: studentIds
+        }
+        
+        const activityDoc = await addDoc(collection(db, 'activities'), activityData)
+
+        // Create notification for each student in the class
+        const activityTypeName = activityTypes.find(t => t.id === activityType)?.name || activityType
+        const notificationPromises = studentIds.map(studentId => {
+          return addDoc(collection(db, 'notifications'), {
+            recipientId: studentId,
+            type: 'activity',
+            title: `New ${activityTypeName}: ${newActivity.title}`,
+            message: `${newActivity.description.substring(0, 100)}${newActivity.description.length > 100 ? '...' : ''}`,
+            class: selectedClass,
+            subject: user.subjects?.[0] || 'General',
+            activityType: activityType,
+            dueDate: newActivity.dueDate,
+            teacherId: user.id,
+            teacherName: user.fullName || user.name || 'Teacher',
+            read: false,
+            createdAt: serverTimestamp(),
+            activityId: activityDoc.id
+          })
+        })
+
+        await Promise.all(notificationPromises)
+
+        console.log(`✅ Created ${notificationPromises.length} notifications for activity`)
+        console.log('Notification details:', {
+          type: 'activity',
+          activityType: activityType,
+          recipientCount: studentIds.length,
+          class: selectedClass,
+          subject: user.subjects?.[0] || 'General',
+          dueDate: newActivity.dueDate
+        })
+
+        // Refresh activities list
+        const updatedActivitiesQuery = query(
+          collection(db, 'activities'),
+          where('class', '==', selectedClass),
+          where('teacherId', '==', user.id)
+        )
+        const updatedActivitiesSnapshot = await getDocs(updatedActivitiesQuery)
+        const updatedActivitiesData = updatedActivitiesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().getTime() : 0
+        }))
+        // Sort client-side by timestamp descending
+        updatedActivitiesData.sort((a, b) => b.timestamp - a.timestamp)
+        setActivities(updatedActivitiesData)
+
+        setNewActivity({
+          title: '',
+          description: '',
+          dueDate: '',
+          file: null
+        })
+        if (showToast) {
+          showToast(`Activity uploaded and sent to ${studentIds.length} students successfully!`, 'success')
+        }
+      } catch (error) {
+        console.error('Error uploading activity:', error)
+        if (showToast) {
+          showToast('Failed to upload activity. Please try again.', 'error')
+        }
+      } finally {
+        setLoading(false)
       }
     } else {
       if (showToast) {
@@ -81,11 +207,23 @@ const ActivityUpload = ({ showToast }) => {
     setShowConfirmModal(true)
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (activityToDelete) {
-      setActivities(activities.filter(a => a.id !== activityToDelete.id))
-      if (showToast) {
-        showToast('Activity deleted successfully!', 'success')
+      try {
+        // Delete activity from Firestore
+        await deleteDoc(doc(db, 'activities', activityToDelete.id))
+        
+        // Refresh activities list
+        setActivities(activities.filter(a => a.id !== activityToDelete.id))
+        
+        if (showToast) {
+          showToast('Activity deleted successfully!', 'success')
+        }
+      } catch (error) {
+        console.error('Error deleting activity:', error)
+        if (showToast) {
+          showToast('Failed to delete activity. Please try again.', 'error')
+        }
       }
     }
     setShowConfirmModal(false)
@@ -123,7 +261,7 @@ const ActivityUpload = ({ showToast }) => {
               >
                 {classes.length === 0 && <option value="">No classes assigned</option>}
                 {classes.map(cls => (
-                  <option key={cls.id} value={cls.id}>
+                  <option key={cls.id} value={cls.value}>
                     {cls.name}
                   </option>
                 ))}
@@ -192,8 +330,8 @@ const ActivityUpload = ({ showToast }) => {
             </div>
           </div>
 
-          <button type="submit" className="upload-btn">
-            <span>📤</span> Upload Activity
+          <button type="submit" className="upload-btn" disabled={loading}>
+            <span>📤</span> {loading ? 'Uploading...' : 'Upload Activity'}
           </button>
         </form>
       </div>
@@ -212,15 +350,15 @@ const ActivityUpload = ({ showToast }) => {
                       {activityTypes.find(type => type.id === activity.type)?.name}
                     </span>
                     <span className="class-tag">
-                      {activity.className}
+                      {activity.class}
                     </span>
                   </div>
                   <span className="due-date">📅 {activity.dueDate}</span>
                 </div>
                 <h4>{activity.title}</h4>
                 <p className="activity-description">{activity.description}</p>
-                {activity.file && (
-                  <p className="activity-file">📎 {activity.file.name}</p>
+                {activity.fileName && (
+                  <p className="activity-file">📎 {activity.fileName}</p>
                 )}
                 <div className="activity-actions">
                   <button className="edit-btn">

@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../utils/firebase'
 
-const MessageBoard = () => {
+const MessageBoard = ({ showToast }) => {
   const { user } = useAuth()
   const [selectedClass, setSelectedClass] = useState('')
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
+  const [loading, setLoading] = useState(false)
 
   // Get teacher's classes dynamically
   const teacherClasses = user?.classes || []
@@ -16,27 +19,147 @@ const MessageBoard = () => {
   }))
 
   // Set default selected class
-  useState(() => {
+  useEffect(() => {
     if (classes.length > 0 && !selectedClass) {
-      setSelectedClass(classes[0].id)
+      setSelectedClass(classes[0].value)
     }
   }, [classes])
 
-  const handleSubmit = (e) => {
+  // Fetch messages when class changes
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedClass || !user?.id) return
+
+      try {
+        const messagesQuery = query(
+          collection(db, 'messages'),
+          where('class', '==', selectedClass),
+          where('teacherId', '==', user.id)
+        )
+        const messagesSnapshot = await getDocs(messagesQuery)
+        const messagesData = messagesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().getTime() : 0
+        }))
+        // Sort client-side by timestamp descending
+        messagesData.sort((a, b) => b.timestamp - a.timestamp)
+        setMessages(messagesData)
+      } catch (error) {
+        console.error('Error fetching messages:', error)
+      }
+    }
+
+    fetchMessages()
+  }, [selectedClass, user?.id])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (message.trim() && selectedClass) {
-      const selectedClassName = classes.find(cls => cls.id === selectedClass)?.name || selectedClass
-      setMessages([
-        {
-          id: messages.length + 1,
+    if (message.trim() && selectedClass && user?.id) {
+      setLoading(true)
+      try {
+        // Parse the selected class format (e.g., "10-D" -> grade: 10, className: D)
+        let grade, className
+        if (selectedClass.includes('-')) {
+          [grade, className] = selectedClass.split('-')
+        } else {
+          className = selectedClass
+          grade = null
+        }
+
+        // Get all students in the selected class
+        let studentsQuery
+        if (grade && className) {
+          studentsQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('studentData.grade', '==', grade),
+            where('studentData.className', '==', className)
+          )
+        } else {
+          studentsQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('studentData.className', '==', className)
+          )
+        }
+        
+        const studentsSnapshot = await getDocs(studentsQuery)
+        const studentIds = studentsSnapshot.docs.map(doc => doc.id)
+
+        console.log(`Found ${studentIds.length} students in class ${selectedClass}`)
+
+        // Save message to Firestore
+        const messageData = {
           class: selectedClass,
-          className: selectedClassName,
           content: message,
-          date: new Date().toISOString().split('T')[0]
-        },
-        ...messages
-      ])
-      setMessage('')
+          teacherId: user.id,
+          teacherName: user.fullName || user.name || 'Teacher',
+          subject: user.subjects?.[0] || 'General',
+          createdAt: serverTimestamp(),
+          studentIds: studentIds
+        }
+        
+        const messageDoc = await addDoc(collection(db, 'messages'), messageData)
+
+        // Create notification for each student in the class
+        const notificationPromises = studentIds.map(studentId => {
+          return addDoc(collection(db, 'notifications'), {
+            recipientId: studentId,
+            type: 'message',
+            title: `New Message from ${user.fullName || user.name || 'Teacher'}`,
+            message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+            class: selectedClass,
+            subject: user.subjects?.[0] || 'General',
+            teacherId: user.id,
+            teacherName: user.fullName || user.name || 'Teacher',
+            read: false,
+            createdAt: serverTimestamp(),
+            messageId: messageDoc.id
+          })
+        })
+
+        await Promise.all(notificationPromises)
+
+        console.log(`✅ Created ${notificationPromises.length} notifications for message`)
+        console.log('Notification details:', {
+          type: 'message',
+          recipientCount: studentIds.length,
+          class: selectedClass,
+          subject: user.subjects?.[0] || 'General',
+          teacherName: user.fullName || user.name || 'Teacher'
+        })
+
+        // Refresh messages list
+        const updatedMessagesQuery = query(
+          collection(db, 'messages'),
+          where('class', '==', selectedClass),
+          where('teacherId', '==', user.id)
+        )
+        const updatedMessagesSnapshot = await getDocs(updatedMessagesQuery)
+        const updatedMessagesData = updatedMessagesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().getTime() : 0
+        }))
+        // Sort client-side by timestamp descending
+        updatedMessagesData.sort((a, b) => b.timestamp - a.timestamp)
+        setMessages(updatedMessagesData)
+
+        setMessage('')
+        if (showToast) {
+          showToast(`Message sent to ${studentIds.length} students successfully!`, 'success')
+        }
+      } catch (error) {
+        console.error('Error posting message:', error)
+        if (showToast) {
+          showToast('Failed to send message. Please try again.', 'error')
+        }
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -63,7 +186,7 @@ const MessageBoard = () => {
           >
             {classes.length === 0 && <option value="">No classes assigned</option>}
             {classes.map(cls => (
-              <option key={cls.id} value={cls.id}>
+              <option key={cls.id} value={cls.value}>
                 {cls.name}
               </option>
             ))}
@@ -75,9 +198,10 @@ const MessageBoard = () => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message here..."
             rows={4}
+            disabled={loading}
           />
-          <button type="submit" className="submit-btn">
-            Post Message
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Posting...' : 'Post Message'}
           </button>
         </form>
       </div>
@@ -91,7 +215,7 @@ const MessageBoard = () => {
             <div key={msg.id} className="message-card">
               <div className="message-header">
                 <span className="class-tag">
-                  {msg.className}
+                  {msg.class}
                 </span>
                 <span className="message-date">{msg.date}</span>
               </div>
