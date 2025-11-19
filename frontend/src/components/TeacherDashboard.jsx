@@ -181,15 +181,10 @@ const TeacherDashboard = () => {
   if (loading || !user) {
     return (
       <div className="dashboard-container">
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          fontSize: '1.5rem',
-          color: '#4A90E2'
-        }}>
-          Loading teacher dashboard...
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <h2 className="loading-title">Teacher Dashboard</h2>
+          <p className="loading-text">Preparing your classes and student data...</p>
         </div>
       </div>
     )

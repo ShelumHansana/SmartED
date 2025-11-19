@@ -1462,7 +1462,11 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <div className="loading-state">Loading admin dashboard...</div>
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <h2 className="loading-title">Admin Dashboard</h2>
+          <p className="loading-text">Loading school management system...</p>
+        </div>
       </div>
     )
   }

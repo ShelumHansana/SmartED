@@ -481,7 +481,11 @@ const ParentDashboard = () => {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <div className="loading-state">Loading parent data...</div>
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <h2 className="loading-title">Parent Dashboard</h2>
+          <p className="loading-text">Loading your children's academic progress...</p>
+        </div>
       </div>
     )
   }
@@ -709,11 +713,6 @@ const ParentDashboard = () => {
                           <h3 className="subject-name-large">{grade.subject}</h3>
                           <p className="performance-label">{getPerformanceText(grade.marks)}</p>
                         </div>
-                        <div className="grade-circle" style={{ borderColor: getGradeColor(grade.grade) }}>
-                          <span className="grade-letter" style={{ color: getGradeColor(grade.grade) }}>
-                            {grade.grade}
-                          </span>
-                        </div>
                       </div>
 
                       <div className="marks-section">
@@ -728,9 +727,7 @@ const ParentDashboard = () => {
                               width: `${grade.marks}%`,
                               background: `linear-gradient(90deg, ${getGradeColor(grade.grade)}, ${getGradeColor(grade.grade)}dd)`
                             }}
-                          >
-                            <span className="progress-label">{grade.marks}%</span>
-                          </div>
+                          />
                         </div>
                       </div>
 
