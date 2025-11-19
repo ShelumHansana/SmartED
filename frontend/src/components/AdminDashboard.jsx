@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { 
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  adminToggleUserStatus,
+  getAllCourses,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  getCourseStatistics
+} from '../../../backend'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 import '../styles/Dashboard.css'
@@ -34,10 +46,10 @@ const AdminDashboard = () => {
   
   // Settings States
   const [schoolSettings, setSchoolSettings] = useState({
-    schoolName: 'Mahinda College',
-    address: 'Colombo 07, Sri Lanka',
+    schoolName: 'Richmond College',
+    address: 'Galle, Sri Lanka',
     phone: '+94 11 269 1731',
-    email: 'admin@mahindacollege.lk',
+    email: 'admin@richmondcollege.lk',
     academicYear: '2025',
     terms: 3,
     gradingSystem: 'A/B/C/S/W',
@@ -53,6 +65,101 @@ const AdminDashboard = () => {
 
   const [recentActivities, setRecentActivities] = useState([])
   const [notifications, setNotifications] = useState([])
+
+  // Toast Notification States
+  const [toasts, setToasts] = useState([])
+
+  // Confirmation Modal States
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '',
+    message: '',
+    onConfirm: null,
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'danger' // danger, warning, info
+  })
+
+  // Function to show confirmation modal
+  const showConfirm = (config) => {
+    setConfirmConfig({
+      title: config.title || 'Confirm Action',
+      message: config.message || 'Are you sure?',
+      onConfirm: config.onConfirm,
+      confirmText: config.confirmText || 'Confirm',
+      cancelText: config.cancelText || 'Cancel',
+      type: config.type || 'danger'
+    })
+    setShowConfirmModal(true)
+  }
+
+  const handleConfirm = () => {
+    if (confirmConfig.onConfirm) {
+      confirmConfig.onConfirm()
+    }
+    setShowConfirmModal(false)
+  }
+
+  const handleCancelConfirm = () => {
+    setShowConfirmModal(false)
+  }
+
+  // Function to show toast notification
+  const showToast = (message, type = 'success') => {
+    const id = Date.now()
+    const newToast = { id, message, type }
+    setToasts(prev => [...prev, newToast])
+    
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 3000)
+  }
+
+  // Function to reload all data from Firestore
+  const reloadAllData = async () => {
+    if (!user || !user.id) return
+
+    try {
+      console.log('Reloading all admin data...')
+
+      // Load all users
+      const usersQuery = query(collection(db, 'users'))
+      const usersSnapshot = await getDocs(usersQuery)
+      const usersData = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        name: doc.data().fullName || doc.data().name,
+        joinDate: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toISOString().split('T')[0] : 'N/A'
+      }))
+      setUsers(usersData)
+
+      // Calculate statistics
+      const studentCount = usersData.filter(u => u.role === 'student').length
+      const teacherCount = usersData.filter(u => u.role === 'teacher').length
+      const activeCount = usersData.filter(u => u.status === 'Active' || !u.status).length
+
+      // Load courses
+      const coursesQuery = query(collection(db, 'courses'))
+      const coursesSnapshot = await getDocs(coursesQuery)
+      const coursesData = coursesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setCourses(coursesData)
+
+      setStats({
+        totalStudents: studentCount,
+        totalTeachers: teacherCount,
+        totalCourses: coursesData.length,
+        activeUsers: activeCount
+      })
+
+      console.log('Data reloaded successfully!')
+    } catch (error) {
+      console.error('Error reloading data:', error)
+    }
+  }
 
   // Load all admin data from Firestore
   useEffect(() => {
@@ -157,85 +264,112 @@ const AdminDashboard = () => {
   // User Management Actions
   const handleAddUser = async (userData) => {
     try {
+      console.log('Adding user with data:', userData)
+      
       const newUser = {
-        ...userData,
+        fullName: userData.fullName || userData.name,
+        email: userData.email,
+        role: userData.role,
+        status: userData.status || 'Active',
         createdAt: serverTimestamp(),
-        status: 'Active'
+        updatedAt: serverTimestamp()
       }
+      
+      // Add role-specific data
+      if (userData.grade) newUser.studentData = { grade: userData.grade }
+      if (userData.subject) newUser.teacherData = { subject: userData.subject }
+      if (userData.phone) newUser.phone = userData.phone
+      
+      console.log('Final new user data:', newUser)
+      
       const docRef = await addDoc(collection(db, 'users'), newUser)
       
-      setUsers(prev => [...prev, { id: docRef.id, ...newUser }])
-      setStats(prev => ({ 
-        ...prev, 
-        activeUsers: prev.activeUsers + 1,
-        totalStudents: userData.role === 'student' ? prev.totalStudents + 1 : prev.totalStudents,
-        totalTeachers: userData.role === 'teacher' ? prev.totalTeachers + 1 : prev.totalTeachers
-      }))
+      // Reload all data to ensure consistency
+      await reloadAllData()
+      
       setShowUserModal(false)
       setSelectedUser(null)
-      alert('User added successfully!')
+      showToast('User added successfully!', 'success')
     } catch (error) {
       console.error('Error adding user:', error)
-      alert('Error adding user. Please try again.')
+      showToast('Error adding user: ' + error.message, 'error')
     }
   }
 
   const handleUpdateUser = async (userData) => {
     try {
-      await updateDoc(doc(db, 'users', selectedUser.id), userData)
+      console.log('Updating user with data:', userData)
+      console.log('Selected user ID:', selectedUser.id)
       
-      setUsers(prev => prev.map(user => 
-        user.id === selectedUser.id ? { ...user, ...userData } : user
-      ))
+      // Prepare update data with proper field mapping
+      const updateData = {
+        fullName: userData.fullName || userData.name,
+        email: userData.email,
+        role: userData.role,
+        status: userData.status,
+        updatedAt: serverTimestamp()
+      }
+      
+      // Add role-specific data if needed
+      if (userData.grade) updateData.studentData = { grade: userData.grade }
+      if (userData.subject) updateData.teacherData = { subject: userData.subject }
+      if (userData.phone) updateData.phone = userData.phone
+      
+      console.log('Final update data:', updateData)
+      
+      await updateDoc(doc(db, 'users', selectedUser.id), updateData)
+      
+      // Reload all data to ensure consistency
+      await reloadAllData()
+      
       setShowUserModal(false)
       setSelectedUser(null)
-      alert('User updated successfully!')
+      showToast('User updated successfully!', 'success')
     } catch (error) {
       console.error('Error updating user:', error)
-      alert('Error updating user. Please try again.')
+      showToast('Error updating user: ' + error.message, 'error')
     }
   }
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      try {
-        // Soft delete - set status to Inactive
-        await updateDoc(doc(db, 'users', userId), {
-          status: 'Inactive'
-        })
-        
-        setUsers(prev => prev.map(user => 
-          user.id === userId ? { ...user, status: 'Inactive' } : user
-        ))
-        setStats(prev => ({ ...prev, activeUsers: prev.activeUsers - 1 }))
-        alert('User deactivated successfully!')
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        alert('Error deleting user. Please try again.')
+    showConfirm({
+      title: 'Delete User',
+      message: 'Are you sure you want to permanently delete this user? This action cannot be undone and will remove all user data.',
+      confirmText: 'Delete User',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          console.log('Deleting user with ID:', userId)
+          
+          // Permanently delete the user document from Firestore
+          await deleteDoc(doc(db, 'users', userId))
+          
+          // Reload all data to ensure consistency
+          await reloadAllData()
+          
+          showToast('User deleted successfully!', 'success')
+        } catch (error) {
+          console.error('Error deleting user:', error)
+          showToast('Error deleting user: ' + error.message, 'error')
+        }
       }
-    }
+    })
   }
 
   const handleToggleUserStatus = async (userId) => {
     try {
-      const user = users.find(u => u.id === userId)
-      const newStatus = user.status === 'Active' ? 'Inactive' : 'Active'
+      const result = await adminToggleUserStatus(userId)
       
-      await updateDoc(doc(db, 'users', userId), {
-        status: newStatus
-      })
-      
-      setUsers(prev => prev.map(u => 
-        u.id === userId ? { ...u, status: newStatus } : u
-      ))
-      
-      setStats(prev => ({
-        ...prev,
-        activeUsers: newStatus === 'Active' ? prev.activeUsers + 1 : prev.activeUsers - 1
-      }))
+      if (result.success) {
+        // Reload all data to ensure consistency
+        await reloadAllData()
+        
+        showToast('User status updated successfully!', 'success')
+      }
     } catch (error) {
       console.error('Error toggling user status:', error)
-      alert('Error updating user status. Please try again.')
+      showToast('Error updating user status: ' + error.message, 'error')
     }
   }
 
@@ -250,46 +384,73 @@ const AdminDashboard = () => {
       }
       const docRef = await addDoc(collection(db, 'courses'), newCourse)
       
-      setCourses(prev => [...prev, { id: docRef.id, ...newCourse }])
-      setStats(prev => ({ ...prev, totalCourses: prev.totalCourses + 1 }))
+      // Reload all data to ensure consistency
+      await reloadAllData()
+      
       setShowCourseModal(false)
       setSelectedCourse(null)
-      alert('Course added successfully!')
+      showToast('Course added successfully!', 'success')
     } catch (error) {
       console.error('Error adding course:', error)
-      alert('Error adding course. Please try again.')
+      showToast('Error adding course: ' + error.message, 'error')
     }
   }
 
   const handleUpdateCourse = async (courseData) => {
     try {
-      await updateDoc(doc(db, 'courses', selectedCourse.id), courseData)
+      console.log('Updating course with data:', courseData)
+      console.log('Selected course ID:', selectedCourse.id)
       
-      setCourses(prev => prev.map(course => 
-        course.id === selectedCourse.id ? { ...course, ...courseData } : course
-      ))
+      const updateData = {
+        name: courseData.name,
+        level: courseData.level,
+        teacher: courseData.teacher,
+        status: courseData.status,
+        updatedAt: serverTimestamp()
+      }
+      
+      // Add stream if it's A/L
+      if (courseData.stream) {
+        updateData.stream = courseData.stream
+      }
+      
+      console.log('Final course update data:', updateData)
+      
+      await updateDoc(doc(db, 'courses', selectedCourse.id), updateData)
+      
+      // Reload all data to ensure consistency
+      await reloadAllData()
+      
       setShowCourseModal(false)
       setSelectedCourse(null)
-      alert('Course updated successfully!')
+      showToast('Course updated successfully!', 'success')
     } catch (error) {
       console.error('Error updating course:', error)
-      alert('Error updating course. Please try again.')
+      showToast('Error updating course: ' + error.message, 'error')
     }
   }
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course? This will affect all enrolled students.')) {
-      try {
-        await deleteDoc(doc(db, 'courses', courseId))
-        
-        setCourses(prev => prev.filter(course => course.id !== courseId))
-        setStats(prev => ({ ...prev, totalCourses: prev.totalCourses - 1 }))
-        alert('Course deleted successfully!')
-      } catch (error) {
-        console.error('Error deleting course:', error)
-        alert('Error deleting course. Please try again.')
+    showConfirm({
+      title: 'Delete Course',
+      message: 'Are you sure you want to delete this course? This will affect all enrolled students.',
+      confirmText: 'Delete Course',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'courses', courseId))
+          
+          // Reload all data to ensure consistency
+          await reloadAllData()
+          
+          showToast('Course deleted successfully!', 'success')
+        } catch (error) {
+          console.error('Error deleting course:', error)
+          showToast('Error deleting course: ' + error.message, 'error')
+        }
       }
-    }
+    })
   }
 
   const handleViewCourse = (course) => {
@@ -308,35 +469,42 @@ const AdminDashboard = () => {
   const handleSaveSettings = async () => {
     try {
       await updateDoc(doc(db, 'settings', 'school'), schoolSettings)
-      alert('Settings saved successfully!')
+      showToast('Settings saved successfully!', 'success')
     } catch (error) {
       console.error('Error saving settings:', error)
-      alert('Error saving settings. Please try again.')
+      showToast('Error saving settings: ' + error.message, 'error')
     }
   }
 
   const handleResetSettings = async () => {
-    if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
-      const defaultSettings = {
-        schoolName: 'Mahinda College',
-        address: 'Colombo 07, Sri Lanka',
-        phone: '+94 11 269 1731',
-        email: 'admin@mahindacollege.lk',
-        academicYear: '2025',
-        terms: 3,
-        gradingSystem: 'A/B/C/S/W',
-        languages: ['English', 'Sinhala', 'Tamil']
+    showConfirm({
+      title: 'Reset Settings',
+      message: 'Are you sure you want to reset all settings to defaults? This will overwrite your current configuration.',
+      confirmText: 'Reset to Defaults',
+      cancelText: 'Cancel',
+      type: 'warning',
+      onConfirm: async () => {
+        const defaultSettings = {
+          schoolName: 'Richmond College',
+          address: 'Galle, Sri Lanka',
+          phone: '+94 11 269 1731',
+          email: 'admin@richmondcollege.lk',
+          academicYear: '2025',
+          terms: 3,
+          gradingSystem: 'A/B/C/S/W',
+          languages: ['English', 'Sinhala', 'Tamil']
+        }
+        
+        try {
+          await updateDoc(doc(db, 'settings', 'school'), defaultSettings)
+          setSchoolSettings(defaultSettings)
+          showToast('Settings reset to defaults!', 'success')
+        } catch (error) {
+          console.error('Error resetting settings:', error)
+          showToast('Error resetting settings: ' + error.message, 'error')
+        }
       }
-      
-      try {
-        await updateDoc(doc(db, 'settings', 'school'), defaultSettings)
-        setSchoolSettings(defaultSettings)
-        alert('Settings reset to defaults!')
-      } catch (error) {
-        console.error('Error resetting settings:', error)
-        alert('Error resetting settings. Please try again.')
-      }
-    }
+    })
   }
 
   const handleCreateBackup = () => {
@@ -359,7 +527,7 @@ const AdminDashboard = () => {
     link.download = `smarted-backup-${new Date().toISOString().split('T')[0]}.json`
     link.click()
     
-    alert('Backup created and downloaded successfully!')
+    showToast('Backup created and downloaded successfully!', 'success')
   }
 
   // Report Generation Actions
@@ -514,7 +682,7 @@ const AdminDashboard = () => {
     }
 
     console.log('Report generated:', reportData)
-    alert(`${reportType} generated successfully! Click download to save the report.`)
+    showToast(`${reportType} generated successfully!`, 'success')
     return reportData
   }
 
@@ -564,7 +732,7 @@ const AdminDashboard = () => {
       }, 500)
     }
     
-    alert(`${reportType} PDF is ready! Please use the print dialog to save as PDF.`)
+    showToast(`${reportType} PDF is ready! Use the print dialog to save.`, 'info')
   }
 
   // Generate HTML content (separated for reusability)
@@ -1316,7 +1484,11 @@ const AdminDashboard = () => {
       <aside className="dashboard-sidebar">
         <div className="admin-profile">
           <div className="profile-image">
-            <img src="/admin-avatar.svg" alt="Admin" />
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt="Admin" />
+            ) : (
+              <div className="profile-avatar-letter">A</div>
+            )}
           </div>
           <h3>{user?.fullName || 'System Admin'}</h3>
           <p>Administrator</p>
@@ -2420,20 +2592,40 @@ const AdminDashboard = () => {
                 ×
               </button>
             </div>
-            <div className="modal-body">
+            <form className="modal-body" onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.target)
+              const userData = {
+                fullName: formData.get('fullName'),
+                email: formData.get('email'),
+                role: formData.get('role'),
+                status: formData.get('status'),
+                phone: formData.get('phone') || '',
+                grade: formData.get('grade') || '',
+                subject: formData.get('subject') || ''
+              }
+              
+              console.log('Form submitted with data:', userData)
+              
+              if (selectedUser) {
+                handleUpdateUser(userData)
+              } else {
+                handleAddUser(userData)
+              }
+            }}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Full Name</label>
+                  <label>Full Name *</label>
                   <input 
                     type="text" 
-                    name="name"
+                    name="fullName"
                     placeholder="Enter full name"
-                    defaultValue={selectedUser?.name || ''}
+                    defaultValue={selectedUser?.fullName || selectedUser?.name || ''}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Email Address</label>
+                  <label>Email Address *</label>
                   <input 
                     type="email" 
                     name="email"
@@ -2443,7 +2635,16 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Role</label>
+                  <label>Phone</label>
+                  <input 
+                    type="tel" 
+                    name="phone"
+                    placeholder="Enter phone number"
+                    defaultValue={selectedUser?.phone || ''}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role *</label>
                   <select 
                     name="role"
                     defaultValue={selectedUser?.role || 'student'}
@@ -2456,7 +2657,25 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Status</label>
+                  <label>Grade (For Students)</label>
+                  <input 
+                    type="text" 
+                    name="grade"
+                    placeholder="e.g., Grade 10"
+                    defaultValue={selectedUser?.studentData?.grade || ''}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Subject (For Teachers)</label>
+                  <input 
+                    type="text" 
+                    name="subject"
+                    placeholder="e.g., Mathematics"
+                    defaultValue={selectedUser?.teacherData?.subject || ''}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Status *</label>
                   <select 
                     name="status"
                     defaultValue={selectedUser?.status || 'Active'}
@@ -2466,10 +2685,11 @@ const AdminDashboard = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </form>
             <div className="modal-footer">
               <button 
                 className="cancel-btn"
+                type="button"
                 onClick={() => {
                   setShowUserModal(false)
                   setSelectedUser(null)
@@ -2480,27 +2700,11 @@ const AdminDashboard = () => {
               </button>
               <button 
                 className="save-btn"
-                onClick={(e) => {
-                  e.preventDefault()
-                  const form = e.target.closest('.modal-content').querySelector('form') || 
-                              e.target.closest('.modal-content').querySelector('.modal-body')
-                  const formData = new FormData()
-                  const inputs = form.querySelectorAll('input, select')
-                  const userData = {}
-                  
-                  inputs.forEach(input => {
-                    if (input.name) {
-                      userData[input.name] = input.value
-                    } else if (input.placeholder) {
-                      const fieldName = input.placeholder.toLowerCase().replace(/[^a-z]/g, '')
-                      userData[fieldName] = input.value
-                    }
-                  })
-                  
-                  if (selectedUser) {
-                    handleUpdateUser(userData)
-                  } else {
-                    handleAddUser(userData)
+                type="button"
+                onClick={() => {
+                  const form = document.querySelector('.modal-content form')
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
                   }
                 }}
               >
@@ -2517,7 +2721,7 @@ const AdminDashboard = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>{selectedCourse ? 'Course Details' : 'Add New Course'}</h3>
+              <h3>{selectedCourse ? 'Edit Course' : 'Add New Course'}</h3>
               <button 
                 className="close-modal"
                 onClick={() => {
@@ -2528,10 +2732,28 @@ const AdminDashboard = () => {
                 ×
               </button>
             </div>
-            <div className="modal-body">
+            <form className="modal-body" onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.target)
+              const courseData = {
+                name: formData.get('name'),
+                level: formData.get('level'),
+                teacher: formData.get('teacher'),
+                status: formData.get('status'),
+                stream: formData.get('stream') || ''
+              }
+              
+              console.log('Course form submitted with data:', courseData)
+              
+              if (selectedCourse) {
+                handleUpdateCourse(courseData)
+              } else {
+                handleAddCourse(courseData)
+              }
+            }}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Course Name</label>
+                  <label>Course Name *</label>
                   <input 
                     type="text" 
                     name="name"
@@ -2541,7 +2763,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Level</label>
+                  <label>Level *</label>
                   <select 
                     name="level"
                     defaultValue={selectedCourse?.level || 'O/L'}
@@ -2552,7 +2774,20 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Teacher</label>
+                  <label>Stream (For A/L)</label>
+                  <select 
+                    name="stream"
+                    defaultValue={selectedCourse?.stream || ''}
+                  >
+                    <option value="">Select Stream</option>
+                    <option value="Physical Science">Physical Science</option>
+                    <option value="Biological Science">Biological Science</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Arts">Arts</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Teacher *</label>
                   <select 
                     name="teacher"
                     defaultValue={selectedCourse?.teacher || ''}
@@ -2566,7 +2801,7 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Status</label>
+                  <label>Status *</label>
                   <select 
                     name="status"
                     defaultValue={selectedCourse?.status || 'Active'}
@@ -2582,7 +2817,7 @@ const AdminDashboard = () => {
                   <div className="stats-row">
                     <div className="stat-item">
                       <span>Enrolled Students:</span>
-                      <strong>{selectedCourse.students}</strong>
+                      <strong>{selectedCourse.students || 0}</strong>
                     </div>
                     <div className="stat-item">
                       <span>Level:</span>
@@ -2597,44 +2832,89 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </form>
             <div className="modal-footer">
               <button 
                 className="cancel-btn"
+                type="button"
                 onClick={() => {
                   setShowCourseModal(false)
                   setSelectedCourse(null)
                 }}
               >
                 <span className="btn-icon">❌</span>
-                Close
+                Cancel
               </button>
-              {!selectedCourse && (
-                <button 
-                  className="save-btn"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const form = e.target.closest('.modal-content').querySelector('.modal-body')
-                    const inputs = form.querySelectorAll('input, select')
-                    const courseData = {}
-                    
-                    inputs.forEach(input => {
-                      if (input.name) {
-                        courseData[input.name] = input.value
-                      }
-                    })
-                    
-                    handleAddCourse(courseData)
-                  }}
-                >
-                  <span className="btn-icon">✅</span>
-                  Add Course
-                </button>
-              )}
+              <button 
+                className="save-btn"
+                type="button"
+                onClick={() => {
+                  const form = document.querySelector('.modal-content form')
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+                  }
+                }}
+              >
+                <span className="btn-icon">{selectedCourse ? '📝' : '➕'}</span>
+                {selectedCourse ? 'Update Course' : 'Add Course'}
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal-overlay confirm-overlay">
+          <div className="modal-content confirm-modal">
+            <div className="modal-header">
+              <h3>{confirmConfig.title}</h3>
+            </div>
+            <div className="modal-body">
+              <div className={`confirm-icon confirm-icon-${confirmConfig.type}`}>
+                {confirmConfig.type === 'danger' && '⚠️'}
+                {confirmConfig.type === 'warning' && '⚡'}
+                {confirmConfig.type === 'info' && 'ℹ️'}
+              </div>
+              <p className="confirm-message">{confirmConfig.message}</p>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="cancel-btn"
+                onClick={handleCancelConfirm}
+              >
+                <span className="btn-icon">❌</span>
+                {confirmConfig.cancelText}
+              </button>
+              <button 
+                className={`confirm-btn confirm-btn-${confirmConfig.type}`}
+                onClick={handleConfirm}
+              >
+                <span className="btn-icon">
+                  {confirmConfig.type === 'danger' && '🗑️'}
+                  {confirmConfig.type === 'warning' && '⚠️'}
+                  {confirmConfig.type === 'info' && '✓'}
+                </span>
+                {confirmConfig.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notifications */}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            <span className="toast-icon">
+              {toast.type === 'success' && '✓'}
+              {toast.type === 'error' && '✕'}
+              {toast.type === 'info' && 'ℹ'}
+            </span>
+            <span className="toast-message">{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

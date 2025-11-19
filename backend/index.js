@@ -51,6 +51,26 @@ export {
   initializeDatabase
 } from './services/dbInitService.js';
 
+// Admin Services - User & Course Management
+export {
+  getAllUsers,
+  getUserById as getAdminUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  toggleUserStatus as adminToggleUserStatus,
+  getAllCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  enrollStudent,
+  getCoursesByTeacher,
+  getCoursesByLevel,
+  bulkUpdateCourses,
+  getCourseStatistics
+} from './services/adminService.js';
+
 // Validation Utilities
 export {
   validateEmail,

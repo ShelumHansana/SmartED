@@ -271,7 +271,25 @@ const Register = ({ onClose, onLoginClick }) => {
       
     } catch (err) {
       console.error('Registration error:', err)
-      setError(err.message || 'Registration failed. Please try again.')
+      console.error('Error details:', {
+        message: err.message,
+        code: err.code,
+        stack: err.stack
+      })
+      
+      // Show detailed error message to user
+      let errorMessage = err.message || 'Registration failed. Please try again.'
+      
+      // Add helpful context for permission errors
+      if (errorMessage.includes('permission') || errorMessage.includes('insufficient')) {
+        errorMessage = 'Database permission error detected. Please ask your administrator to:\n\n' +
+                      '1. Go to Firebase Console > Firestore Database > Rules\n' +
+                      '2. Update security rules to allow user registration\n' +
+                      '3. See firestore-security-rules.txt in the project folder for the correct rules\n\n' +
+                      'Technical error: ' + errorMessage
+      }
+      
+      setError(errorMessage)
       setLoading(false)
     }
   }

@@ -1,42 +1,36 @@
 import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 const MessageBoard = () => {
-  const [selectedClass, setSelectedClass] = useState('class-1')
+  const { user } = useAuth()
+  const [selectedClass, setSelectedClass] = useState('')
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      class: 'class-1',
-      content: 'Remember to submit your A/L Mathematics homework on Calculus by Friday! Please focus on integration techniques covered in this week\'s lessons.',
-      date: '2025-09-28'
-    },
-    {
-      id: 2,
-      class: 'class-2',
-      content: 'Unit Test on Differential Calculus next Monday. Please review Chapter 6 and practice the examples we solved in class.',
-      date: '2025-09-27'
-    },
-    {
-      id: 3,
-      class: 'class-3',
-      content: 'Grade 13 students - Final revision session for Applied Mathematics this Saturday at 9:00 AM. Attendance is highly recommended.',
-      date: '2025-09-26'
-    }
-  ])
+  const [messages, setMessages] = useState([])
 
-  const classes = [
-    { id: 'class-1', name: 'Grade 12 M1 (Physical Science)' },
-    { id: 'class-2', name: 'Grade 12 M2 (Physical Science)' },
-    { id: 'class-3', name: 'Grade 13 M1 (Physical Science)' }
-  ]
+  // Get teacher's classes dynamically
+  const teacherClasses = user?.classes || []
+  const classes = teacherClasses.map((cls, index) => ({
+    id: `class-${index}`,
+    value: cls,
+    name: cls
+  }))
+
+  // Set default selected class
+  useState(() => {
+    if (classes.length > 0 && !selectedClass) {
+      setSelectedClass(classes[0].id)
+    }
+  }, [classes])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (message.trim()) {
+    if (message.trim() && selectedClass) {
+      const selectedClassName = classes.find(cls => cls.id === selectedClass)?.name || selectedClass
       setMessages([
         {
           id: messages.length + 1,
           class: selectedClass,
+          className: selectedClassName,
           content: message,
           date: new Date().toISOString().split('T')[0]
         },
@@ -44,6 +38,17 @@ const MessageBoard = () => {
       ])
       setMessage('')
     }
+  }
+
+  if (!user || !user.classes || user.classes.length === 0) {
+    return (
+      <div className="message-board">
+        <div className="no-classes-message">
+          <h3>No Classes Assigned</h3>
+          <p>You don't have any classes assigned yet. Please contact the administrator.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -56,6 +61,7 @@ const MessageBoard = () => {
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
           >
+            {classes.length === 0 && <option value="">No classes assigned</option>}
             {classes.map(cls => (
               <option key={cls.id} value={cls.id}>
                 {cls.name}
@@ -78,17 +84,21 @@ const MessageBoard = () => {
 
       <div className="message-list">
         <h3>Previous Messages</h3>
-        {messages.map(msg => (
-          <div key={msg.id} className="message-card">
-            <div className="message-header">
-              <span className="class-tag">
-                {classes.find(cls => cls.id === msg.class)?.name}
-              </span>
-              <span className="message-date">{msg.date}</span>
+        {messages.length === 0 ? (
+          <p className="no-messages">No messages posted yet. Post your first message above!</p>
+        ) : (
+          messages.map(msg => (
+            <div key={msg.id} className="message-card">
+              <div className="message-header">
+                <span className="class-tag">
+                  {msg.className}
+                </span>
+                <span className="message-date">{msg.date}</span>
+              </div>
+              <p className="message-content">{msg.content}</p>
             </div>
-            <p className="message-content">{msg.content}</p>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )

@@ -20,15 +20,20 @@ import { auth, db } from '../firebase/config.js';
  * @returns {Promise<Object>} Created user object
  */
 export const registerStudent = async (userData) => {
+  let userCredential = null;
+  
   try {
+    console.log('Starting student registration for:', userData.email);
+    
     // Create authentication account
-    const userCredential = await createUserWithEmailAndPassword(
+    userCredential = await createUserWithEmailAndPassword(
       auth,
       userData.email,
       userData.password
     );
     
     const user = userCredential.user;
+    console.log('Firebase Auth user created successfully:', user.uid);
 
     // Prepare student data for Firestore
     const studentData = {
@@ -60,8 +65,28 @@ export const registerStudent = async (userData) => {
       }
     };
 
-    // Save to Firestore
-    await setDoc(doc(db, 'users', user.uid), studentData);
+    console.log('Attempting to save student data to Firestore...');
+    
+    // Save to Firestore with retry logic
+    try {
+      await setDoc(doc(db, 'users', user.uid), studentData);
+      console.log('Student data saved successfully to Firestore');
+    } catch (firestoreError) {
+      console.error('Firestore write error:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      
+      // If Firestore fails, delete the auth user to keep things clean
+      console.log('Cleaning up - deleting auth user due to Firestore failure');
+      await user.delete();
+      
+      // Provide more specific error message
+      if (firestoreError.code === 'permission-denied') {
+        throw new Error('Database permission denied. Please contact the administrator to update Firestore security rules.');
+      }
+      
+      throw new Error(`Failed to save user data: ${firestoreError.message}`);
+    }
 
     // Update display name
     await updateProfile(user, {
@@ -76,7 +101,19 @@ export const registerStudent = async (userData) => {
 
   } catch (error) {
     console.error('Error registering student:', error);
-    throw new Error(error.message);
+    
+    // Provide user-friendly error messages
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('This email is already registered. Please use a different email or try logging in.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address format.');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Password is too weak. Please use at least 6 characters.');
+    } else if (error.message.includes('permission')) {
+      throw new Error('Database permissions error. Please ask your administrator to update Firestore security rules to allow new user registration.');
+    }
+    
+    throw new Error(error.message || 'Registration failed. Please try again.');
   }
 };
 
@@ -86,15 +123,20 @@ export const registerStudent = async (userData) => {
  * @returns {Promise<Object>} Created user object
  */
 export const registerTeacher = async (userData) => {
+  let userCredential = null;
+  
   try {
+    console.log('Starting teacher registration for:', userData.email);
+    
     // Create authentication account
-    const userCredential = await createUserWithEmailAndPassword(
+    userCredential = await createUserWithEmailAndPassword(
       auth,
       userData.email,
       userData.password
     );
     
     const user = userCredential.user;
+    console.log('Firebase Auth user created successfully:', user.uid);
 
     // Prepare teacher data for Firestore
     const teacherData = {
@@ -124,8 +166,28 @@ export const registerTeacher = async (userData) => {
       }
     };
 
-    // Save to Firestore
-    await setDoc(doc(db, 'users', user.uid), teacherData);
+    console.log('Attempting to save teacher data to Firestore...');
+    
+    // Save to Firestore with retry logic
+    try {
+      await setDoc(doc(db, 'users', user.uid), teacherData);
+      console.log('Teacher data saved successfully to Firestore');
+    } catch (firestoreError) {
+      console.error('Firestore write error:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      
+      // If Firestore fails, delete the auth user to keep things clean
+      console.log('Cleaning up - deleting auth user due to Firestore failure');
+      await user.delete();
+      
+      // Provide more specific error message
+      if (firestoreError.code === 'permission-denied') {
+        throw new Error('Database permission denied. Please contact the administrator to update Firestore security rules.');
+      }
+      
+      throw new Error(`Failed to save user data: ${firestoreError.message}`);
+    }
 
     // Update display name
     await updateProfile(user, {
@@ -140,7 +202,19 @@ export const registerTeacher = async (userData) => {
 
   } catch (error) {
     console.error('Error registering teacher:', error);
-    throw new Error(error.message);
+    
+    // Provide user-friendly error messages
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('This email is already registered. Please use a different email or try logging in.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address format.');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Password is too weak. Please use at least 6 characters.');
+    } else if (error.message.includes('permission')) {
+      throw new Error('Database permissions error. Please ask your administrator to update Firestore security rules to allow new user registration.');
+    }
+    
+    throw new Error(error.message || 'Registration failed. Please try again.');
   }
 };
 
@@ -150,15 +224,20 @@ export const registerTeacher = async (userData) => {
  * @returns {Promise<Object>} Created user object
  */
 export const registerParent = async (userData) => {
+  let userCredential = null;
+  
   try {
+    console.log('Starting parent registration for:', userData.email);
+    
     // Create authentication account
-    const userCredential = await createUserWithEmailAndPassword(
+    userCredential = await createUserWithEmailAndPassword(
       auth,
       userData.email,
       userData.password
     );
     
     const user = userCredential.user;
+    console.log('Firebase Auth user created successfully:', user.uid);
 
     // Prepare parent data for Firestore
     const parentData = {
@@ -183,8 +262,28 @@ export const registerParent = async (userData) => {
       }
     };
 
-    // Save to Firestore
-    await setDoc(doc(db, 'users', user.uid), parentData);
+    console.log('Attempting to save parent data to Firestore...');
+    
+    // Save to Firestore with retry logic
+    try {
+      await setDoc(doc(db, 'users', user.uid), parentData);
+      console.log('Parent data saved successfully to Firestore');
+    } catch (firestoreError) {
+      console.error('Firestore write error:', firestoreError);
+      console.error('Error code:', firestoreError.code);
+      console.error('Error message:', firestoreError.message);
+      
+      // If Firestore fails, delete the auth user to keep things clean
+      console.log('Cleaning up - deleting auth user due to Firestore failure');
+      await user.delete();
+      
+      // Provide more specific error message
+      if (firestoreError.code === 'permission-denied') {
+        throw new Error('Database permission denied. Please contact the administrator to update Firestore security rules.');
+      }
+      
+      throw new Error(`Failed to save user data: ${firestoreError.message}`);
+    }
 
     // Update display name
     await updateProfile(user, {
@@ -199,7 +298,19 @@ export const registerParent = async (userData) => {
 
   } catch (error) {
     console.error('Error registering parent:', error);
-    throw new Error(error.message);
+    
+    // Provide user-friendly error messages
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('This email is already registered. Please use a different email or try logging in.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address format.');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Password is too weak. Please use at least 6 characters.');
+    } else if (error.message.includes('permission')) {
+      throw new Error('Database permissions error. Please ask your administrator to update Firestore security rules to allow new user registration.');
+    }
+    
+    throw new Error(error.message || 'Registration failed. Please try again.');
   }
 };
 
