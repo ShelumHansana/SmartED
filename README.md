@@ -28,7 +28,9 @@
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
+- [Screenshots](#-screenshots)
 - [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
 - [Project Structure](#-project-structure)
 - [Documentation](#-documentation)
 - [Roadmap](#-roadmap)
@@ -102,12 +104,13 @@ SmartED digitizes the entire school management workflow with:
 | **Frontend** | ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black) | UI components & rendering |
 | **Build Tool** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white) | Fast development & bundling |
 | **State Management** | ![Redux](https://img.shields.io/badge/Redux_Toolkit-764ABC?style=flat-square&logo=redux&logoColor=white) | Global state management |
-| **Routing** | ![React Router](https://img.shields.io/badge/React_Router_7-CA4245?style=flat-square&logo=react-router&logoColor=white) | Client-side navigation |
-| **Animation** | ![Framer](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white) | UI animations & transitions |
-| **Charts** | ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=flat-square&logo=chartdotjs&logoColor=white) ![Recharts](https://img.shields.io/badge/Recharts-22B5BF?style=flat-square) | Data visualization |
-| **Backend** | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) | Auth, Firestore, Hosting |
+| **Routing** | ![React Router](https://img.shields.io/badge/React_Router_v6-CA4245?style=flat-square&logo=react-router&logoColor=white) | Client-side routing |
+| **Animation** | ![Framer](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white) | Page transitions & UI animations |
+| **Charts** | ![Chart.js](https://img.shields.io/badge/Chart.js_+_Recharts-FF6384?style=flat-square&logo=chartdotjs&logoColor=white) | Data visualization |
+| **Authentication** | ![Firebase Auth](https://img.shields.io/badge/Firebase_Auth-FFCA28?style=flat-square&logo=firebase&logoColor=black) | User login & role management |
+| **Database** | ![Firestore](https://img.shields.io/badge/Cloud_Firestore-039BE5?style=flat-square&logo=firebase&logoColor=white) | NoSQL real-time database |
+| **Hosting** | ![Firebase](https://img.shields.io/badge/Firebase_Hosting-FFA611?style=flat-square&logo=firebase&logoColor=white) | Production deployment |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) | Automated testing & deployment |
-| **Linting** | ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint&logoColor=white) | Code quality enforcement |
 
 </div>
 
@@ -118,43 +121,54 @@ SmartED digitizes the entire school management workflow with:
 ```mermaid
 graph TB
     subgraph Client["🖥️ Frontend (React 19 + Vite)"]
-        LP[Landing Page]
-        Auth[Authentication]
-        AD[Admin Dashboard]
-        TD[Teacher Dashboard]
-        SD[Student Dashboard]
-        PD[Parent Dashboard]
+        UI["UI Components"]
+        Redux["Redux Toolkit Store"]
+        Router["React Router v6"]
+        FM["Framer Motion"]
     end
 
-    subgraph State["📦 State Management"]
-        Redux[Redux Toolkit]
-        Context[Auth Context]
+    subgraph Auth["🔐 Authentication"]
+        FA["Firebase Auth"]
+        RG["Role Guard"]
     end
 
     subgraph Backend["☁️ Firebase Backend"]
-        FA[Firebase Auth]
-        FS[Cloud Firestore]
-        FH[Firebase Hosting]
+        FS["Cloud Firestore"]
+        FH["Firebase Hosting"]
     end
 
-    subgraph DevOps["🔄 CI/CD"]
-        GA[GitHub Actions]
-        Deploy[Auto Deploy]
+    subgraph CI["⚙️ DevOps"]
+        GA["GitHub Actions"]
     end
 
-    LP --> Auth
-    Auth --> Context
-    Context --> AD & TD & SD & PD
-    AD & TD & SD & PD --> Redux
+    UI --> Redux
+    UI --> Router
+    UI --> FM
+    Router --> RG
+    RG --> FA
+    FA --> FS
     Redux --> FS
-    Auth --> FA
-    GA --> Deploy --> FH
-
-    style Client fill:#1a1b27,stroke:#6c63ff,color:#fff
-    style State fill:#1a1b27,stroke:#764ba2,color:#fff
-    style Backend fill:#1a1b27,stroke:#ffca28,color:#fff
-    style DevOps fill:#1a1b27,stroke:#2088ff,color:#fff
+    GA --> FH
 ```
+
+---
+
+## 📸 Screenshots
+
+> **📌 Coming Soon** — Screenshots of each dashboard will be added here.
+> 
+> If you'd like to see the app in action, check out the [Live Demo](https://smart-ed-b7023.web.app).
+
+<!--
+Uncomment and add your screenshots:
+
+<div align="center">
+<img src="screenshots/admin-dashboard.png" width="45%" />
+<img src="screenshots/teacher-dashboard.png" width="45%" />
+<img src="screenshots/student-dashboard.png" width="45%" />
+<img src="screenshots/parent-dashboard.png" width="45%" />
+</div>
+-->
 
 ---
 
@@ -162,68 +176,45 @@ graph TB
 
 ### Prerequisites
 
-- **Node.js** ≥ 18.0.0
-- **npm** ≥ 9.0.0
-- **Firebase CLI** (for deployment)
+- **Node.js** v18+ and **npm** v9+
+- A **Firebase** project with Firestore and Authentication enabled
+- **Git** installed
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ShelumHansana/SmartED.git
-   cd SmartED
-   ```
-
-2. **Install frontend dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-3. **Install backend dependencies**
-   ```bash
-   cd ../backend
-   npm install
-   ```
-
-4. **Configure Firebase**
-   
-   Create a Firebase project at [Firebase Console](https://console.firebase.google.com/) and update `frontend/src/utils/firebase.js` with your configuration:
-   ```javascript
-   const firebaseConfig = {
-     apiKey: "YOUR_API_KEY",
-     authDomain: "YOUR_AUTH_DOMAIN",
-     projectId: "YOUR_PROJECT_ID",
-     storageBucket: "YOUR_STORAGE_BUCKET",
-     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-     appId: "YOUR_APP_ID"
-   };
-   ```
-
-5. **Start the development server**
-   ```bash
-   cd ../frontend
-   npm run dev
-   ```
-
-6. **Open your browser**
-   ```
-   http://localhost:5173
-   ```
-
-### Firebase Deployment
-
 ```bash
-# Build the frontend
-cd frontend
-npm run build
+# 1. Clone the repository
+git clone https://github.com/ShelumHansana/SmartED.git
+cd SmartED
 
-# Deploy to Firebase Hosting
-cd ..
-firebase deploy --only hosting
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables (see below)
+cp .env.example .env
+
+# 4. Start the development server
+npm run dev
 ```
 
-> 💡 **Tip:** Push to the `main` branch triggers automatic deployment via GitHub Actions!
+The app will be available at `http://localhost:5173`
+
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file in the root directory with your Firebase configuration:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+> **Note:** Never commit your `.env` file. It's already included in `.gitignore`.
 
 ---
 
@@ -231,104 +222,87 @@ firebase deploy --only hosting
 
 ```
 SmartED/
-├── 📂 .github/
-│   └── workflows/              # CI/CD pipeline configuration
-│       ├── firebase-hosting-merge.yml
-│       └── firebase-hosting-pull-request.yml
-├── 📂 backend/
-│   ├── firebase/config.js      # Firebase configuration
-│   ├── index.js                # Backend entry point
-│   ├── scripts/                # Database initialization scripts
-│   ├── services/               # Business logic layer
-│   │   ├── adminService.js     # Admin operations
-│   │   ├── authService.js      # Authentication logic
-│   │   ├── dbInitService.js    # Database setup
-│   │   └── userService.js      # User management
-│   └── utils/                  # Shared utilities
-├── 📂 frontend/
-│   ├── public/                 # Static assets
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   │   ├── dashboard/      # Student dashboard modules
-│   │   │   └── teacher/        # Teacher-specific components
-│   │   ├── contexts/           # React Context providers
-│   │   ├── data/               # Static data & constants
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── services/           # API service layer
-│   │   ├── styles/             # CSS stylesheets
-│   │   │   └── teacher/        # Teacher-specific styles
-│   │   └── utils/              # Frontend utilities
-│   ├── index.html              # App entry point
-│   ├── vite.config.js          # Vite configuration
-│   └── package.json            # Frontend dependencies
-├── firebase.json               # Firebase hosting config
-├── CONTRIBUTING.md             # Contribution guidelines
-├── CODE_OF_CONDUCT.md          # Community guidelines
-├── SECURITY.md                 # Security policy
-├── LICENSE                     # MIT License
-└── README.md                   # This file
+├── .github/
+│   └── workflows/         # CI/CD pipeline configurations
+├── public/                # Static assets
+├── src/
+│   ├── assets/            # Images, icons, fonts
+│   ├── components/        # Reusable UI components
+│   │   ├── common/        # Shared components (buttons, cards, etc.)
+│   │   ├── admin/         # Admin-specific components
+│   │   ├── teacher/       # Teacher-specific components
+│   │   ├── student/       # Student-specific components
+│   │   └── parent/        # Parent-specific components
+│   ├── pages/             # Page-level components
+│   ├── store/             # Redux Toolkit slices & store
+│   ├── services/          # Firebase service functions
+│   ├── hooks/             # Custom React hooks
+│   ├── utils/             # Utility functions & constants
+│   ├── routes/            # Route configurations & guards
+│   ├── App.jsx            # Main application component
+│   └── main.jsx           # Entry point
+├── .env.example           # Environment template
+├── firebase.json          # Firebase configuration
+├── vite.config.js         # Vite configuration
+└── package.json           # Dependencies & scripts
 ```
 
 ---
 
 ## 📖 Documentation
 
-| Document | Description |
+| Resource | Link |
 |---|---|
-| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Step-by-step deployment instructions |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute to SmartED |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community behavior guidelines |
-| [SECURITY.md](SECURITY.md) | Security vulnerability reporting |
+| 🌐 Live Application | [smart-ed-b7023.web.app](https://smart-ed-b7023.web.app) |
+| 🐛 Bug Reports | [GitHub Issues](https://github.com/ShelumHansana/SmartED/issues) |
+| ✨ Feature Requests | [GitHub Issues](https://github.com/ShelumHansana/SmartED/issues) |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] Multi-role authentication system
+- [x] Role-based authentication system
 - [x] Admin dashboard with user management
 - [x] Teacher grade entry & analytics
-- [x] Student progress dashboard
+- [x] Student academic progress view
 - [x] Parent monitoring portal
-- [x] Firebase CI/CD pipeline
-- [ ] Mobile-responsive optimization
-- [ ] Push notifications
-- [ ] Attendance tracking module
-- [ ] Timetable management
-- [ ] Report card generation (PDF)
-- [ ] Multi-language support (Sinhala/Tamil/English)
-- [ ] PWA support for offline access
-- [ ] API documentation with Swagger
+- [x] CI/CD pipeline with GitHub Actions
+- [ ] Push notifications for parents
+- [ ] Multi-language support (Sinhala, Tamil, English)
+- [ ] Offline mode with service workers
+- [ ] Mobile app version (React Native)
+- [ ] Advanced analytics & reporting
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are welcome! Here's how you can help:
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'feat: add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Please ensure your code follows the existing style and all tests pass.
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
 - [React](https://react.dev/) — UI library
-- [Firebase](https://firebase.google.com/) — Backend services
+- [Firebase](https://firebase.google.com/) — Backend-as-a-Service
 - [Vite](https://vitejs.dev/) — Build tool
-- [Chart.js](https://www.chartjs.org/) & [Recharts](https://recharts.org/) — Data visualization
 - [Framer Motion](https://www.framer.com/motion/) — Animations
-- [Shields.io](https://shields.io/) — Badges
+- [Chart.js](https://www.chartjs.org/) & [Recharts](https://recharts.org/) — Data visualization
+- [Redux Toolkit](https://redux-toolkit.js.org/) — State management
 
 ---
 
@@ -336,8 +310,6 @@ Distributed under the **MIT License**. See [LICENSE](LICENSE) for more informati
 
 **Built with ❤️ by [Shelum Hansana](https://github.com/ShelumHansana)**
 
-⭐ Star this repo if you find it helpful!
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:667eea,100:764ba2&height=100&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:667eea,100:764ba2&height=120&section=footer" width="100%" />
 
 </div>
