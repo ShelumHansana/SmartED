@@ -6,6 +6,7 @@ import { db } from '../utils/firebase'
 import Calculator from './Calculator'
 import Notepad from './Notepad'
 import StudentProgress from './dashboard/StudentProgress'
+import ProfileAvatarUploader from './ProfileAvatarUploader'
 import '../styles/StudentDashboard.css'
 
 // Default avatar image
@@ -13,6 +14,7 @@ const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/s
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth()
+  const [profileImg, setProfileImg] = useState(user?.profileImage || user?.photoURL || null)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -303,9 +305,19 @@ const StudentDashboard = () => {
           ✕
         </button>
         <div className="student-profile">
-          <div className="profile-image">
-            <img src={defaultAvatar} alt="Student" />
-          </div>
+          <ProfileAvatarUploader
+            userId={user?.id || user?.uid}
+            currentImageUrl={profileImg || user?.profileImage || user?.photoURL || defaultAvatar}
+            displayName={studentData.name}
+            role="Student"
+            onImageUpdated={(url) => {
+              setProfileImg(url)
+              if (user) {
+                user.profileImage = url
+                user.photoURL = url
+              }
+            }}
+          />
           <h3>{studentData.name}</h3>
           <div className="student-info">
             <p className="student-id">ID: {studentData.studentId}</p>

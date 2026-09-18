@@ -1,8 +1,8 @@
 // Firebase Configuration for Frontend
 // This file initializes Firebase services for the SmartED application
 
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -25,6 +25,24 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+/**
+ * Creates a new user in Firebase Auth using a secondary Firebase App instance.
+ * This ensures the currently logged-in Admin is never logged out.
+ */
+export const createFirebaseUserWithoutLoggingOut = async (email, password) => {
+  let secondaryApp;
+  const existingApp = getApps().find(a => a.name === 'SecondaryAdminApp');
+  if (existingApp) {
+    secondaryApp = existingApp;
+  } else {
+    secondaryApp = initializeApp(firebaseConfig, 'SecondaryAdminApp');
+  }
+  const secondaryAuth = getAuth(secondaryApp);
+  const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+  await signOut(secondaryAuth);
+  return userCredential.user;
+};
 
 // Export the app instance
 export default app;

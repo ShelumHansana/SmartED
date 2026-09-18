@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const Login = ({ onClose, onSignupClick }) => {
-  const [email, setEmail] = useState('')
+const Login = ({ onClose }) => {
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,7 +17,7 @@ const Login = ({ onClose, onSignupClick }) => {
     setError('')
     
     // Validation
-    if (!email || !password) {
+    if (!identifier.trim() || !password) {
       setError('Please fill in all fields')
       return
     }
@@ -25,8 +25,8 @@ const Login = ({ onClose, onSignupClick }) => {
     try {
       setLoading(true)
       
-      // Login with Firebase
-      const userData = await login(email, password)
+      // Login with Firebase via identifier (username, index number, or email)
+      const userData = await login(identifier.trim(), password)
       
       // Role-based navigation
       const roleRoutes = {
@@ -42,7 +42,7 @@ const Login = ({ onClose, onSignupClick }) => {
       
     } catch (err) {
       console.error('Login error:', err)
-      setError(err.message || 'Invalid email or password. Please try again.')
+      setError(err.message || 'Invalid credentials. Please try again.')
       setLoading(false)
     }
   }
@@ -50,14 +50,6 @@ const Login = ({ onClose, onSignupClick }) => {
   const handleModalClick = (e) => {
     if (e.target.className === 'auth-modal') {
       onClose()
-    }
-  }
-
-  const handleSignupClick = (e) => {
-    e.preventDefault()
-    onClose() // Close login modal
-    if (onSignupClick) {
-      onSignupClick() // Open signup modal
     }
   }
 
@@ -71,10 +63,10 @@ const Login = ({ onClose, onSignupClick }) => {
           <div style={{
             padding: '10px',
             marginBottom: '15px',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '6px',
+            color: '#b91c1c',
             fontSize: '0.9rem'
           }}>
             {error}
@@ -83,15 +75,16 @@ const Login = ({ onClose, onSignupClick }) => {
         
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="identifier">Username, Index Number, or Email</label>
             <input 
-              type="email" 
-              id="email" 
-              placeholder="Enter your email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text" 
+              id="identifier" 
+              placeholder="e.g. ST260001, username, or email" 
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               disabled={loading}
               required 
+              autoFocus
             />
           </div>
           <div className="form-group">
@@ -116,8 +109,8 @@ const Login = ({ onClose, onSignupClick }) => {
           </button>
         </form>
         
-        <p style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
-          Don't have an account? <a href="#" onClick={handleSignupClick} style={{ color: '#4A90E2', textDecoration: 'none', cursor: 'pointer' }}>Sign up</a>
+        <p style={{ marginTop: '18px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
+          🔒 New account? Credentials are provided by the school administrator.
         </p>
       </div>
     </div>

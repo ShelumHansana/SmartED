@@ -1,7 +1,7 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
-const Navbar = ({ onLoginClick, onSignupClick }) => {
+const Navbar = ({ onLoginClick }) => {
   const { user, logout, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   
@@ -39,17 +39,14 @@ const Navbar = ({ onLoginClick, onSignupClick }) => {
               fontSize: '0.9rem',
               cursor: 'pointer'
             }} onClick={goToDashboard}>
-              👤 {user?.firstName || user?.email}
+              👤 {user?.firstName || user?.fullName || user?.email}
             </span>
             <button className="login-button" onClick={handleLogout}>
               Logout
             </button>
           </>
         ) : (
-          <>
-            <button className="login-button" onClick={onLoginClick}>Login</button>
-            <button className="signup-button" onClick={onSignupClick}>Sign Up</button>
-          </>
+          <button className="login-button" onClick={onLoginClick}>Login</button>
         )}
       </div>
     </nav>

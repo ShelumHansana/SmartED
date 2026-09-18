@@ -8,7 +8,7 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../utils/firebase';
 
 // ==================== USER REGISTRATION ====================
@@ -195,13 +195,62 @@ export const registerParent = async (userData) => {
 // ==================== USER LOGIN ====================
 
 /**
- * Login user with email and password
+ * Login user with username, index number, or email and password
  */
-export const loginUser = async (email, password) => {
+export const loginUser = async (identifier, password) => {
   try {
-    console.log('Attempting login for:', email);
+    const rawIdentifier = (identifier || '').trim();
+    console.log('Attempting login for:', rawIdentifier);
+
+    // Check for hardcoded admin credentials
+    if ((rawIdentifier.toLowerCase() === 'admin@gmail.com' || rawIdentifier.toLowerCase() === 'admin') && password === '12345') {
+      console.log('Admin login with default credentials');
+      return {
+        uid: 'admin-hardcoded-001',
+        id: 'admin-hardcoded-001',
+        email: 'admin@gmail.com',
+        username: 'admin',
+        role: 'admin',
+        fullName: 'System Administrator',
+        status: 'Active',
+        isHardcodedAdmin: true
+      };
+    }
+
+    let emailToAuth = rawIdentifier;
+
+    // If identifier is not an email, lookup user in Firestore by username or index number
+    if (!rawIdentifier.includes('@')) {
+      const usersRef = collection(db, 'users');
+      
+      // Check username (case-insensitive search by lowercase)
+      let q = query(usersRef, where('username', '==', rawIdentifier.toLowerCase()));
+      let querySnapshot = await getDocs(q);
+
+      // If not found, check indexNumber
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('indexNumber', '==', rawIdentifier));
+        querySnapshot = await getDocs(q);
+      }
+
+      // If not found, check studentData.indexNumber
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('studentData.indexNumber', '==', rawIdentifier));
+        querySnapshot = await getDocs(q);
+      }
+
+      if (querySnapshot.empty) {
+        throw new Error('No account found with this username or index number.');
+      }
+
+      const matchedData = querySnapshot.docs[0].data();
+      if (!matchedData.email) {
+        throw new Error('No linked email found for this user account.');
+      }
+      emailToAuth = matchedData.email;
+    }
     
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, emailToAuth, password);
     const user = userCredential.user;
     
     // Get user data from Firestore
@@ -214,7 +263,7 @@ export const loginUser = async (email, password) => {
     const userData = userDoc.data();
     
     // Check if user is active
-    if (userData.status !== 'Active') {
+    if (userData.status && userData.status !== 'Active') {
       await firebaseSignOut(auth);
       throw new Error('Account is inactive. Please contact administrator.');
     }
@@ -226,12 +275,17 @@ export const loginUser = async (email, password) => {
     
     return {
       uid: user.uid,
+      id: user.uid,
       email: user.email,
       ...userData
     };
   } catch (error) {
     console.error('Login error:', error);
-    throw error;
+    let errorMessage = error.message || 'Login failed. Please try again.';
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      errorMessage = 'Invalid username, index number, email, or password.';
+    }
+    throw new Error(errorMessage);
   }
 };
 

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
 import { db } from '../utils/firebase'
+import ProfileAvatarUploader from './ProfileAvatarUploader'
 import '../styles/ParentDashboard.css'
 
 const ParentDashboard = () => {
   const { user, logout } = useAuth()
+  const [profileImg, setProfileImg] = useState(user?.profileImage || user?.photoURL || null)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -569,16 +571,20 @@ const ParentDashboard = () => {
           ✕
         </button>
         <div className="parent-profile">
-          <div className="profile-image">
-            {user.profileImage ? (
-              <img src={user.profileImage} alt="Parent" />
-            ) : (
-              <div className="profile-avatar-letter">
-                {(user.fullName || 'Parent').charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          <h3>{user.fullName || 'Parent'}</h3>
+          <ProfileAvatarUploader
+            userId={user?.id || user?.uid}
+            currentImageUrl={profileImg || user?.profileImage || user?.photoURL}
+            displayName={user?.fullName || 'Parent'}
+            role="Parent"
+            onImageUpdated={(url) => {
+              setProfileImg(url)
+              if (user) {
+                user.profileImage = url
+                user.photoURL = url
+              }
+            }}
+          />
+          <h3>{user?.fullName || 'Parent'}</h3>
           <p className="parent-role">Parent Portal</p>
           <p className="parent-children">{children.length} {children.length === 1 ? 'Child' : 'Children'}</p>
         </div>

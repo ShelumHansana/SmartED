@@ -1,10 +1,55 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../utils/firebase'
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db, createFirebaseUserWithoutLoggingOut } from '../utils/firebase'
+import ProfileAvatarUploader from './ProfileAvatarUploader'
 import '../styles/Dashboard.css'
 import '../styles/AdminDashboard.css'
+
+// Credentials generation utilities
+const generateIndexNumber = (role = 'student') => {
+  const prefixMap = {
+    student: 'ST',
+    teacher: 'TC',
+    parent: 'PR',
+    admin: 'AD'
+  }
+  const prefix = prefixMap[role] || 'ST'
+  const year = new Date().getFullYear().toString().slice(-2)
+  const randomNum = Math.floor(1000 + Math.random() * 9000)
+  return `${prefix}${year}${randomNum}`
+}
+
+const generateUsername = (fullName = '', indexNumber = '') => {
+  if (fullName && fullName.trim()) {
+    const cleaned = fullName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .split(/\s+/)
+      .slice(0, 2)
+      .join('.')
+    if (cleaned.length >= 3) {
+      return cleaned
+    }
+  }
+  return indexNumber ? indexNumber.toLowerCase() : `user${Math.floor(1000 + Math.random() * 9000)}`
+}
+
+const generatePassword = () => {
+  const chars = 'abcdefghijkmnopqrstuvwxyz'
+  const digits = '23456789'
+  let randomDigits = ''
+  for (let i = 0; i < 4; i++) {
+    randomDigits += digits.charAt(Math.floor(Math.random() * digits.length))
+  }
+  let randomChars = ''
+  for (let i = 0; i < 2; i++) {
+    randomChars += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return `Smart@${randomDigits}${randomChars}`
+}
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth()
@@ -24,6 +69,29 @@ const AdminDashboard = () => {
   const [showUserModal, setShowUserModal] = useState(false)
   const [userFilter, setUserFilter] = useState('All')
   const [userSearchQuery, setUserSearchQuery] = useState('')
+
+  // Generated Credentials States
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false)
+  const [createdCredentials, setCreatedCredentials] = useState(null)
+  const [copiedCredentials, setCopiedCredentials] = useState(false)
+  const [formRole, setFormRole] = useState('student')
+  const [formIndexNumber, setFormIndexNumber] = useState('')
+  const [formUsername, setFormUsername] = useState('')
+  const [formPassword, setFormPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
+  const openAddUserModal = () => {
+    setSelectedUser(null)
+    const initialRole = 'student'
+    const index = generateIndexNumber(initialRole)
+    const pass = generatePassword()
+    setFormRole(initialRole)
+    setFormIndexNumber(index)
+    setFormUsername(index.toLowerCase())
+    setFormPassword(pass)
+    setShowPassword(false)
+    setShowUserModal(true)
+  }
   
   // Course Management States
   const [courses, setCourses] = useState([])
@@ -256,30 +324,89 @@ const AdminDashboard = () => {
     try {
       console.log('Adding user with data:', userData)
       
+      const username = (userData.username || formUsername || '').trim().toLowerCase()
+      const indexNumber = (userData.indexNumber || formIndexNumber || '').trim().toUpperCase()
+      const password = (userData.password || formPassword || '').trim()
+      const email = (userData.email || '').trim() || `${username}@smarted.school`
+      const role = userData.role || formRole || 'student'
+      const fullName = userData.fullName || userData.name || 'New User'
+
+      if (!password || password.length < 6) {
+        showToast('Password must be at least 6 characters long.', 'error')
+        return
+      }
+
+      // 1. Create Firebase Auth user without logging out the Admin
+      let authUser
+      try {
+        authUser = await createFirebaseUserWithoutLoggingOut(email, password)
+      } catch (authErr) {
+        console.error('Firebase Auth creation failed:', authErr)
+        let msg = authErr.message
+        if (authErr.code === 'auth/email-already-in-use') {
+          msg = 'This email address is already in use. Please use a unique email or let system generate one.'
+        }
+        showToast(`Registration error: ${msg}`, 'error')
+        return
+      }
+
+      const uid = authUser.uid
+
+      // 2. Prepare user record for Firestore
       const newUser = {
-        fullName: userData.fullName || userData.name,
-        email: userData.email,
-        role: userData.role,
+        fullName: fullName,
+        email: email,
+        username: username,
+        indexNumber: indexNumber,
+        role: role,
         status: userData.status || 'Active',
+        initialPassword: password,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }
       
       // Add role-specific data
-      if (userData.grade) newUser.studentData = { grade: userData.grade }
-      if (userData.subject) newUser.teacherData = { subject: userData.subject }
+      if (role === 'student') {
+        newUser.studentData = { 
+          indexNumber: indexNumber,
+          admissionNo: indexNumber,
+          grade: userData.grade || '',
+          class: userData.className || ''
+        }
+      } else if (role === 'teacher') {
+        newUser.teacherData = { 
+          employeeId: indexNumber,
+          subject: userData.subject || '',
+          subjects: userData.subject ? [userData.subject] : []
+        }
+      } else if (role === 'parent') {
+        newUser.parentData = { 
+          contactNumber: userData.phone || ''
+        }
+      }
       if (userData.phone) newUser.phone = userData.phone
       
-      console.log('Final new user data:', newUser)
+      console.log('Saving new user data to Firestore:', newUser)
       
-      await addDoc(collection(db, 'users'), newUser)
+      await setDoc(doc(db, 'users', uid), newUser)
       
       // Reload all data to ensure consistency
       await reloadAllData()
       
       setShowUserModal(false)
       setSelectedUser(null)
-      showToast('User added successfully!', 'success')
+
+      // Open credentials modal for the Admin
+      setCreatedCredentials({
+        fullName: fullName,
+        role: role,
+        indexNumber: indexNumber,
+        username: username,
+        password: password,
+        email: email
+      })
+      setShowCredentialsModal(true)
+      showToast('User created successfully! Credentials generated.', 'success')
     } catch (error) {
       console.error('Error adding user:', error)
       showToast('Error adding user: ' + error.message, 'error')
@@ -1424,8 +1551,7 @@ const AdminDashboard = () => {
   const handleQuickAction = (action) => {
     switch (action) {
       case 'addUser':
-        setShowUserModal(true)
-        setSelectedUser(null)
+        openAddUserModal()
         break
       case 'createCourse':
         setShowCourseModal(true)
@@ -1493,13 +1619,19 @@ const AdminDashboard = () => {
           ✕
         </button>
         <div className="admin-profile">
-          <div className="profile-image">
-            {user?.profileImage ? (
-              <img src={user.profileImage} alt="Admin" />
-            ) : (
-              <div className="profile-avatar-letter">A</div>
-            )}
-          </div>
+          <ProfileAvatarUploader 
+            userId={user?.id || user?.uid}
+            currentImageUrl={user?.profileImage || user?.photoURL}
+            displayName={user?.fullName || 'System Admin'}
+            role="Admin"
+            onImageUpdated={(url) => {
+              if (user) {
+                user.profileImage = url
+                user.photoURL = url
+              }
+              showToast('Profile image updated successfully!', 'success')
+            }}
+          />
           <h3>{user?.fullName || 'System Admin'}</h3>
           <p>Administrator</p>
           <p>{schoolSettings.schoolName}</p>
@@ -1669,10 +1801,7 @@ const AdminDashboard = () => {
                     <option value="teacher">Teachers</option>
                     <option value="parent">Parents</option>
                   </select>
-                  <button className="add-btn" onClick={() => {
-                    setSelectedUser(null)
-                    setShowUserModal(true)
-                  }}>
+                  <button className="add-btn" onClick={openAddUserModal}>
                     <span className="btn-icon">➕</span>
                     Add New User
                   </button>
@@ -1685,6 +1814,8 @@ const AdminDashboard = () => {
                     const matchesRole = userFilter === 'All' || user.role === userFilter
                     const matchesSearch = userSearchQuery === '' || 
                       (user.name && user.name.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
+                      (user.username && user.username.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
+                      (user.indexNumber && user.indexNumber.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
                       (user.email && user.email.toLowerCase().includes(userSearchQuery.toLowerCase()))
                     return matchesRole && matchesSearch
                   })
@@ -1704,10 +1835,7 @@ const AdminDashboard = () => {
                         </p>
                         <button 
                           className="empty-action-btn"
-                          onClick={() => {
-                            setSelectedUser(null)
-                            setShowUserModal(true)
-                          }}
+                          onClick={openAddUserModal}
                         >
                           <span className="btn-icon">➕</span>
                           Add New User
@@ -1719,15 +1847,35 @@ const AdminDashboard = () => {
                   return filteredUsers.map(user => (
                     <div key={user.id} className="user-card">
                       <div className="user-header">
-                        <div className="user-avatar">
-                          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        <div className="user-avatar" style={{ overflow: 'hidden' }}>
+                          {user.profileImage || user.photoURL ? (
+                            <img 
+                              src={user.profileImage || user.photoURL} 
+                              alt={user.name || 'User'} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                            />
+                          ) : (
+                            user.name ? user.name.charAt(0).toUpperCase() : 'U'
+                          )}
                         </div>
                         <div className="user-info">
                           <h4>{user.name || 'Unnamed User'}</h4>
                           <p>{user.email}</p>
-                          <span className={`role-badge ${user.role ? user.role.toLowerCase() : 'unknown'}`}>
-                            {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown'}
-                          </span>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                            <span className={`role-badge ${user.role ? user.role.toLowerCase() : 'unknown'}`}>
+                              {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown'}
+                            </span>
+                            {user.username && (
+                              <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                                @{user.username}
+                              </span>
+                            )}
+                            {(user.indexNumber || user.studentData?.indexNumber) && (
+                              <span style={{ fontSize: '0.75rem', background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                                ID: {user.indexNumber || user.studentData?.indexNumber}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="user-details">
@@ -2599,9 +2747,9 @@ const AdminDashboard = () => {
       {/* User Modal */}
       {showUserModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '640px' }}>
             <div className="modal-header">
-              <h3>{selectedUser ? 'Edit User' : 'Add New User'}</h3>
+              <h3>{selectedUser ? 'Edit User' : 'Add New User & Generate Credentials'}</h3>
               <button 
                 className="close-modal"
                 onClick={() => {
@@ -2618,6 +2766,9 @@ const AdminDashboard = () => {
               const userData = {
                 fullName: formData.get('fullName'),
                 email: formData.get('email'),
+                username: formData.get('username') || formUsername,
+                indexNumber: formData.get('indexNumber') || formIndexNumber,
+                password: formData.get('password') || formPassword,
                 role: formData.get('role'),
                 status: formData.get('status'),
                 phone: formData.get('phone') || '',
@@ -2633,27 +2784,142 @@ const AdminDashboard = () => {
                 handleAddUser(userData)
               }
             }}>
+              {!selectedUser && (
+                <div className="admin-form-tip">
+                  ⚡ <strong>Auto-Credential Generation:</strong> Unique Index Number, Username, and Password are automatically generated. You can customize them or click 🔄 to regenerate.
+                </div>
+              )}
+
               <div className="form-grid">
+                <div className="form-group">
+                  <label>Role *</label>
+                  <select 
+                    name="role"
+                    value={selectedUser ? (selectedUser.role || 'student') : formRole}
+                    onChange={(e) => {
+                      const newRole = e.target.value
+                      setFormRole(newRole)
+                      if (!selectedUser) {
+                        const newIdx = generateIndexNumber(newRole)
+                        setFormIndexNumber(newIdx)
+                        setFormUsername(newIdx.toLowerCase())
+                      }
+                    }}
+                    required
+                  >
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="parent">Parent</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
                 <div className="form-group">
                   <label>Full Name *</label>
                   <input 
                     type="text" 
                     name="fullName"
-                    placeholder="Enter full name"
+                    placeholder="e.g. Kasun Perera"
                     defaultValue={selectedUser?.fullName || selectedUser?.name || ''}
+                    onChange={(e) => {
+                      if (!selectedUser && e.target.value.trim()) {
+                        const gen = generateUsername(e.target.value, formIndexNumber)
+                        setFormUsername(gen)
+                      }
+                    }}
                     required
                   />
                 </div>
+
+                {!selectedUser && (
+                  <>
+                    <div className="form-group">
+                      <label>Generated Index Number *</label>
+                      <div className="generated-input-group">
+                        <input 
+                          type="text" 
+                          name="indexNumber"
+                          value={formIndexNumber}
+                          onChange={(e) => setFormIndexNumber(e.target.value.toUpperCase())}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="input-action-btn"
+                          title="Regenerate Index Number"
+                          onClick={() => setFormIndexNumber(generateIndexNumber(formRole))}
+                        >
+                          🔄
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Generated Username *</label>
+                      <div className="generated-input-group">
+                        <input 
+                          type="text" 
+                          name="username"
+                          value={formUsername}
+                          onChange={(e) => setFormUsername(e.target.value.toLowerCase())}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="input-action-btn"
+                          title="Regenerate Username"
+                          onClick={() => {
+                            const fullNameInput = document.querySelector('input[name="fullName"]')?.value
+                            setFormUsername(generateUsername(fullNameInput, formIndexNumber))
+                          }}
+                        >
+                          🔄
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Generated Password *</label>
+                      <div className="generated-input-group">
+                        <input 
+                          type={showPassword ? 'text' : 'password'} 
+                          name="password"
+                          value={formPassword}
+                          onChange={(e) => setFormPassword(e.target.value)}
+                          required
+                        />
+                        <button 
+                          type="button" 
+                          className="input-action-btn"
+                          title={showPassword ? 'Hide Password' : 'Show Password'}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? '🙈' : '👁️'}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="input-action-btn"
+                          title="Regenerate Password"
+                          onClick={() => setFormPassword(generatePassword())}
+                        >
+                          🔄
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="form-group">
-                  <label>Email Address *</label>
+                  <label>Email Address {selectedUser ? '*' : '(Optional)'}</label>
                   <input 
                     type="email" 
                     name="email"
-                    placeholder="Enter email address"
+                    placeholder={!selectedUser && formUsername ? `${formUsername}@smarted.school` : 'Enter email address'}
                     defaultValue={selectedUser?.email || ''}
-                    required
+                    required={!!selectedUser}
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Phone</label>
                   <input 
@@ -2663,37 +2929,31 @@ const AdminDashboard = () => {
                     defaultValue={selectedUser?.phone || ''}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Role *</label>
-                  <select 
-                    name="role"
-                    defaultValue={selectedUser?.role || 'student'}
-                    required
-                  >
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="parent">Parent</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Grade (For Students)</label>
-                  <input 
-                    type="text" 
-                    name="grade"
-                    placeholder="e.g., Grade 10"
-                    defaultValue={selectedUser?.studentData?.grade || ''}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Subject (For Teachers)</label>
-                  <input 
-                    type="text" 
-                    name="subject"
-                    placeholder="e.g., Mathematics"
-                    defaultValue={selectedUser?.teacherData?.subject || ''}
-                  />
-                </div>
+
+                {((selectedUser && selectedUser.role === 'student') || (!selectedUser && formRole === 'student')) && (
+                  <div className="form-group">
+                    <label>Grade (For Students)</label>
+                    <input 
+                      type="text" 
+                      name="grade"
+                      placeholder="e.g., Grade 10"
+                      defaultValue={selectedUser?.studentData?.grade || ''}
+                    />
+                  </div>
+                )}
+
+                {((selectedUser && selectedUser.role === 'teacher') || (!selectedUser && formRole === 'teacher')) && (
+                  <div className="form-group">
+                    <label>Subject (For Teachers)</label>
+                    <input 
+                      type="text" 
+                      name="subject"
+                      placeholder="e.g., Mathematics"
+                      defaultValue={selectedUser?.teacherData?.subject || ''}
+                    />
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label>Status *</label>
                   <select 
@@ -2729,7 +2989,90 @@ const AdminDashboard = () => {
                 }}
               >
                 <span className="btn-icon">{selectedUser ? '📝' : '➕'}</span>
-                {selectedUser ? 'Update User' : 'Add User'}
+                {selectedUser ? 'Update User' : 'Register User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Created Popup Modal */}
+      {showCredentialsModal && createdCredentials && (
+        <div className="modal-overlay credentials-modal-overlay">
+          <div className="modal-content credentials-modal-content">
+            <div className="modal-header credentials-modal-header">
+              <div className="credentials-success-badge">✅ User Registered Successfully</div>
+              <button 
+                className="close-modal"
+                onClick={() => setShowCredentialsModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body credentials-modal-body">
+              <p className="credentials-intro">
+                New user registered by Administrator. Please share the generated credentials with the user:
+              </p>
+
+              <div className="credentials-card">
+                <div className="credential-row">
+                  <span className="credential-label">👤 Full Name:</span>
+                  <span className="credential-value">{createdCredentials.fullName}</span>
+                </div>
+                <div className="credential-row">
+                  <span className="credential-label">🏷️ Role:</span>
+                  <span className="credential-value role-tag">{createdCredentials.role.toUpperCase()}</span>
+                </div>
+                <div className="credential-row highlight-row">
+                  <span className="credential-label">🆔 Index Number:</span>
+                  <span className="credential-value credential-code">{createdCredentials.indexNumber}</span>
+                </div>
+                <div className="credential-row highlight-row">
+                  <span className="credential-label">🔑 Username:</span>
+                  <span className="credential-value credential-code">{createdCredentials.username}</span>
+                </div>
+                <div className="credential-row highlight-row">
+                  <span className="credential-label">🔒 Password:</span>
+                  <span className="credential-value credential-code">{createdCredentials.password}</span>
+                </div>
+                <div className="credential-row">
+                  <span className="credential-label">✉️ Email:</span>
+                  <span className="credential-value">{createdCredentials.email}</span>
+                </div>
+              </div>
+
+              <div className="credentials-tip">
+                💡 The user can now log in at the home page using their <strong>Username</strong> (or Index Number) and <strong>Password</strong>.
+              </div>
+            </div>
+            <div className="modal-footer credentials-modal-footer">
+              <button 
+                className="copy-credentials-btn"
+                type="button"
+                onClick={() => {
+                  const textToCopy = `SmartED Login Credentials:
+Full Name: ${createdCredentials.fullName}
+Role: ${createdCredentials.role}
+Index Number: ${createdCredentials.indexNumber}
+Username: ${createdCredentials.username}
+Password: ${createdCredentials.password}
+Email: ${createdCredentials.email}
+Portal: ${window.location.origin}`
+                  navigator.clipboard.writeText(textToCopy)
+                  setCopiedCredentials(true)
+                  showToast('Credentials copied to clipboard!', 'success')
+                  setTimeout(() => setCopiedCredentials(false), 2500)
+                }}
+              >
+                <span className="btn-icon">{copiedCredentials ? '✅' : '📋'}</span>
+                {copiedCredentials ? 'Copied to Clipboard!' : 'Copy All Credentials'}
+              </button>
+              <button 
+                className="save-btn"
+                type="button"
+                onClick={() => setShowCredentialsModal(false)}
+              >
+                Done
               </button>
             </div>
           </div>

@@ -10,10 +10,12 @@ import TodoList from './teacher/TodoList'
 import ActivityUpload from './teacher/ActivityUpload'
 import GradeEntry from './teacher/GradeEntry'
 import GradeAnalytics from './teacher/GradeAnalytics'
+import ProfileAvatarUploader from './ProfileAvatarUploader'
 import '../styles/TeacherDashboard.css'
 
 const TeacherDashboard = () => {
   const { user, logout } = useAuth()
+  const [profileImg, setProfileImg] = useState(user?.profileImage || user?.photoURL || null)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('students')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -220,15 +222,19 @@ const TeacherDashboard = () => {
           ✕
         </button>
         <div className="teacher-profile">
-          <div className="profile-image">
-            {user.profileImage ? (
-              <img src={user.profileImage} alt="Teacher" />
-            ) : (
-              <div className="profile-avatar-letter">
-                {teacherName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
+          <ProfileAvatarUploader
+            userId={user?.id || user?.uid}
+            currentImageUrl={profileImg || user?.profileImage || user?.photoURL}
+            displayName={teacherName}
+            role="Teacher"
+            onImageUpdated={(url) => {
+              setProfileImg(url)
+              if (user) {
+                user.profileImage = url
+                user.photoURL = url
+              }
+            }}
+          />
           <h3>{teacherName}</h3>
           <p className="teacher-subject">{teacherSubjects}</p>
           <p className="teacher-classes">{user.classes?.length || 0} Classes Assigned</p>

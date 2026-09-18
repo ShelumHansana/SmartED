@@ -9,7 +9,7 @@ import {
   updateProfile,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase/config.js';
 
 // ==================== USER REGISTRATION ====================
@@ -322,13 +322,14 @@ export const registerParent = async (userData) => {
  * @param {string} password - User password
  * @returns {Promise<Object>} User data with role
  */
-export const loginUser = async (email, password) => {
+export const loginUser = async (identifier, password) => {
   try {
-    // Check for hardcoded admin account
-    if (email === 'admin@gmail.com' && password === '12345') {
+    const rawIdentifier = (identifier || '').trim();
+
+    // Check for hardcoded admin account (email or username 'admin')
+    if ((rawIdentifier.toLowerCase() === 'admin@gmail.com' || rawIdentifier.toLowerCase() === 'admin') && password === '12345') {
       console.log('Admin login detected with hardcoded credentials');
       
-      // Return admin user data without Firebase authentication
       return {
         success: true,
         userId: 'admin-hardcoded-001',
@@ -346,9 +347,42 @@ export const loginUser = async (email, password) => {
       };
     }
 
+    let emailToAuth = rawIdentifier;
+
+    // If identifier is not an email, lookup in Firestore by username or indexNumber
+    if (!rawIdentifier.includes('@')) {
+      const usersRef = collection(db, 'users');
+      
+      // Try username (lowercase)
+      let q = query(usersRef, where('username', '==', rawIdentifier.toLowerCase()));
+      let querySnapshot = await getDocs(q);
+
+      // If not found, try indexNumber
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('indexNumber', '==', rawIdentifier));
+        querySnapshot = await getDocs(q);
+      }
+
+      // If not found, try studentData.indexNumber
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('studentData.indexNumber', '==', rawIdentifier));
+        querySnapshot = await getDocs(q);
+      }
+
+      if (querySnapshot.empty) {
+        throw new Error('No account found with this username or index number.');
+      }
+
+      const matchedUser = querySnapshot.docs[0].data();
+      if (!matchedUser.email) {
+        throw new Error('No linked email found for this user account.');
+      }
+      emailToAuth = matchedUser.email;
+    }
+
     // Regular login flow for other users
     // Sign in with Firebase Auth
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, emailToAuth, password);
     const user = userCredential.user;
 
     // Get user data from Firestore
@@ -360,6 +394,12 @@ export const loginUser = async (email, password) => {
     }
 
     const userData = userDoc.data();
+
+    // Check if user is active
+    if (userData.status && userData.status !== 'Active') {
+      await signOut(auth);
+      throw new Error('This account has been deactivated. Please contact the administrator.');
+    }
 
     // Update last login timestamp
     await setDoc(userDocRef, {
