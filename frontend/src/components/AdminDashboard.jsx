@@ -10,6 +10,7 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
@@ -52,7 +53,7 @@ const AdminDashboard = () => {
     activeUsers: 0
   })
 
-  const [recentActivities, setRecentActivities] = useState([])
+  const [recentActivities, _setRecentActivities] = useState([])
   const [notifications, setNotifications] = useState([])
 
   // Toast Notification States
@@ -271,7 +272,7 @@ const AdminDashboard = () => {
       
       console.log('Final new user data:', newUser)
       
-      const docRef = await addDoc(collection(db, 'users'), newUser)
+      await addDoc(collection(db, 'users'), newUser)
       
       // Reload all data to ensure consistency
       await reloadAllData()
@@ -348,14 +349,19 @@ const AdminDashboard = () => {
 
   const handleToggleUserStatus = async (userId) => {
     try {
-      const result = await adminToggleUserStatus(userId)
-      
-      if (result.success) {
-        // Reload all data to ensure consistency
-        await reloadAllData()
-        
-        showToast('User status updated successfully!', 'success')
+      const userRef = doc(db, 'users', userId)
+      const userSnap = await getDoc(userRef)
+      if (!userSnap.exists()) {
+        throw new Error('User not found')
       }
+      const currentStatus = userSnap.data().status
+      const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
+      await updateDoc(userRef, {
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      })
+      await reloadAllData()
+      showToast(`User status updated to ${newStatus}!`, 'success')
     } catch (error) {
       console.error('Error toggling user status:', error)
       showToast('Error updating user status: ' + error.message, 'error')
@@ -371,7 +377,7 @@ const AdminDashboard = () => {
         status: 'Active',
         createdAt: serverTimestamp()
       }
-      const docRef = await addDoc(collection(db, 'courses'), newCourse)
+      await addDoc(collection(db, 'courses'), newCourse)
       
       // Reload all data to ensure consistency
       await reloadAllData()
@@ -577,7 +583,7 @@ const AdminDashboard = () => {
           }))
         break
       
-      case 'Grade Analysis Report':
+      case 'Grade Analysis Report': {
         const gradeDistribution = users
           .filter(u => u.role === 'student')
           .reduce((acc, student) => {
@@ -594,6 +600,7 @@ const AdminDashboard = () => {
         }
         reportData.gradeDistribution = gradeDistribution
         break
+      }
       
       case 'Attendance Report':
         reportData.summary = {
@@ -729,12 +736,6 @@ const AdminDashboard = () => {
 
   // Generate HTML content (separated for reusability)
   const generateHTMLContent = (reportData, reportType) => {
-    const maxValue = reportData.gradeDistribution 
-      ? Math.max(...Object.values(reportData.gradeDistribution))
-      : reportData.usersByRole
-      ? Math.max(...Object.values(reportData.usersByRole))
-      : 100
-
     let htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -1333,7 +1334,7 @@ const AdminDashboard = () => {
   }
 
   // Generate PDF and open in new window (for viewing)
-  const generateHTMLReport = (reportData, reportType) => {
+  const _generateHTMLReport = (reportData, reportType) => {
     const htmlContent = generateHTMLContent(reportData, reportType)
     
     // Create and download HTML file
@@ -1477,7 +1478,20 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container admin-dashboard">
-      <aside className="dashboard-sidebar">
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <button 
+          className="mobile-sidebar-close" 
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
         <div className="admin-profile">
           <div className="profile-image">
             {user?.profileImage ? (
@@ -1493,31 +1507,31 @@ const AdminDashboard = () => {
         <nav className="dashboard-nav">
           <button 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
             Overview
           </button>
           <button 
             className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
+            onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
           >
             User Management
           </button>
           <button 
             className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courses')}
+            onClick={() => { setActiveTab('courses'); setMobileMenuOpen(false); }}
           >
             Course Management
           </button>
           <button 
             className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reports')}
+            onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
           >
             Reports
           </button>
           <button 
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+            onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
           >
             Settings
           </button>
@@ -1526,7 +1540,16 @@ const AdminDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h2>Admin Dashboard</h2>
+          <div className="header-left">
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            <h2>Admin Dashboard</h2>
+          </div>
           <div className="header-actions">
             <button 
               className="notification-btn"

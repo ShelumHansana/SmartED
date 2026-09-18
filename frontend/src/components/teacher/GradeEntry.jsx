@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { collection, query, where, getDocs, addDoc, getDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../../utils/firebase'
 import './GradeEntry.css'
 
@@ -746,7 +746,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                       </td>
                       <td className="calculated-grade">
                         {grade !== '-' && (
-                          <span className={`grade-badge ${grade.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}>
+                          <span className={`grade-badge ${grade.toLowerCase().replace(/-$/, '-minus').replace('+', '-plus')}`}>
                             {grade}
                           </span>
                         )}
@@ -887,12 +887,12 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                     
                     return (
                       <div key={gradeLevel} className="distribution-row">
-                        <span className={`dist-grade grade-badge ${gradeLevel.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}>
+                        <span className={`dist-grade grade-badge ${gradeLevel.toLowerCase().replace(/-$/, '-minus').replace('+', '-plus')}`}>
                           {gradeLevel}
                         </span>
                         <div className="dist-bar-container">
                           <div 
-                            className={`dist-bar dist-${gradeLevel.toLowerCase().replace(/\-$/, '-minus').replace('+', '-plus')}`}
+                            className={`dist-bar dist-${gradeLevel.toLowerCase().replace(/-$/, '-minus').replace('+', '-plus')}`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>

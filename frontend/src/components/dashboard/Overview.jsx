@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getStudentLevel, getALGrade, getOLGrade } from '../../utils/sriLankanSchoolUtils'
+import { getStudentLevel } from '../../utils/sriLankanSchoolUtils'
 
 const Overview = () => {
   const [selectedSubject, setSelectedSubject] = useState(null)
@@ -261,3 +261,5 @@ const Overview = () => {
     </div>
   )
 }
+
+export default Overview

@@ -16,6 +16,7 @@ const TeacherDashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('students')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
@@ -204,7 +205,20 @@ const TeacherDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="dashboard-sidebar">
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <button 
+          className="mobile-sidebar-close" 
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
         <div className="teacher-profile">
           <div className="profile-image">
             {user.profileImage ? (
@@ -222,37 +236,37 @@ const TeacherDashboard = () => {
         <nav className="dashboard-nav">
           <button 
             className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
-            onClick={() => setActiveTab('students')}
+            onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }}
           >
             Students
           </button>
           <button 
             className={`nav-item ${activeTab === 'grades' ? 'active' : ''}`}
-            onClick={() => setActiveTab('grades')}
+            onClick={() => { setActiveTab('grades'); setMobileMenuOpen(false); }}
           >
             Grades
           </button>
           <button 
             className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
+            onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false); }}
           >
             Analytics
           </button>
           <button 
             className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
+            onClick={() => { setActiveTab('messages'); setMobileMenuOpen(false); }}
           >
             Messages
           </button>
           <button 
             className={`nav-item ${activeTab === 'activities' ? 'active' : ''}`}
-            onClick={() => setActiveTab('activities')}
+            onClick={() => { setActiveTab('activities'); setMobileMenuOpen(false); }}
           >
             Activities
           </button>
           <button 
             className={`nav-item ${activeTab === 'tools' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tools')}
+            onClick={() => { setActiveTab('tools'); setMobileMenuOpen(false); }}
           >
             Tools
           </button>
@@ -261,7 +275,16 @@ const TeacherDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h2>Welcome back, {teacherName}!</h2>
+          <div className="header-left">
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            <h2>Welcome back, {teacherName}!</h2>
+          </div>
           <div className="header-actions">
             <button 
               className="notification-btn"

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useFirestore } from '../hooks/useFirestore'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 import Calculator from './Calculator'
@@ -16,11 +15,12 @@ const StudentDashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [showMessageDetail, setShowMessageDetail] = useState(false)
-  const [readNotifications, setReadNotifications] = useState(new Set())
+  const [_readNotifications, setReadNotifications] = useState(new Set())
   const [grades, setGrades] = useState([])
   const [assignments, setAssignments] = useState([])
   const [activities, setActivities] = useState([])
@@ -259,7 +259,7 @@ const StudentDashboard = () => {
     setShowNotifications(false)
   }
 
-  const openMessageDetail = (notification) => {
+  const _openMessageDetail = (notification) => {
     setSelectedMessage(notification)
     setShowMessageDetail(true)
   }
@@ -288,7 +288,20 @@ const StudentDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="dashboard-sidebar">
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <button 
+          className="mobile-sidebar-close" 
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
         <div className="student-profile">
           <div className="profile-image">
             <img src={defaultAvatar} alt="Student" />
@@ -313,35 +326,35 @@ const StudentDashboard = () => {
         <nav className="dashboard-nav">
           <button 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
             <span className="nav-icon">📊</span>
             Overview
           </button>
           <button 
             className={`nav-item ${activeTab === 'subjects' ? 'active' : ''}`}
-            onClick={() => setActiveTab('subjects')}
+            onClick={() => { setActiveTab('subjects'); setMobileMenuOpen(false); }}
           >
             <span className="nav-icon">📚</span>
             {studentData.level === 'A/L' ? 'My Subjects' : 'My Subjects'}
           </button>
           <button 
             className={`nav-item ${activeTab === 'progress' ? 'active' : ''}`}
-            onClick={() => setActiveTab('progress')}
+            onClick={() => { setActiveTab('progress'); setMobileMenuOpen(false); }}
           >
             <span className="nav-icon">📈</span>
             Academic Progress
           </button>
           <button 
             className={`nav-item ${activeTab === 'exams' ? 'active' : ''}`}
-            onClick={() => setActiveTab('exams')}
+            onClick={() => { setActiveTab('exams'); setMobileMenuOpen(false); }}
           >
             <span className="nav-icon">📝</span>
             {studentData.level === 'A/L' ? 'A/L Preparation' : 'Examinations'}
           </button>
           <button 
             className={`nav-item ${activeTab === 'tools' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tools')}
+            onClick={() => { setActiveTab('tools'); setMobileMenuOpen(false); }}
           >
             <span className="nav-icon">🛠️</span>
             Study Tools
@@ -349,7 +362,7 @@ const StudentDashboard = () => {
           {studentData.level === 'A/L' && (
             <button 
               className={`nav-item ${activeTab === 'university' ? 'active' : ''}`}
-              onClick={() => setActiveTab('university')}
+              onClick={() => { setActiveTab('university'); setMobileMenuOpen(false); }}
             >
               <span className="nav-icon">🎓</span>
               University Prep
@@ -360,7 +373,16 @@ const StudentDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h2>Welcome back, {studentData.name}!</h2>
+          <div className="header-left">
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            <h2>Welcome back, {studentData.name}!</h2>
+          </div>
           <div className="header-actions">
             <button 
               className="notification-btn"

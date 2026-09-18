@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { validateEmail, validatePassword, validatePhoneNumber } from '../utils/validation'
+import { validateEmail, validatePassword } from '../utils/validation'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 
@@ -343,7 +343,7 @@ const Register = ({ onClose, onLoginClick }) => {
 
   return (
     <div className="auth-modal" onClick={handleModalClick}>
-      <div className="modal-content">
+      <div className="modal-content register-modal-content">
         <button className="close-button" onClick={onClose}>&times;</button>
         <h2>Register</h2>
         

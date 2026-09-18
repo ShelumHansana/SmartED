@@ -10,7 +10,7 @@ const Calculator = () => {
         const result = eval(display)
         setHistory([...history, `${display} = ${result}`])
         setDisplay(result.toString())
-      } catch (error) {
+      } catch {
         setDisplay('Error')
       }
     } else if (value === 'C') {

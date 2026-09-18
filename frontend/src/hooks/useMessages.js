@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, or } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 
-export const useMessages = (userId, userRole) => {
+export const useMessages = (userId) => {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
 

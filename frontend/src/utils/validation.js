@@ -70,7 +70,7 @@ export const validatePassword = (password) => {
 export const validatePhoneNumber = (phoneNumber) => {
   if (!phoneNumber) return false;
   // Accept phone numbers with 10 digits (with or without country code)
-  const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+  const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
   return phoneRegex.test(phoneNumber.replace(/\s/g, ''));
 };
 

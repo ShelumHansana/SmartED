@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../utils/firebase'
 
-const StudentList = ({ students = [], teacherClasses = [], teacherId }) => {
+const StudentList = ({ students = [], teacherClasses = [] }) => {
   const [selectedClass, setSelectedClass] = useState('')
   const [filteredStudents, setFilteredStudents] = useState([])
   const [studentGrades, setStudentGrades] = useState({})

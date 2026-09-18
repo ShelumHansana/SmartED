@@ -17,6 +17,7 @@ import './styles/TeacherDashboard.css'
 import './styles/AdminDashboard.css'
 import './styles/Dashboard.css'
 import './styles/ParentDashboard.css'
+import './styles/responsive.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

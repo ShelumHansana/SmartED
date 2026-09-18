@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
@@ -9,6 +9,7 @@ const ParentDashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -236,7 +237,7 @@ const ParentDashboard = () => {
     setShowNotifications(false)
   }
 
-  const refetchChildrenData = async () => {
+  const _refetchChildrenData = async () => {
     try {
       // Get fresh parent data
       const parentRef = doc(db, 'users', user.id)
@@ -354,7 +355,7 @@ const ParentDashboard = () => {
     }
   }
 
-  const removeChildFromParent = async (indexNumber, studentName) => {
+  const removeChildFromParent = async (indexNumber) => {
     if (!confirm('Are you sure you want to remove this child from your account?')) {
       return
     }
@@ -400,7 +401,7 @@ const ParentDashboard = () => {
   }
 
   // Academic progress data for selected student
-  const getSubjectsProgress = (studentLevel) => {
+  const _getSubjectsProgress = (studentLevel) => {
     if (studentLevel === 'A/L') {
       return [
         {
@@ -501,7 +502,7 @@ const ParentDashboard = () => {
   }
 
   // Get recent test results for selected student
-  const getRecentTests = (studentLevel) => {
+  const _getRecentTests = (studentLevel) => {
     if (studentLevel === 'A/L') {
       return [
         { subject: 'Mathematics', score: '95%', date: '2025-09-25', grade: 'A', type: 'Unit Test' },
@@ -521,8 +522,6 @@ const ParentDashboard = () => {
 
   // Use loaded data
   const currentStudent = children[selectedStudent]
-  const currentSubjects = currentStudent ? getSubjectsProgress(currentStudent.level) : []
-  const currentTests = currentStudent ? getRecentTests(currentStudent.level) : []
 
   const handleLogout = async () => {
     try {
@@ -555,7 +554,20 @@ const ParentDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="dashboard-sidebar">
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <button 
+          className="mobile-sidebar-close" 
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
         <div className="parent-profile">
           <div className="profile-image">
             {user.profileImage ? (
@@ -583,7 +595,7 @@ const ParentDashboard = () => {
               <button
                 key={student.id}
                 className={`student-tab ${selectedStudent === index ? 'active' : ''}`}
-                onClick={() => setSelectedStudent(index)}
+                onClick={() => { setSelectedStudent(index); setMobileMenuOpen(false); }}
               >
                 <div className="student-avatar">
                   {(student.fullName || student.name || 'S').charAt(0).toUpperCase()}
@@ -600,25 +612,25 @@ const ParentDashboard = () => {
         <nav className="dashboard-nav">
           <button 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
             Overview
           </button>
           <button 
             className={`nav-item ${activeTab === 'progress' ? 'active' : ''}`}
-            onClick={() => setActiveTab('progress')}
+            onClick={() => { setActiveTab('progress'); setMobileMenuOpen(false); }}
           >
             Academic Progress
           </button>
           <button 
             className={`nav-item ${activeTab === 'teachers' ? 'active' : ''}`}
-            onClick={() => setActiveTab('teachers')}
+            onClick={() => { setActiveTab('teachers'); setMobileMenuOpen(false); }}
           >
             Teachers
           </button>
           <button 
             className={`nav-item ${activeTab === 'manage' ? 'active' : ''}`}
-            onClick={() => setActiveTab('manage')}
+            onClick={() => { setActiveTab('manage'); setMobileMenuOpen(false); }}
           >
             Manage Children
           </button>
@@ -627,17 +639,26 @@ const ParentDashboard = () => {
 
       <main className="dashboard-main">
         <header className="dashboard-header">
-          {activeTab !== 'manage' ? (
-            <div className="header-info">
-              <h2>{currentStudent.fullName || currentStudent.name}</h2>
-              <p>Grade {currentStudent.grade} - {currentStudent.className || currentStudent.class}</p>
-            </div>
-          ) : (
-            <div className="header-info">
-              <h2>Manage Children</h2>
-              <p>Add or remove children from your account</p>
-            </div>
-          )}
+          <div className="header-left">
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            {activeTab !== 'manage' ? (
+              <div className="header-info">
+                <h2>{currentStudent.fullName || currentStudent.name}</h2>
+                <p>Grade {currentStudent.grade} - {currentStudent.className || currentStudent.class}</p>
+              </div>
+            ) : (
+              <div className="header-info">
+                <h2>Manage Children</h2>
+                <p>Add or remove children from your account</p>
+              </div>
+            )}
+          </div>
           <div className="header-actions">
             <button 
               className="notification-btn"
