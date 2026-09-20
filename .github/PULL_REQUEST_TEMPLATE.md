@@ -1,32 +1,61 @@
-## 📝 Description
+## Summary of Changes
 
-Brief description of changes made.
+Provide an executive summary of the changes proposed in this Pull Request and the educational problem being solved.
 
-## 🔗 Related Issue
+---
 
-Fixes #(issue number)
+## Related Issue
 
-## 🔄 Type of Change
+Closes # (issue number)
 
-- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
-- [ ] ✨ New feature (non-breaking change that adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] 📖 Documentation update
-- [ ] 🎨 Style/UI change
-- [ ] ♻️ Refactor (no functional changes)
+---
 
-## 📸 Screenshots (if applicable)
+## Type of Change
+
+Please mark the relevant option with an `x`:
+
+- [ ] `feat`: New feature or user capability
+- [ ] `fix`: Bug fix
+- [ ] `perf`: Performance optimization
+- [ ] `refactor`: Code refactoring without behavioral change
+- [ ] `style`: UI layout, visual polish, or formatting
+- [ ] `docs`: Documentation addition or update
+- [ ] `ci`: CI/CD pipeline or build configuration
+
+---
+
+## Affected Areas
+
+- [ ] Admin Portal
+- [ ] Teacher Dashboard
+- [ ] Student Dashboard
+- [ ] Parent Monitoring Portal
+- [ ] Authentication / Route Guards
+- [ ] Firestore Services & Database Schema
+- [ ] Styles / Responsive Design
+
+---
+
+## Verification & Screenshots
+
+### Test Plan
+Describe the manual steps or tests conducted to verify the changes:
+1. ...
+2. ...
+
+### Visual Comparison (if UI changes)
 
 | Before | After |
-|--------|-------|
-|        |       |
+| :--- | :--- |
+| *(Image or N/A)* | *(Image or N/A)* |
 
-## ✅ Checklist
+---
 
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have tested my changes locally
-- [ ] Any dependent changes have been merged and published
+## Quality Checklist
+
+- [ ] My code conforms to the project's style guidelines outlined in [CONTRIBUTING.md](../CONTRIBUTING.md).
+- [ ] I have executed a self-review of my code.
+- [ ] Local build (`npm run build` in `frontend/`) completes with zero errors.
+- [ ] No new console warnings or lint errors are introduced.
+- [ ] Documentation has been updated where applicable.
+- [ ] Sensitive secrets or credentials have NOT been committed.

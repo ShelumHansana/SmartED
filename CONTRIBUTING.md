@@ -1,148 +1,176 @@
 # Contributing to SmartED
 
-First off, thank you for considering contributing to SmartED! 🎉 It's people like you that make SmartED such a great tool for education.
+Thank you for your interest in contributing to the **SmartED School Management Platform**. Open-source contributions, feature suggestions, and bug reports help make SmartED a dependable platform for educators, administrators, and students.
 
-## 📋 Table of Contents
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/ShelumHansana/SmartED/pulls)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Code of Conduct](https://img.shields.io/badge/Contributor-Covenant-orange.svg?style=flat-square)](CODE_OF_CONDUCT.md)
+
+---
+
+## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [How Can I Contribute?](#how-can-i-contribute)
-- [Development Setup](#development-setup)
-- [Commit Guidelines](#commit-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Style Guidelines](#style-guidelines)
+- [How Can You Contribute?](#how-can-you-contribute)
+  - [Reporting Issues & Bugs](#reporting-issues--bugs)
+  - [Suggesting Features](#suggesting-features)
+  - [Submitting Code Changes](#submitting-code-changes)
+- [Local Development Setup](#local-development-setup)
+- [Branching Strategy](#branching-strategy)
+- [Commit Message Conventions](#commit-message-conventions)
+- [Pull Request Guidelines](#pull-request-guidelines)
+- [Coding Standards & Best Practices](#coding-standards--best-practices)
+  - [React & JavaScript](#react--javascript)
+  - [Styling & CSS](#styling--css)
+  - [Firebase & State Management](#firebase--state-management)
+
+---
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [SmartED Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+All contributors and maintainers are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please report any violations or unacceptable conduct to **shelumh5@gmail.com**.
 
-## Getting Started
+---
 
-- Make sure you have a [GitHub account](https://github.com/signup)
-- Fork the repository on GitHub
-- Clone your fork locally
-- Create a new branch for your contribution
+## How Can You Contribute?
 
-## How Can I Contribute?
+### Reporting Issues & Bugs
+Before creating an issue, search the [Existing Issues](https://github.com/ShelumHansana/SmartED/issues) to ensure it hasn't already been addressed.
 
-### 🐛 Reporting Bugs
+When submitting a bug report:
+1. Use our [Bug Report Template](https://github.com/ShelumHansana/SmartED/issues/new?template=bug_report.md).
+2. Clearly describe the issue and include exact steps to reproduce it.
+3. Attach screenshots or console error traces where relevant.
+4. Mention your browser, operating system, and user role (e.g., Teacher, Admin).
 
-- Use the [bug report template](https://github.com/ShelumHansana/SmartED/issues/new?template=bug_report.md)
-- Check if the bug has already been reported
-- Include as much detail as possible
-- Include steps to reproduce the bug
+### Suggesting Features
+Have an idea for SmartED?
+1. Open an issue using our [Feature Request Template](https://github.com/ShelumHansana/SmartED/issues/new?template=feature_request.md).
+2. Outline the educational use case and the specific personas that benefit.
+3. Detail proposed interface mockups, APIs, or workflow changes.
 
-### ✨ Suggesting Features
+### Submitting Code Changes
+1. Select an open issue or discuss your proposed change in an issue first.
+2. Fork the repository and work on a dedicated feature branch.
+3. Adhere to the established code styling and architecture.
+4. Submit a Pull Request targeting the `main` branch.
 
-- Use the [feature request template](https://github.com/ShelumHansana/SmartED/issues/new?template=feature_request.md)
-- Explain the problem your feature would solve
-- Describe the solution you'd like to see
+---
 
-### 💻 Code Contributions
+## Local Development Setup
 
-1. Look for issues labeled `good first issue` or `help wanted`
-2. Comment on the issue to let others know you're working on it
-3. Fork and create a branch from `main`
-4. Make your changes following our style guidelines
-5. Submit a pull request
-
-## Development Setup
-
+### 1. Fork and Clone
 ```bash
-# Clone your fork
 git clone https://github.com/YOUR_USERNAME/SmartED.git
 cd SmartED
+```
 
-# Install frontend dependencies
+### 2. Install Dependencies
+Install dependencies for both frontend and backend modules:
+
+```bash
+# Frontend setup
 cd frontend
 npm install
 
-# Install backend dependencies
+# Backend setup
 cd ../backend
 npm install
+```
 
-# Start development server
+### 3. Environment Configuration
+Create a local `.env` file in `frontend/`:
+
+```bash
 cd ../frontend
+cp .env.example .env
+```
+
+Ensure your Firebase credentials in `.env` match your local development project.
+
+### 4. Run Development Server
+```bash
 npm run dev
 ```
 
-## Commit Guidelines
+Your Vite development server will spin up at `http://localhost:5173`.
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear and structured commit messages.
+---
 
-### Format
+## Branching Strategy
 
+Follow standard git feature-branching conventions:
+
+| Branch Type | Format | Example |
+| :--- | :--- | :--- |
+| **Features** | `feat/<short-description>` | `feat/parent-notification-bell` |
+| **Bug Fixes** | `fix/<short-description>` | `fix/grade-calculation-rounding` |
+| **Documentation** | `docs/<short-description>` | `docs/update-deployment-guide` |
+| **Performance** | `perf/<short-description>` | `perf/optimize-student-list-query` |
+| **Chores / Config** | `chore/<short-description>` | `chore/upgrade-vite-plugin` |
+
+---
+
+## Commit Message Conventions
+
+We adhere to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard.
+
+### Syntax
 ```
-<type>(<scope>): <description>
+<type>(<optional scope>): <description>
 
 [optional body]
 
 [optional footer(s)]
 ```
 
-### Types
+### Common Types
+- `feat`: A new user-facing capability or component
+- `fix`: A patch for a bug or defect
+- `docs`: Documentation edits only
+- `style`: Formatting, missing semicolons, or cosmetic tweaks (no code logic change)
+- `refactor`: Restructuring existing code without modifying external behavior
+- `perf`: Code modification that boosts speed or lowers memory consumption
+- `test`: Adding or maintaining test coverage
+- `chore`: Build tool, pipeline, or dependency updates
 
-| Type | Description |
-|---|---|
-| `feat` | A new feature |
-| `fix` | A bug fix |
-| `docs` | Documentation changes |
-| `style` | Code style changes (formatting, semicolons, etc.) |
-| `refactor` | Code changes that neither fix bugs nor add features |
-| `perf` | Performance improvements |
-| `test` | Adding or fixing tests |
-| `chore` | Maintenance tasks |
-| `ci` | CI/CD configuration changes |
-
-### Examples
-
+### Example
+```bash
+git commit -m "feat(teacher): add CSV export for term test grades"
 ```
-feat(auth): add password strength indicator
-fix(dashboard): resolve chart rendering issue on mobile
-docs(readme): update installation instructions
-style(components): format code with Prettier
-```
-
-## Pull Request Process
-
-1. Update the README.md with details of changes if applicable
-2. Ensure your code follows the project's style guidelines
-3. Make sure all existing tests pass
-4. Add tests for new functionality
-5. Your pull request will be reviewed by maintainers
-6. Once approved, it will be merged into `main`
-
-### PR Title Format
-
-Follow the same conventional commit format for PR titles:
-```
-feat(scope): description of the change
-```
-
-## Style Guidelines
-
-### JavaScript/React
-
-- Use functional components with hooks
-- Use meaningful variable and function names
-- Keep components focused and small
-- Use `const` by default, `let` when reassignment is needed
-- Destructure props and state
-
-### CSS
-
-- Use component-specific CSS files
-- Follow BEM naming convention where applicable
-- Use CSS variables for theming
-- Ensure responsive design
-
-### File Naming
-
-- Components: `PascalCase.jsx` (e.g., `StudentDashboard.jsx`)
-- Styles: Match component name (e.g., `StudentDashboard.css`)
-- Utilities: `camelCase.js` (e.g., `validation.js`)
-- Hooks: `useHookName.js` (e.g., `useFirestore.js`)
 
 ---
 
-Thank you for contributing to SmartED! 🚀
+## Pull Request Guidelines
+
+1. **Keep PRs Focused**: Avoid bundling unrelated changes into a single pull request.
+2. **Follow Templates**: Fill out all sections of the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+3. **Verify Locally**:
+   - Verify that `npm run build` completes with zero errors in `frontend/`.
+   - Ensure lint rules pass and no console warnings remain.
+4. **Link Issues**: Reference related issues using GitHub keywords (e.g., `Closes #12`).
+5. **Review Feedback**: Respond constructively to review comments and update the branch as needed.
+
+---
+
+## Coding Standards & Best Practices
+
+### React & JavaScript
+- Use functional components with standard React Hooks (`useState`, `useEffect`, `useMemo`, `useCallback`).
+- Maintain modular, single-responsibility components under `frontend/src/components/`.
+- Prefer early returns to keep JSX render logic readable.
+- Avoid passing raw inline arrow functions in tight loops where performance is critical.
+
+### Styling & CSS
+- Maintain styles in dedicated CSS files or CSS modules under `frontend/src/styles/`.
+- Respect responsive breakpoints (mobile, tablet, desktop) as defined in `responsive.css`.
+- Ensure appropriate contrast ratios and accessible interactive targets for buttons and inputs.
+
+### Firebase & State Management
+- Never perform direct user creation via `auth.createUserWithEmailAndPassword` on the primary Auth instance inside administrative views; utilize `createFirebaseUserWithoutLoggingOut` from `src/utils/firebase.js` to preserve the current session.
+- Keep Firestore queries selective using indexes and proper constraints (`where`, `limit`).
+- Store global session and user role data in Redux Toolkit slices (`src/store/`).
+
+---
+
+*Thank you for helping build a better education management platform with SmartED!*

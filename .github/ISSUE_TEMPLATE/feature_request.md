@@ -1,31 +1,41 @@
 ---
-name: ✨ Feature Request
-about: Suggest a new feature for SmartED
+name: Feature Request
+about: Suggest a new feature, workflow improvement, or enhancement for SmartED
 title: '[FEATURE] '
 labels: enhancement
 assignees: ShelumHansana
 ---
 
-## ✨ Feature Description
+## Feature Summary
 
-A clear and concise description of the feature you'd like.
+A clear and concise description of the capability or improvement you would like to see in SmartED.
 
-## 🎯 Problem Statement
+---
 
-What problem does this feature solve? Which user role benefits?
+## Educational Use Case / Problem Statement
 
-## 💡 Proposed Solution
+What challenge or bottleneck does this feature address? Which stakeholder role benefits most (Administrators, Teachers, Students, or Parents)?
 
-Describe the solution you'd like to see implemented.
+---
 
-## 🔄 Alternatives Considered
+## Proposed Solution
 
-Any alternative solutions or features you've considered.
+Describe how the proposed feature should work, including suggested user interaction workflows or system behaviors.
 
-## 📸 Mockups / Examples
+---
 
-If applicable, add mockups, wireframes, or examples from other tools.
+## Alternative Solutions Considered
 
-## 📝 Additional Context
+Outline any alternative workflows, workarounds, or third-party integrations you have considered.
 
-Add any other context about the feature request here.
+---
+
+## Mockups or Reference Material
+
+Add UI sketches, wireframes, or reference examples from other educational software if available.
+
+---
+
+## Additional Information
+
+Provide any other relevant context or implementation considerations here.

@@ -1,41 +1,54 @@
 ---
-name: 🐛 Bug Report
-about: Report a bug to help us improve SmartED
+name: Bug Report
+about: Report a reproducible problem or defect to help improve SmartED
 title: '[BUG] '
 labels: bug
 assignees: ShelumHansana
 ---
 
-## 🐛 Bug Description
+## Bug Overview
 
-A clear and concise description of what the bug is.
+A clear and concise summary of the issue encountered.
 
-## 📋 Steps to Reproduce
+---
 
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+## Reproduction Steps
 
-## ✅ Expected Behavior
+Steps to reproduce the observed behavior:
+1. Navigate to '...'
+2. Log in as role: [e.g., Teacher, Admin, Student, Parent]
+3. Click on '...'
+4. Observe the error.
 
-A clear description of what you expected to happen.
+---
 
-## ❌ Actual Behavior
+## Expected Behavior
 
-A clear description of what actually happened.
+A concise description of what should happen under expected conditions.
 
-## 📸 Screenshots
+---
 
-If applicable, add screenshots to help explain the problem.
+## Observed Behavior
 
-## 🖥️ Environment
+A concise description of what actually happened (include error messages or unexpected states).
 
-- **Browser**: [e.g. Chrome 120, Firefox 121]
-- **OS**: [e.g. Windows 11, macOS Sonoma]
-- **Screen Size**: [e.g. Desktop 1920x1080, Mobile 375x812]
-- **User Role**: [e.g. Admin, Teacher, Student, Parent]
+---
 
-## 📝 Additional Context
+## Environment Details
 
-Add any other context about the problem here.
+- **Browser & Version**: [e.g., Chrome 124, Safari 17, Firefox 125]
+- **Operating System**: [e.g., Windows 11, macOS Sonoma, iOS, Android]
+- **Device / Resolution**: [e.g., Desktop 1920x1080, iPad Air, iPhone 14]
+- **User Role**: [e.g., Admin, Teacher, Student, Parent]
+
+---
+
+## Visual Evidence / Logs
+
+Attach screenshots, screen recordings, or browser console error logs if applicable.
+
+---
+
+## Additional Context
+
+Add any other details about the problem, such as network conditions or recent database updates.

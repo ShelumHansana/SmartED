@@ -1632,40 +1632,45 @@ const AdminDashboard = () => {
               showToast('Profile image updated successfully!', 'success')
             }}
           />
-          <h3>{user?.fullName || 'System Admin'}</h3>
-          <p>Administrator</p>
-          <p>{schoolSettings.schoolName}</p>
+          <h3 className="profile-name">{user?.fullName || 'System Admin'}</h3>
+          <span className="profile-role-badge">Administrator</span>
+          <p className="profile-school">{schoolSettings.schoolName}</p>
         </div>
         <nav className="dashboard-nav">
           <button 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
-            Overview
+            <span className="nav-item-icon">📊</span>
+            <span>Overview</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
           >
-            User Management
+            <span className="nav-item-icon">👥</span>
+            <span>User Management</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
             onClick={() => { setActiveTab('courses'); setMobileMenuOpen(false); }}
           >
-            Course Management
+            <span className="nav-item-icon">📚</span>
+            <span>Course Management</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
           >
-            Reports
+            <span className="nav-item-icon">📈</span>
+            <span>Reports</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
           >
-            Settings
+            <span className="nav-item-icon">⚙️</span>
+            <span>Settings</span>
           </button>
         </nav>
       </aside>
@@ -1680,24 +1685,30 @@ const AdminDashboard = () => {
             >
               ☰
             </button>
-            <h2>Admin Dashboard</h2>
+            <div className="header-title-group">
+              <h2>Admin Dashboard</h2>
+              <span className="header-subtitle">Welcome back, {user?.fullName || 'Administrator'}</span>
+            </div>
           </div>
           <div className="header-actions">
             <button 
               className="notification-btn"
               onClick={() => setShowNotifications(!showNotifications)}
+              title="Notifications"
             >
+              <span className="btn-icon">🔔</span>
+              <span>Notifications</span>
               {notificationCount > 0 && (
                 <span className="notification-badge">{notificationCount}</span>
               )}
-              Notifications
             </button>
             <button 
               className="logout-btn"
               onClick={handleLogout}
               title="Logout"
             >
-              🚪 Logout
+              <span className="btn-icon">🚪</span>
+              <span>Logout</span>
             </button>
           </div>
         </header>
@@ -1707,37 +1718,59 @@ const AdminDashboard = () => {
             <div className="overview-section">
               <div className="stats-grid">
                 <div className="stat-card">
-                  <h3>Total Students</h3>
-                  <p>{stats.totalStudents}</p>
+                  <div className="stat-icon-badge icon-students">👥</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Total Students</span>
+                    <div className="stat-value">{stats.totalStudents || 0}</div>
+                  </div>
                 </div>
                 <div className="stat-card">
-                  <h3>Total Teachers</h3>
-                  <p>{stats.totalTeachers}</p>
+                  <div className="stat-icon-badge icon-teachers">👨‍🏫</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Total Teachers</span>
+                    <div className="stat-value">{stats.totalTeachers || 0}</div>
+                  </div>
                 </div>
                 <div className="stat-card">
-                  <h3>Total Courses</h3>
-                  <p>{stats.totalCourses}</p>
+                  <div className="stat-icon-badge icon-courses">📚</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Total Courses</span>
+                    <div className="stat-value">{stats.totalCourses || 0}</div>
+                  </div>
                 </div>
                 <div className="stat-card">
-                  <h3>Active Users</h3>
-                  <p>{stats.activeUsers}</p>
+                  <div className="stat-icon-badge icon-users">⚡</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Active Users</span>
+                    <div className="stat-value">{stats.activeUsers || 0}</div>
+                  </div>
                 </div>
               </div>
 
               <div className="recent-activities">
-                <h3>Recent Activities</h3>
-                <div className="activities-list">
-                  {recentActivities.map(activity => (
-                    <div key={activity.id} className="activity-item">
-                      <div className="activity-info">
-                        <span className="activity-type">{activity.type}</span>
-                        <span className="activity-user">{activity.user}</span>
-                        <span className="activity-role">{activity.role}</span>
-                      </div>
-                      <span className="activity-time">{activity.time}</span>
-                    </div>
-                  ))}
+                <div className="section-header-compact">
+                  <h3>Recent Activities</h3>
                 </div>
+                {recentActivities && recentActivities.length > 0 ? (
+                  <div className="activities-list">
+                    {recentActivities.map(activity => (
+                      <div key={activity.id} className="activity-item">
+                        <div className="activity-info">
+                          <span className="activity-type">{activity.type}</span>
+                          <span className="activity-user">{activity.user}</span>
+                          <span className="activity-role">{activity.role}</span>
+                        </div>
+                        <span className="activity-time">{activity.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-activities-placeholder">
+                    <div className="empty-icon-wrap">📋</div>
+                    <p className="empty-msg">No recent activity logged yet.</p>
+                    <span className="empty-sub">Recent administrative events, registrations, and updates will appear here.</span>
+                  </div>
+                )}
               </div>
 
               <div className="quick-actions">
