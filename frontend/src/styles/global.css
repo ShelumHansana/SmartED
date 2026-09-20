@@ -61,20 +61,20 @@
 }
 
 /* ============================================================
-   GLOBAL SIZE TUNING (scale 0.85 — increased by 5% from 0.8)
-   Uses transform: scale(0.85) on #root for a true physical
-   reduction of all elements across every page.
+   GLOBAL SIZE TUNING (scale 0.95 — increased by 10% from 0.85)
+   Uses transform: scale(0.95) on #root for a true physical
+   scaling of all elements across every page.
    ============================================================ */
 html {
-  font-size: 13.6px; /* 16px * 0.85 = 13.6px — increased by 5% from 12.8px */
+  font-size: 15px; /* Increased by 10% from 13.6px */
   overflow-x: hidden;
 }
 
 #root {
-  transform: scale(0.85);
+  transform: scale(0.95);
   transform-origin: top left;
-  width: 117.65%;        /* 1 / 0.85 = 1.17647 — counteracts the horizontal shrink */
-  min-height: 117.65vh;  /* 1 / 0.85 = 1.17647 — counteracts the vertical shrink */
+  width: 105.26%;        /* 1 / 0.95 = 1.05263 — counteracts horizontal shrink */
+  min-height: 105.26vh;  /* 1 / 0.95 = 1.05263 — counteracts vertical shrink */
 }
 
 /* Reset CSS */

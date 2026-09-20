@@ -16,14 +16,14 @@ body.landing-page-active {
 }
 
 #root:has(.landing-container) {
-  height: 117.65vh !important;
-  max-height: 117.65vh !important;
+  height: 105.26vh !important;
+  max-height: 105.26vh !important;
   overflow: hidden !important;
 }
 
 .landing-container {
-  height: 117.65vh !important;
-  max-height: 117.65vh !important;
+  height: 105.26vh !important;
+  max-height: 105.26vh !important;
   position: relative;
   overflow: hidden !important;
   display: flex;
