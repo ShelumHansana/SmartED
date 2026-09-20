@@ -10,14 +10,44 @@ const LandingPage = () => {
     document.documentElement.classList.add('landing-page-active')
     document.body.classList.add('landing-page-active')
     window.scrollTo(0, 0)
+
+    const container = document.querySelector('.landing-container')
+    let rafId = null
+
+    const handleMouseMove = (e) => {
+      if (!container) return
+      if (rafId) return
+      rafId = requestAnimationFrame(() => {
+        const percentX = (e.clientX / window.innerWidth) * 100
+        const percentY = (e.clientY / window.innerHeight) * 100
+        const ratioX = (e.clientX / window.innerWidth) * 2 - 1
+        const ratioY = (e.clientY / window.innerHeight) * 2 - 1
+
+        container.style.setProperty('--mouse-px', `${percentX.toFixed(2)}%`)
+        container.style.setProperty('--mouse-py', `${percentY.toFixed(2)}%`)
+        container.style.setProperty('--mouse-rx', ratioX.toFixed(3))
+        container.style.setProperty('--mouse-ry', ratioY.toFixed(3))
+        rafId = null
+      })
+    }
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+
     return () => {
       document.documentElement.classList.remove('landing-page-active')
       document.body.classList.remove('landing-page-active')
+      window.removeEventListener('mousemove', handleMouseMove)
+      if (rafId) cancelAnimationFrame(rafId)
     }
   }, [])
 
   return (
     <div className="landing-container">
+      {/* Interactive Cursor-reactive Backdrop Layers */}
+      <div className="landing-bg-layer" aria-hidden="true"></div>
+      <div className="cursor-spotlight" aria-hidden="true"></div>
+      <div className="cursor-glow-orb" aria-hidden="true"></div>
+
       {/* Dynamic ambient glowing light orbs for depth */}
       <div className="ambient-orb orb-1" aria-hidden="true"></div>
       <div className="ambient-orb orb-2" aria-hidden="true"></div>

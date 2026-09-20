@@ -31,13 +31,61 @@ body.landing-page-active {
   justify-content: space-between;
   padding-top: 3.5rem;
   background-color: #0a1122;
-  /* Deep cinematic backdrop with layered image overlay */
+}
+
+/* --------------------------------------------------------------------------
+   1b. Interactive Cursor-Reactive Background Layers
+   -------------------------------------------------------------------------- */
+/* Dynamic 3D Parallax Background Layer that shifts with cursor */
+.landing-bg-layer {
+  position: absolute;
+  inset: -28px; /* Safe bleed to allow parallax shift without showing borders */
+  z-index: 0;
+  pointer-events: none;
+  background-color: #0a1122;
   background-image: 
     linear-gradient(180deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 27, 75, 0.78) 35%, rgba(10, 17, 34, 0.97) 85%),
     url('/graduation-bg.jpg');
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
+  transform: translate(calc(var(--mouse-rx, 0) * -18px), calc(var(--mouse-ry, 0) * -14px));
+  transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform;
+}
+
+/* Interactive Cursor Spotlight (Aurora beam directly under pointer) */
+.cursor-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    650px circle at var(--mouse-px, 50%) var(--mouse-py, 40%),
+    rgba(99, 102, 241, 0.36) 0%,
+    rgba(6, 182, 212, 0.22) 32%,
+    rgba(139, 92, 246, 0.1) 58%,
+    transparent 75%
+  );
+  mix-blend-mode: screen;
+  will-change: background;
+}
+
+/* Fluid Soft Glow Follower Orb */
+.cursor-glow-orb {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(70px);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.42) 0%, rgba(99, 102, 241, 0.25) 50%, transparent 70%);
+  left: var(--mouse-px, 50%);
+  top: var(--mouse-py, 40%);
+  transform: translate(-50%, -50%);
+  transition: left 0.18s cubic-bezier(0.2, 0, 0.2, 1), top 0.18s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: left, top;
 }
 
 /* Atmospheric Ambient Glowing Orbs */
