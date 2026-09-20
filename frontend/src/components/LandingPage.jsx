@@ -7,8 +7,11 @@ const LandingPage = () => {
   const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
+    document.documentElement.classList.add('landing-page-active')
     document.body.classList.add('landing-page-active')
+    window.scrollTo(0, 0)
     return () => {
+      document.documentElement.classList.remove('landing-page-active')
       document.body.classList.remove('landing-page-active')
     }
   }, [])
