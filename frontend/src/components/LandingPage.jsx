@@ -13,13 +13,6 @@ const LandingPage = () => {
     }
   }, [])
 
-  const scrollToFeatures = () => {
-    const el = document.getElementById('features-section')
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   return (
     <div className="landing-container">
       {/* Dynamic ambient glowing light orbs for depth */}
@@ -33,7 +26,6 @@ const LandingPage = () => {
       <main className="main-content">
         {/* Hero Area with Floating Glass Badges */}
         <div className="hero-container">
-          {/* Floating Pill Badges */}
           <div className="floating-badge badge-left" aria-hidden="true">
             <span className="floating-icon">⭐</span>
             <div className="floating-info">
@@ -77,10 +69,10 @@ const LandingPage = () => {
               <button 
                 id="cta-explore-features"
                 className="cta-button secondary-cta" 
-                onClick={scrollToFeatures}
+                onClick={() => setShowLogin(true)}
               >
-                <span className="cta-label">Explore Features</span>
-                <span className="cta-icon">↓</span>
+                <span className="cta-label">Explore Portal</span>
+                <span className="cta-icon">↗</span>
               </button>
             </div>
           </div>
@@ -123,14 +115,6 @@ const LandingPage = () => {
 
         {/* Features Section */}
         <div className="features-section" id="features-section">
-          <div className="landing-features-header">
-            <span className="landing-kicker">DISCOVER EXCELLENCE</span>
-            <h3 className="landing-section-heading">Designed for Modern Learning</h3>
-            <p className="landing-section-subheading">
-              Everything you need to succeed academically, organized in one intuitive platform.
-            </p>
-          </div>
-
           <div className="features-grid">
             <div className="feature-card card-animate-1" onClick={() => setShowLogin(true)}>
               <div className="feature-icon-bubble bubble-blue">
@@ -174,7 +158,7 @@ const LandingPage = () => {
         </div>
       </main>
 
-      {/* Modern Landing Footer */}
+      {/* Slim Modern Landing Footer */}
       <footer className="landing-footer">
         <div className="footer-container">
           <div className="footer-brand">
@@ -184,7 +168,7 @@ const LandingPage = () => {
             <span className="footer-tag">Smart Learning Management System</span>
           </div>
           <p className="footer-copy">
-            © {new Date().getFullYear()} SmartED LMS. Designed for modern institutions, students & educators.
+            © {new Date().getFullYear()} SmartED LMS. All rights reserved.
           </p>
         </div>
       </footer>
