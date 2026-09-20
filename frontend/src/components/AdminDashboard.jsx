@@ -51,6 +51,29 @@ const generatePassword = () => {
   return `Smart@${randomDigits}${randomChars}`
 }
 
+const PRESET_SUBJECTS = [
+  'Mathematics',
+  'Science',
+  'English',
+  'Sinhala',
+  'Tamil',
+  'History',
+  'Commerce',
+  'Information Technology (ICT)',
+  'Health & Physical Education',
+  'Geography',
+  'Art',
+  'Music',
+  'Dancing',
+  'Civic Education',
+  'Buddhism',
+  'Christianity',
+  'Islam'
+]
+
+const PRESET_GRADES = ['Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Grade 13']
+const PRESET_SECTIONS = ['A', 'B', 'C', 'D', 'E', 'F']
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -80,6 +103,15 @@ const AdminDashboard = () => {
   const [formPassword, setFormPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Teacher Registration / Edit Options
+  const [teacherSubjects, setTeacherSubjects] = useState([])
+  const [customSubjectInput, setCustomSubjectInput] = useState('')
+  const [teacherClassAssignments, setTeacherClassAssignments] = useState([])
+  const [assignGrade, setAssignGrade] = useState('Grade 10')
+  const [assignSection, setAssignSection] = useState('A')
+  const [assignSubject, setAssignSubject] = useState('')
+  const [teacherInChargeClass, setTeacherInChargeClass] = useState('')
+
   const openAddUserModal = () => {
     setSelectedUser(null)
     const initialRole = 'student'
@@ -90,6 +122,13 @@ const AdminDashboard = () => {
     setFormUsername(index.toLowerCase())
     setFormPassword(pass)
     setShowPassword(false)
+    setTeacherSubjects([])
+    setCustomSubjectInput('')
+    setTeacherClassAssignments([])
+    setAssignGrade('Grade 10')
+    setAssignSection('A')
+    setAssignSubject('')
+    setTeacherInChargeClass('')
     setShowUserModal(true)
   }
   
@@ -317,6 +356,120 @@ const AdminDashboard = () => {
     }
   }
 
+  // Teacher Management Helper Functions
+  const handleAddTeacherSubject = (subj) => {
+    const trimmed = (subj || '').trim()
+    if (!trimmed) return
+    if (!teacherSubjects.includes(trimmed)) {
+      const updated = [...teacherSubjects, trimmed]
+      setTeacherSubjects(updated)
+      if (!assignSubject) {
+        setAssignSubject(trimmed)
+      }
+    }
+    setCustomSubjectInput('')
+  }
+
+  const handleRemoveTeacherSubject = (subjToRemove) => {
+    const updated = teacherSubjects.filter(s => s !== subjToRemove)
+    setTeacherSubjects(updated)
+    if (assignSubject === subjToRemove) {
+      setAssignSubject(updated[0] || '')
+    }
+  }
+
+  const handleAddClassAssignment = () => {
+    if (!assignGrade || !assignSection) {
+      showToast('Please select grade and section.', 'error')
+      return
+    }
+    const gradeNum = assignGrade.replace('Grade ', '').trim()
+    const classId = `${gradeNum}-${assignSection}`
+    const subject = assignSubject || teacherSubjects[0] || 'General'
+
+    const exists = teacherClassAssignments.some(
+      a => a.classId === classId && a.subject.toLowerCase() === subject.toLowerCase()
+    )
+    if (exists) {
+      showToast(`${classId} (${subject}) is already assigned.`, 'error')
+      return
+    }
+
+    const newAssignment = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      grade: assignGrade,
+      section: assignSection,
+      classId: classId,
+      subject: subject
+    }
+
+    setTeacherClassAssignments([...teacherClassAssignments, newAssignment])
+  }
+
+  const handleRemoveClassAssignment = (assignmentId) => {
+    setTeacherClassAssignments(teacherClassAssignments.filter(a => a.id !== assignmentId))
+  }
+
+  const openEditUserModal = (userToEdit) => {
+    setSelectedUser(userToEdit)
+    const role = userToEdit.role || 'student'
+    setFormRole(role)
+    setFormIndexNumber(userToEdit.indexNumber || '')
+    setFormUsername(userToEdit.username || '')
+    setFormPassword(userToEdit.initialPassword || '')
+    setShowPassword(false)
+
+    if (role === 'teacher') {
+      const existingSubjects = Array.isArray(userToEdit.subjects) && userToEdit.subjects.length > 0
+        ? [...userToEdit.subjects]
+        : Array.isArray(userToEdit.teacherData?.subjects) && userToEdit.teacherData.subjects.length > 0
+          ? [...userToEdit.teacherData.subjects]
+          : (userToEdit.subject || userToEdit.teacherData?.subject)
+            ? [(userToEdit.subject || userToEdit.teacherData?.subject)]
+            : []
+      setTeacherSubjects(existingSubjects)
+      setCustomSubjectInput('')
+
+      let existingAssignments = []
+      if (Array.isArray(userToEdit.classAssignments) && userToEdit.classAssignments.length > 0) {
+        existingAssignments = [...userToEdit.classAssignments]
+      } else if (Array.isArray(userToEdit.teacherData?.classAssignments) && userToEdit.teacherData.classAssignments.length > 0) {
+        existingAssignments = [...userToEdit.teacherData.classAssignments]
+      } else if (Array.isArray(userToEdit.classes) && userToEdit.classes.length > 0) {
+        const primarySub = existingSubjects[0] || userToEdit.subject || userToEdit.teacherData?.subject || 'General'
+        existingAssignments = userToEdit.classes.map((cls, idx) => {
+          const parts = cls.split('-')
+          const gradeNum = parts[0] ? `Grade ${parts[0]}` : 'Grade 10'
+          const section = parts[1] || 'A'
+          return {
+            id: `legacy-${idx}-${cls}`,
+            grade: gradeNum,
+            section: section,
+            classId: cls,
+            subject: primarySub
+          }
+        })
+      }
+      setTeacherClassAssignments(existingAssignments)
+      setAssignGrade('Grade 10')
+      setAssignSection('A')
+      setAssignSubject(existingSubjects[0] || '')
+
+      const inCharge = userToEdit.inChargeClass || userToEdit.teacherData?.inChargeClass || ''
+      setTeacherInChargeClass(inCharge)
+    } else {
+      setTeacherSubjects([])
+      setCustomSubjectInput('')
+      setTeacherClassAssignments([])
+      setAssignGrade('Grade 10')
+      setAssignSection('A')
+      setAssignSubject('')
+      setTeacherInChargeClass('')
+    }
+
+    setShowUserModal(true)
+  }
+
   // ===== ACTION BUTTON HANDLERS =====
 
   // User Management Actions
@@ -374,11 +527,25 @@ const AdminDashboard = () => {
           class: userData.className || ''
         }
       } else if (role === 'teacher') {
+        const uniqueClasses = Array.from(new Set(teacherClassAssignments.map(a => a.classId)))
+        const primarySubject = teacherSubjects[0] || userData.subject || ''
+        const subjectsList = teacherSubjects.length > 0 ? teacherSubjects : (primarySubject ? [primarySubject] : [])
+
         newUser.teacherData = { 
           employeeId: indexNumber,
-          subject: userData.subject || '',
-          subjects: userData.subject ? [userData.subject] : []
+          subject: primarySubject,
+          subjects: subjectsList,
+          classes: uniqueClasses,
+          teachingClasses: uniqueClasses,
+          classAssignments: teacherClassAssignments,
+          inChargeClass: teacherInChargeClass || null,
+          isInCharge: !!teacherInChargeClass
         }
+        // Mirror top-level for backward compatibility with queries & dashboards
+        newUser.subject = primarySubject
+        newUser.subjects = subjectsList
+        newUser.classes = uniqueClasses
+        newUser.inChargeClass = teacherInChargeClass || null
       } else if (role === 'parent') {
         newUser.parentData = { 
           contactNumber: userData.phone || ''
@@ -428,8 +595,33 @@ const AdminDashboard = () => {
       }
       
       // Add role-specific data if needed
-      if (userData.grade) updateData.studentData = { grade: userData.grade }
-      if (userData.subject) updateData.teacherData = { subject: userData.subject }
+      if (userData.grade) updateData.studentData = { ...(selectedUser?.studentData || {}), grade: userData.grade }
+      
+      const effectiveRole = userData.role || selectedUser?.role
+      if (effectiveRole === 'teacher') {
+        const uniqueClasses = Array.from(new Set(teacherClassAssignments.map(a => a.classId)))
+        const primarySubject = teacherSubjects[0] || userData.subject || selectedUser?.subject || selectedUser?.teacherData?.subject || ''
+        const subjectsList = teacherSubjects.length > 0 ? teacherSubjects : (primarySubject ? [primarySubject] : [])
+
+        updateData.teacherData = {
+          ...(selectedUser?.teacherData || {}),
+          employeeId: selectedUser?.indexNumber || selectedUser?.teacherData?.employeeId || '',
+          subject: primarySubject,
+          subjects: subjectsList,
+          classes: uniqueClasses,
+          teachingClasses: uniqueClasses,
+          classAssignments: teacherClassAssignments,
+          inChargeClass: teacherInChargeClass || null,
+          isInCharge: !!teacherInChargeClass
+        }
+        updateData.subject = primarySubject
+        updateData.subjects = subjectsList
+        updateData.classes = uniqueClasses
+        updateData.inChargeClass = teacherInChargeClass || null
+      } else if (userData.subject) {
+        updateData.teacherData = { ...(selectedUser?.teacherData || {}), subject: userData.subject }
+        updateData.subject = userData.subject
+      }
       if (userData.phone) updateData.phone = userData.phone
       
       console.log('Final update data:', updateData)
@@ -1916,7 +2108,27 @@ const AdminDashboard = () => {
                           <p>Class: {user.grade || user.className || user.class || 'N/A'}</p>
                         )}
                         {user.role === 'teacher' && (
-                          <p>Subjects: {Array.isArray(user.subjects) ? user.subjects.join(', ') : user.subject || 'N/A'}</p>
+                          <div className="teacher-info-preview">
+                            <p>
+                              <strong>Subjects:</strong> {
+                                Array.isArray(user.subjects) && user.subjects.length > 0
+                                  ? user.subjects.join(', ')
+                                  : user.teacherData?.subjects?.join(', ') || user.subject || user.teacherData?.subject || 'Not Assigned'
+                              }
+                            </p>
+                            <p>
+                              <strong>Classes:</strong> {
+                                Array.isArray(user.classes) && user.classes.length > 0
+                                  ? user.classes.join(', ')
+                                  : user.teacherData?.classes?.join(', ') || 'None'
+                              }
+                            </p>
+                            {(user.inChargeClass || user.teacherData?.inChargeClass) && (
+                              <span className="teacher-incharge-badge">
+                                👑 In-Charge: {user.inChargeClass || user.teacherData?.inChargeClass}
+                              </span>
+                            )}
+                          </div>
                         )}
                         {user.role === 'parent' && (
                           <p>Children: {Array.isArray(user.children) ? user.children.length : user.children || 'N/A'}</p>
@@ -1931,8 +2143,7 @@ const AdminDashboard = () => {
                           className="edit-btn"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setSelectedUser(user)
-                            setShowUserModal(true)
+                            openEditUserModal(user)
                           }}
                           title="Edit user information"
                         >
@@ -2780,7 +2991,7 @@ const AdminDashboard = () => {
       {/* User Modal */}
       {showUserModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '640px' }}>
+          <div className="modal-content" style={{ maxWidth: '740px' }}>
             <div className="modal-header">
               <h3>{selectedUser ? 'Edit User' : 'Add New User & Generate Credentials'}</h3>
               <button 
@@ -2806,7 +3017,7 @@ const AdminDashboard = () => {
                 status: formData.get('status'),
                 phone: formData.get('phone') || '',
                 grade: formData.get('grade') || '',
-                subject: formData.get('subject') || ''
+                subject: formData.get('subject') || (teacherSubjects[0] || '')
               }
               
               console.log('Form submitted with data:', userData)
@@ -2828,7 +3039,7 @@ const AdminDashboard = () => {
                   <label>Role *</label>
                   <select 
                     name="role"
-                    value={selectedUser ? (selectedUser.role || 'student') : formRole}
+                    value={formRole}
                     onChange={(e) => {
                       const newRole = e.target.value
                       setFormRole(newRole)
@@ -2963,7 +3174,7 @@ const AdminDashboard = () => {
                   />
                 </div>
 
-                {((selectedUser && selectedUser.role === 'student') || (!selectedUser && formRole === 'student')) && (
+                {formRole === 'student' && (
                   <div className="form-group">
                     <label>Grade (For Students)</label>
                     <input 
@@ -2971,18 +3182,6 @@ const AdminDashboard = () => {
                       name="grade"
                       placeholder="e.g., Grade 10"
                       defaultValue={selectedUser?.studentData?.grade || ''}
-                    />
-                  </div>
-                )}
-
-                {((selectedUser && selectedUser.role === 'teacher') || (!selectedUser && formRole === 'teacher')) && (
-                  <div className="form-group">
-                    <label>Subject (For Teachers)</label>
-                    <input 
-                      type="text" 
-                      name="subject"
-                      placeholder="e.g., Mathematics"
-                      defaultValue={selectedUser?.teacherData?.subject || ''}
                     />
                   </div>
                 )}
@@ -2997,6 +3196,229 @@ const AdminDashboard = () => {
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
+
+                {formRole === 'teacher' && (
+                  <div className="teacher-config-section full-width">
+                    <div className="section-divider">
+                      <span>👨‍🏫 Teacher Assignment Settings</span>
+                    </div>
+
+                    {/* Part 1: Subjects selection */}
+                    <div className="teacher-config-block">
+                      <div className="config-block-header">
+                        <label className="config-label">
+                          1. Subject(s) Taught <span className="req">*</span>
+                        </label>
+                        <span className="config-hint">Select all subjects this teacher teaches</span>
+                      </div>
+
+                      {/* Selected subjects tags */}
+                      <div className="selected-tags-container">
+                        {teacherSubjects.length === 0 ? (
+                          <span className="empty-selection-note">No subjects selected yet. Click from quick select below or type a custom subject.</span>
+                        ) : (
+                          teacherSubjects.map((subj) => (
+                            <span key={subj} className="tag-chip active-chip">
+                              <span className="chip-icon">📚</span>
+                              <span className="chip-text">{subj}</span>
+                              <button
+                                type="button"
+                                className="tag-remove-btn"
+                                onClick={() => handleRemoveTeacherSubject(subj)}
+                                title={`Remove ${subj}`}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Preset subject pills */}
+                      <div className="preset-chips-wrap">
+                        <span className="preset-label">Quick select:</span>
+                        <div className="preset-chips-list">
+                          {PRESET_SUBJECTS.map((subj) => {
+                            const isSelected = teacherSubjects.includes(subj)
+                            return (
+                              <button
+                                key={subj}
+                                type="button"
+                                className={`chip-btn ${isSelected ? 'selected' : ''}`}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    handleRemoveTeacherSubject(subj)
+                                  } else {
+                                    handleAddTeacherSubject(subj)
+                                  }
+                                }}
+                              >
+                                {isSelected ? '✓ ' : '+ '}{subj}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Custom subject input */}
+                      <div className="custom-input-row">
+                        <input
+                          type="text"
+                          placeholder="Or enter custom subject (e.g. French, Japanese)..."
+                          value={customSubjectInput}
+                          onChange={(e) => setCustomSubjectInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAddTeacherSubject(customSubjectInput)
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="action-pill-btn"
+                          onClick={() => handleAddTeacherSubject(customSubjectInput)}
+                        >
+                          + Add Subject
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Part 2: Assign Classes with Subject */}
+                    <div className="teacher-config-block">
+                      <div className="config-block-header">
+                        <label className="config-label">
+                          2. Assign Classes & Subject Taught
+                        </label>
+                        <span className="config-hint">Pair each class with the subject taught to them</span>
+                      </div>
+
+                      {/* Assignment Builder Controls */}
+                      <div className="builder-row">
+                        <div className="builder-col">
+                          <label>Grade</label>
+                          <select
+                            value={assignGrade}
+                            onChange={(e) => setAssignGrade(e.target.value)}
+                          >
+                            {PRESET_GRADES.map(g => (
+                              <option key={g} value={g}>{g}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="builder-col">
+                          <label>Section</label>
+                          <select
+                            value={assignSection}
+                            onChange={(e) => setAssignSection(e.target.value)}
+                          >
+                            {PRESET_SECTIONS.map(s => (
+                              <option key={s} value={s}>Section {s}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="builder-col">
+                          <label>Subject</label>
+                          <select
+                            value={assignSubject || (teacherSubjects[0] || '')}
+                            onChange={(e) => setAssignSubject(e.target.value)}
+                          >
+                            {teacherSubjects.length > 0 ? (
+                              teacherSubjects.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))
+                            ) : (
+                              <option value="">(Select a subject first)</option>
+                            )}
+                          </select>
+                        </div>
+
+                        <div className="builder-btn-col">
+                          <button
+                            type="button"
+                            className="assign-add-btn"
+                            onClick={handleAddClassAssignment}
+                          >
+                            + Assign Class
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Current assignments list */}
+                      <div className="assignments-table-wrap">
+                        {teacherClassAssignments.length === 0 ? (
+                          <div className="empty-assignments-msg">
+                            No classes assigned yet. Select a grade, section, and subject above, then click "+ Assign Class".
+                          </div>
+                        ) : (
+                          <div className="assignment-cards-grid">
+                            {teacherClassAssignments.map((assignment) => (
+                              <div key={assignment.id} className="assignment-badge-card">
+                                <div className="badge-class-icon">🏫</div>
+                                <div className="badge-details">
+                                  <span className="badge-class-name">{assignment.classId}</span>
+                                  <span className="badge-subject-name">{assignment.subject}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="remove-assignment-btn"
+                                  title="Remove assignment"
+                                  onClick={() => handleRemoveClassAssignment(assignment.id)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Part 3: Class In-Charge */}
+                    <div className="teacher-config-block">
+                      <div className="config-block-header">
+                        <label className="config-label">
+                          3. Class In-Charge (Homeroom Teacher)
+                        </label>
+                        <span className="config-hint">Select a class if this teacher is the designated class/homeroom in-charge</span>
+                      </div>
+
+                      <div className="incharge-select-row">
+                        <select
+                          value={teacherInChargeClass}
+                          onChange={(e) => setTeacherInChargeClass(e.target.value)}
+                          className="incharge-dropdown"
+                        >
+                          <option value="">None (Not a class in-charge)</option>
+                          {teacherClassAssignments.length > 0 && (
+                            <optgroup label="From Assigned Classes">
+                              {Array.from(new Set(teacherClassAssignments.map(a => a.classId))).map(cls => (
+                                <option key={`assigned-${cls}`} value={cls}>Class In-Charge: {cls}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                          <optgroup label="All Classes">
+                            {PRESET_GRADES.flatMap(g => 
+                              PRESET_SECTIONS.map(s => {
+                                const id = `${g.replace('Grade ', '').trim()}-${s}`
+                                return (
+                                  <option key={`all-${id}`} value={id}>Class In-Charge: {id}</option>
+                                )
+                              })
+                            )}
+                          </optgroup>
+                        </select>
+                        {teacherInChargeClass && (
+                          <span className="incharge-active-indicator">
+                            👑 Class Teacher: <strong>{teacherInChargeClass}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
             <div className="modal-footer">

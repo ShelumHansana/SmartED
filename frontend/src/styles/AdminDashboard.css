@@ -3586,5 +3586,453 @@
   line-height: 1.4;
 }
 
+/* ==========================================================================
+   Teacher Registration & Assignment Options
+   ========================================================================== */
+
+.teacher-config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.teacher-config-section.full-width {
+  grid-column: 1 / -1;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: #1e293b;
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+  border: 1px solid #c7d2fe;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.teacher-config-block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s ease;
+}
+
+.teacher-config-block:hover {
+  border-color: #cbd5e1;
+}
+
+.config-block-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.config-label {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.config-label .req {
+  color: #ef4444;
+  margin-left: 3px;
+}
+
+.config-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Subjects Section */
+.selected-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 42px;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}
+
+.empty-selection-note {
+  font-size: 0.83rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  box-shadow: 0 1px 2px rgba(67, 56, 202, 0.08);
+  animation: fadeInTag 0.2s ease-out;
+}
+
+@keyframes fadeInTag {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.chip-icon {
+  font-size: 0.9rem;
+}
+
+.chip-text {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #4338ca;
+  font-size: 1.15rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-left: 2px;
+  transition: all 0.15s ease;
+}
+
+.tag-remove-btn:hover {
+  background: #c7d2fe;
+  color: #1e1b4b;
+}
+
+.preset-chips-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.preset-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.preset-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 130px;
+  overflow-y: auto;
+  padding: 0.2rem 0;
+}
+
+.chip-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 0.3rem 0.7rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.chip-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.chip-btn.selected {
+  background: #4f46e5;
+  border-color: #4338ca;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+}
+
+.custom-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.custom-input-row input {
+  flex: 1;
+  padding: 0.52rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: #ffffff;
+}
+
+.custom-input-row input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.action-pill-btn {
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.52rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.action-pill-btn:hover {
+  background: #4338ca;
+}
+
+/* Class Assignment Builder */
+.builder-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.6fr auto;
+  gap: 0.65rem;
+  align-items: flex-end;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .builder-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.builder-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.builder-col label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #475569;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.builder-col select {
+  width: 100%;
+  padding: 0.52rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background-color: #ffffff;
+}
+
+.assign-add-btn {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.52rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assign-add-btn:hover {
+  background: #047857;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.assignments-table-wrap {
+  margin-top: 0.3rem;
+}
+
+.empty-assignments-msg {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 0.85rem 1rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.assignment-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.6rem;
+}
+
+.assignment-badge-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #4f46e5;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.assignment-badge-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.badge-class-icon {
+  font-size: 1.25rem;
+}
+
+.badge-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-class-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.badge-subject-name {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-assignment-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.remove-assignment-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* In-Charge Section */
+.incharge-select-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.incharge-dropdown {
+  flex: 1;
+  min-width: 240px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background-color: #ffffff;
+}
+
+.incharge-dropdown:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.incharge-active-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 0.45rem 0.9rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.1);
+}
+
+/* User Card Teacher Info Preview in Users Table */
+.teacher-info-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.teacher-info-preview p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #475569;
+}
+
+.teacher-info-preview strong {
+  color: #1e293b;
+}
+
+.teacher-incharge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+
 
 
