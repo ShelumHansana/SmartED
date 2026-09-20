@@ -26,8 +26,11 @@ const Navbar = ({ onLoginClick }) => {
   
   return (
     <nav className="navbar">
-      <div className="logo">
-        <h1>SmartED</h1>
+      <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🎓</span>
+          <h1>SmartED</h1>
+        </div>
         <span className="tagline">Smart Learning Management System</span>
       </div>
       <div className="auth-buttons">
@@ -37,7 +40,8 @@ const Navbar = ({ onLoginClick }) => {
               marginRight: '15px', 
               color: '#333',
               fontSize: '0.9rem',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontWeight: 500
             }} onClick={goToDashboard}>
               👤 {user?.firstName || user?.fullName || user?.email}
             </span>
