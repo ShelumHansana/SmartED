@@ -92,17 +92,17 @@ const LandingPage = () => {
             </p>
 
             <div className="hero-buttons">
-              <button 
+              <button
                 id="cta-start-learning"
-                className="cta-button primary-cta" 
+                className="cta-button primary-cta"
                 onClick={() => setShowLogin(true)}
               >
                 <span className="cta-label">Start Learning Today</span>
                 <span className="cta-icon">→</span>
               </button>
-              <button 
+              <button
                 id="cta-explore-features"
-                className="cta-button secondary-cta" 
+                className="cta-button secondary-cta"
                 onClick={() => setShowLogin(true)}
               >
                 <span className="cta-label">Explore Portal</span>
@@ -202,7 +202,7 @@ const LandingPage = () => {
             <span className="footer-tag">Smart Learning Management System</span>
           </div>
           <p className="footer-copy">
-            © {new Date().getFullYear()} SmartED LMS. All rights reserved.
+            © {new Date().getFullYear()} ShellHans. All rights reserved.
           </p>
         </div>
       </footer>
