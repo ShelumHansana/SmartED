@@ -29,7 +29,7 @@ const Navbar = ({ onLoginClick }) => {
     <nav className="navbar">
       <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <GraduationCap size={24} color="#4f46e5" />
+          <GraduationCap size={24} color="#059669" />
           <h1>SmartED</h1>
         </div>
         <span className="tagline">Smart Learning Management System</span>
@@ -47,7 +47,7 @@ const Navbar = ({ onLoginClick }) => {
               alignItems: 'center',
               gap: '6px'
             }} onClick={goToDashboard}>
-              <User size={16} color="#6366f1" />
+              <User size={16} color="#059669" />
               <span>{user?.firstName || user?.fullName || user?.email}</span>
             </span>
             <button className="login-button" onClick={handleLogout}>

@@ -315,7 +315,7 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
             <div className="recommendation-list">
               {progressData.recommendations.map((recommendation, index) => (
                 <div key={index} className="recommendation-item">
-                  <span className="recommendation-icon"><Target size={16} color="#4f46e5" /></span>
+                  <span className="recommendation-icon"><Target size={16} color="#059669" /></span>
                   <span className="recommendation-text">{recommendation}</span>
                 </div>
               ))}

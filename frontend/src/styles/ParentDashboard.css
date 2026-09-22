@@ -256,11 +256,11 @@
 
 .nav-item:hover {
   background: #f8fafc;
-  color: #4f46e5;
+  color: #059669;
 }
 
 .nav-item.active {
-  background: #4f46e5;
+  background: #059669;
   color: white;
 }
 
@@ -329,7 +329,7 @@
 
 .notification-btn {
   padding: 0.75rem 1rem;
-  background: #4f46e5;
+  background: #059669;
   color: white;
   border: none;
   border-radius: 8px;
@@ -340,7 +340,7 @@
 }
 
 .notification-btn:hover {
-  background: #4338ca;
+  background: #047857;
 }
 
 .logout-btn {
@@ -425,7 +425,7 @@
 }
 
 .stat-value.attendance {
-  color: #3b82f6;
+  color: #059669;
 }
 
 .stat-value.subjects {
@@ -519,7 +519,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+  background: linear-gradient(90deg, #059669, #10b981, #34d399);
   border-radius: 16px 16px 0 0;
 }
 
@@ -599,7 +599,7 @@
 
 /* Add focus states for accessibility */
 .subject-card:focus {
-  outline: 3px solid #4f46e5;
+  outline: 3px solid #059669;
   outline-offset: 2px;
 }
 
@@ -610,7 +610,7 @@
 
 @keyframes gentlePulse {
   0%, 100% { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
-  50% { box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15); }
+  50% { box-shadow: 0 8px 25px rgba(5, 150, 105, 0.15); }
 }
 
 .subject-card {
@@ -638,7 +638,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #4f46e5, #06b6d4);
+  background: linear-gradient(90deg, #059669, #10b981);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s ease;
@@ -647,7 +647,7 @@
 .subject-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  border-color: #4f46e5;
+  border-color: #059669;
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
 }
 
@@ -676,7 +676,7 @@
 }
 
 .subject-card:hover .subject-header h4 {
-  color: #4f46e5;
+  color: #059669;
 }
 
 .subject-header h4::before {
@@ -747,7 +747,7 @@
   top: 0 !important;
   left: 0 !important;
   overflow: hidden;
-  background: linear-gradient(90deg, #4f46e5, #3b82f6);
+  background: linear-gradient(90deg, #059669, #10b981);
   min-width: 2px;
   max-height: 18px;
   flex-shrink: 0;
@@ -798,11 +798,11 @@
   left: calc(100% + 12px) !important;
   transform: translateY(-50%) !important;
   color: white !important;
-  background: #4f46e5 !important;
+  background: #059669 !important;
   padding: 3px 8px !important;
   border-radius: 12px !important;
   border: none !important;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3) !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
 }
@@ -831,8 +831,8 @@
 }
 
 .subject-info p:hover {
-  color: #4f46e5;
-  background: rgba(79, 70, 229, 0.05);
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
 }
 
 /* Add a completion indicator */
@@ -841,7 +841,7 @@
   display: block;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, #e2e8f0, #4f46e5, #e2e8f0);
+  background: linear-gradient(90deg, #e2e8f0, #059669, #e2e8f0);
   border-radius: 1px;
   margin-top: 1rem;
   opacity: 0.3;
@@ -904,7 +904,7 @@
 }
 
 .teacher-subject {
-  color: #4f46e5;
+  color: #059669;
   font-weight: 600;
   margin: 0 0 0.25rem 0;
 }
@@ -1083,7 +1083,7 @@
 .mark-all-read {
   width: 100%;
   padding: 0.75rem;
-  background: #3b82f6;
+  background: #059669;
   color: white;
   border: none;
   border-radius: 6px;
@@ -1094,7 +1094,7 @@
 }
 
 .mark-all-read:hover {
-  background: #2563eb;
+  background: #047857;
 }
 
 .notification-overlay {
@@ -1183,7 +1183,7 @@
 .subject-card-compact:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #4f46e5;
+  border-color: #059669;
 }
 
 .subject-card-header {
@@ -1208,7 +1208,7 @@
 .marks-display {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #4f46e5;
+  color: #059669;
 }
 
 .grade-badge {
@@ -1233,7 +1233,7 @@
 
 .grade-badge.grade-b,
 .grade-badge.grade-b-plus {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #0d9488, #0f766e);
   color: white;
 }
 
@@ -1273,7 +1273,7 @@
 
 .progress-fill-compact {
   height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #06b6d4);
+  background: linear-gradient(90deg, #059669, #10b981);
   border-radius: 999px;
   transition: width 0.6s ease;
 }
@@ -2311,11 +2311,11 @@
 }
 
 .toast-info {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #059669;
 }
 
 .toast-info .toast-icon {
-  color: #3b82f6;
+  color: #059669;
 }
 
 @keyframes slideInRight {

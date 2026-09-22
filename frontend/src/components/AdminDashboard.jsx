@@ -1082,7 +1082,7 @@ const AdminDashboard = () => {
     }
     .header {
       text-align: center;
-      border-bottom: 3px solid #3b82f6;
+      border-bottom: 3px solid #059669;
       padding-bottom: 20px;
       margin-bottom: 30px;
     }
@@ -1092,7 +1092,7 @@ const AdminDashboard = () => {
       margin-bottom: 10px;
     }
     .header .school-name {
-      color: #3b82f6;
+      color: #059669;
       font-size: 24px;
       font-weight: 600;
       margin-bottom: 5px;
@@ -1143,7 +1143,7 @@ const AdminDashboard = () => {
       color: #1e293b;
       font-size: 22px;
       margin-bottom: 20px;
-      border-left: 4px solid #3b82f6;
+      border-left: 4px solid #059669;
       padding-left: 15px;
     }
     table {
@@ -1153,7 +1153,7 @@ const AdminDashboard = () => {
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     table thead {
-      background: #3b82f6;
+      background: #059669;
       color: white;
     }
     table th {
@@ -1213,7 +1213,7 @@ const AdminDashboard = () => {
     }
     .bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      background: linear-gradient(90deg, #059669, #10b981);
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -1235,8 +1235,8 @@ const AdminDashboard = () => {
       border-radius: 50%;
       background: conic-gradient(
         from 0deg,
-        #3b82f6 0deg,
-        #3b82f6 var(--angle1, 180deg),
+        #059669 0deg,
+        #059669 var(--angle1, 180deg),
         #8b5cf6 var(--angle1, 180deg),
         #8b5cf6 var(--angle2, 270deg),
         #ec4899 var(--angle2, 270deg),
@@ -2188,7 +2188,7 @@ const AdminDashboard = () => {
               <div className="section-top">
                 <div className="page-title">
                   <div className="title-with-icon">
-                    <div className="page-icon"><BookOpen size={24} color="#4f46e5" /></div>
+                    <div className="page-icon"><BookOpen size={24} color="#059669" /></div>
                     <div>
                       <h2>Course Management</h2>
                       <p>Manage all courses in your institution</p>
@@ -2199,14 +2199,14 @@ const AdminDashboard = () => {
                 {/* Quick Stats Summary - Enhanced with Icons */}
                 <div className="quick-stats">
                   <div className="stat-item total-courses">
-                    <div className="stat-icon"><BarChart3 size={20} color="#4f46e5" /></div>
+                    <div className="stat-icon"><BarChart3 size={20} color="#059669" /></div>
                     <div className="stat-content">
                       <span className="stat-label">Total Courses</span>
                       <span className="stat-value">{courses.length}</span>
                     </div>
                   </div>
                   <div className="stat-item al-courses">
-                    <div className="stat-icon"><GraduationCap size={20} color="#3b82f6" /></div>
+                    <div className="stat-icon"><GraduationCap size={20} color="#059669" /></div>
                     <div className="stat-content">
                       <span className="stat-label">A/L Courses</span>
                       <span className="stat-value">{courses.filter(c => c.level === 'A/L').length}</span>
@@ -2451,7 +2451,7 @@ const AdminDashboard = () => {
                   <h4>Academic Reports</h4>
                   <div className="report-cards">
                     <div className="report-card">
-                      <div className="report-icon"><GraduationCap size={24} color="#4f46e5" /></div>
+                      <div className="report-icon"><GraduationCap size={24} color="#059669" /></div>
                       <h5>Student Performance Report</h5>
                       <p>Comprehensive analysis of student performance by grade, class, and subject with enrollment statistics</p>
                       <div className="report-meta">
@@ -2487,7 +2487,7 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="report-card">
-                      <div className="report-icon"><User size={24} color="#3b82f6" /></div>
+                      <div className="report-icon"><User size={24} color="#059669" /></div>
                       <h5>Teacher Performance Report</h5>
                       <p>Teaching effectiveness metrics including subject assignments, class loads, and status overview</p>
                       <div className="report-meta">
@@ -3354,7 +3354,7 @@ const AdminDashboard = () => {
                           <div className="assignment-cards-grid">
                             {teacherClassAssignments.map((assignment) => (
                               <div key={assignment.id} className="assignment-badge-card">
-                                <div className="badge-class-icon"><GraduationCap size={15} color="#4f46e5" /></div>
+                                <div className="badge-class-icon"><GraduationCap size={15} color="#059669" /></div>
                                 <div className="badge-details">
                                   <span className="badge-class-name">{assignment.classId}</span>
                                   <span className="badge-subject-name">{assignment.subject}</span>
@@ -3700,7 +3700,7 @@ Portal: ${window.location.origin}`
               <div className={`confirm-icon confirm-icon-${confirmConfig.type}`}>
                 {confirmConfig.type === 'danger' && <AlertTriangle size={24} color="#ef4444" />}
                 {confirmConfig.type === 'warning' && <AlertTriangle size={24} color="#f59e0b" />}
-                {confirmConfig.type === 'info' && <Info size={24} color="#3b82f6" />}
+                {confirmConfig.type === 'info' && <Info size={24} color="#059669" />}
               </div>
               <p className="confirm-message">{confirmConfig.message}</p>
             </div>

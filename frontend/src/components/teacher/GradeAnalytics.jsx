@@ -356,7 +356,7 @@ const GradeAnalytics = ({ students, teacher }) => {
                     </div>
                   </div>
                   <div className="stat-card info">
-                    <div className="stat-icon"><Users size={20} color="#6366f1" /></div>
+                    <div className="stat-icon"><Users size={20} color="#059669" /></div>
                     <div className="stat-content">
                       <div className="stat-number">{analyticsData.totalStudents}</div>
                       <div className="stat-label">Total Students</div>
@@ -462,7 +462,7 @@ const GradeAnalytics = ({ students, teacher }) => {
                   <div className="recommendation-list">
                     {analyticsData.subjectInsights.recommendedActions.map((action, index) => (
                       <div key={index} className="recommendation-item">
-                        <div className="recommendation-icon"><Target size={16} color="#6366f1" /></div>
+                        <div className="recommendation-icon"><Target size={16} color="#059669" /></div>
                         <div className="recommendation-text">{action}</div>
                       </div>
                     ))}
@@ -623,7 +623,7 @@ const GradeAnalytics = ({ students, teacher }) => {
         </div>
       ) : !selectedClass || !selectedSubject ? (
         <div className="selection-prompt">
-          <div className="prompt-icon"><BarChart3 size={36} color="#6366f1" /></div>
+          <div className="prompt-icon"><BarChart3 size={36} color="#059669" /></div>
           <h3>Ready to Analyze Performance?</h3>
           <p>Select your class and subject above to generate comprehensive analytics and insights.</p>
           <div className="selection-checklist">

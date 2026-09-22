@@ -178,7 +178,7 @@
 }
 
 .form-group input:focus {
-  border-color: #2563eb;
+  border-color: var(--primary-color);
   outline: none;
 }
 
@@ -289,7 +289,7 @@
 }
 
 .subject-checkbox:hover label {
-  color: #2563eb;
+  color: var(--primary-color);
 }
 
 .form-row select {
@@ -310,16 +310,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
-  border: 1px solid #c7d2fe;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
   border-radius: 8px;
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
 .selected-child-item:hover {
-  border-color: #a5b4fc;
-  background: linear-gradient(135deg, #e8eeff 0%, #dce5ff 100%);
+  border-color: #6ee7b7;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
 
 .selected-child-item span {

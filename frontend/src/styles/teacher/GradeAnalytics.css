@@ -235,13 +235,13 @@
 .quick-stats {
   margin-bottom: 2rem;
   padding: 2rem;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
   border-radius: 12px;
 }
 
 .quick-stats h3 {
   margin: 0 0 1.5rem 0;
-  color: #1e40af;
+  color: #065f46;
   font-size: 1.3rem;
   font-weight: 700;
   text-align: center;
@@ -254,14 +254,14 @@
 }
 
 .stat-card {
+  padding: 1.5rem;
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 2px solid #e5e7eb;
+  gap: 1.5rem;
   transition: all 0.3s ease;
 }
 
@@ -271,7 +271,7 @@
 }
 
 .stat-card.primary {
-  border-color: #3b82f6;
+  border-color: #059669;
 }
 
 .stat-card.success {

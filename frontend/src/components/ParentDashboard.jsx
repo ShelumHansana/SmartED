@@ -818,14 +818,14 @@ const ParentDashboard = () => {
                       <div className="card-details">
                         <div className="detail-row">
                           <div className="detail-item">
-                            <span className="detail-icon"><User size={15} color="#4f46e5" /></span>
+                            <span className="detail-icon"><User size={15} color="#059669" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Teacher</span>
                               <span className="detail-value">{grade.teacherName || 'Not Assigned'}</span>
                             </div>
                           </div>
                           <div className="detail-item">
-                            <span className="detail-icon"><FileText size={15} color="#4f46e5" /></span>
+                            <span className="detail-icon"><FileText size={15} color="#059669" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Assessment</span>
                               <span className="detail-value">{grade.assessmentType || 'Test'}</span>
@@ -834,7 +834,7 @@ const ParentDashboard = () => {
                         </div>
                         <div className="detail-row">
                           <div className="detail-item">
-                            <span className="detail-icon"><Calendar size={15} color="#4f46e5" /></span>
+                            <span className="detail-icon"><Calendar size={15} color="#059669" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Date</span>
                               <span className="detail-value">
@@ -849,7 +849,7 @@ const ParentDashboard = () => {
                             </div>
                           </div>
                           <div className="detail-item">
-                            <span className="detail-icon"><Award size={15} color="#4f46e5" /></span>
+                            <span className="detail-icon"><Award size={15} color="#059669" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Class Rank</span>
                               <span className="detail-value">{grade.rank || 'N/A'}</span>

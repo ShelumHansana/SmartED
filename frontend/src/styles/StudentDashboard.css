@@ -308,7 +308,7 @@
 
 .progress {
   height: 100%;
-  background: #2563eb;
+  background: #059669;
   transition: width 0.3s ease;
 }
 
@@ -789,13 +789,13 @@
 }
 
 .reply-btn {
-  background: #3b82f6;
+  background: #059669;
   color: white;
   border: none;
 }
 
 .reply-btn:hover {
-  background: #2563eb;
+  background: #047857;
 }
 
 .mark-read-btn {

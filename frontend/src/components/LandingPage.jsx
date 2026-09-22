@@ -69,7 +69,7 @@ const LandingPage = () => {
           </div>
 
           <div className="floating-badge badge-right" aria-hidden="true">
-            <span className="floating-icon"><GraduationCap size={20} color="#4f46e5" /></span>
+            <span className="floating-icon"><GraduationCap size={20} color="#059669" /></span>
             <div className="floating-info">
               <span className="floating-title">10,000+</span>
               <span className="floating-sub">Active Students</span>
@@ -115,7 +115,7 @@ const LandingPage = () => {
         {/* Live Platform Stats Strip */}
         <div className="stats-strip">
           <div className="stat-pill-item">
-            <span className="stat-pill-icon"><Users size={18} color="#4f46e5" /></span>
+            <span className="stat-pill-icon"><Users size={18} color="#059669" /></span>
             <div>
               <span className="stat-pill-num">5,000+</span>
               <span className="stat-pill-desc">Active Students</span>
@@ -196,7 +196,7 @@ const LandingPage = () => {
       <footer className="landing-footer">
         <div className="footer-container">
           <div className="footer-brand">
-            <span className="footer-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><GraduationCap size={18} color="#6366f1" /></span>
+            <span className="footer-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><GraduationCap size={18} color="#059669" /></span>
             <span className="footer-title">SmartED</span>
             <span className="footer-separator">•</span>
             <span className="footer-tag">Smart Learning Management System</span>
