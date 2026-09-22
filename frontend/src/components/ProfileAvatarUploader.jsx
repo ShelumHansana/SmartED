@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { doc, updateDoc, setDoc } from 'firebase/firestore'
 import { storage, db } from '../utils/firebase'
+import { Camera } from 'lucide-react'
 import '../styles/ProfileAvatarUploader.css'
 
 /**
@@ -155,8 +156,8 @@ const ProfileAvatarUploader = ({
           </div>
         )}
 
-        <div className="profile-uploader-badge" title="Change photo">
-          📷
+        <div className="profile-uploader-badge" title="Change photo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Camera size={13} color="#ffffff" />
         </div>
       </div>
 

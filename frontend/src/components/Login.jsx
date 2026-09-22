@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Lock } from 'lucide-react'
 
 const Login = ({ onClose }) => {
   const [identifier, setIdentifier] = useState('')
@@ -109,8 +110,8 @@ const Login = ({ onClose }) => {
           </button>
         </form>
         
-        <p style={{ marginTop: '18px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
-          🔒 New account? Credentials are provided by the school administrator.
+        <p style={{ marginTop: '18px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <Lock size={14} /> New account? Credentials are provided by the school administrator.
         </p>
       </div>
     </div>

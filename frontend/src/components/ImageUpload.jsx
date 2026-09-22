@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { doc, updateDoc } from 'firebase/firestore'
 import { storage, db } from '../utils/firebase'
+import { Camera } from 'lucide-react'
 import './ImageUpload.css'
 
 const ImageUpload = ({ userId, currentImageUrl, onUploadComplete }) => {
@@ -101,8 +102,8 @@ const ImageUpload = ({ userId, currentImageUrl, onUploadComplete }) => {
         />
         
         {!selectedFile ? (
-          <label htmlFor="imageInput" className="select-button">
-            📷 Choose Image
+          <label htmlFor="imageInput" className="select-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <Camera size={16} /> Choose Image
           </label>
         ) : (
           <div className="action-buttons">
@@ -111,14 +112,14 @@ const ImageUpload = ({ userId, currentImageUrl, onUploadComplete }) => {
               onClick={handleUpload}
               disabled={uploading}
             >
-              {uploading ? '⏳ Uploading...' : '✓ Upload'}
+              {uploading ? 'Uploading...' : 'Upload'}
             </button>
             <button 
               className="cancel-button"
               onClick={handleCancel}
               disabled={uploading}
             >
-              ✕ Cancel
+              Cancel
             </button>
           </div>
         )}

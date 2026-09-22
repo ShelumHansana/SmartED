@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { storage, db } from '../utils/firebase'
+import { Upload, Paperclip } from 'lucide-react'
 import './FileUpload.css'
 
 const FileUpload = ({ userId, userRole, onUploadComplete }) => {
@@ -88,7 +89,7 @@ const FileUpload = ({ userId, userRole, onUploadComplete }) => {
 
   return (
     <div className="file-upload-container">
-      <h3>📤 Upload File</h3>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Upload size={20} /> Upload File</h3>
       
       <div className="upload-form">
         <div className="form-group">
@@ -161,7 +162,7 @@ const FileUpload = ({ userId, userRole, onUploadComplete }) => {
           />
           {selectedFile && (
             <div className="file-info">
-              <span>📎 {selectedFile.name}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Paperclip size={14} /> {selectedFile.name}</span>
               <span className="file-size">
                 ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
               </span>
@@ -174,7 +175,7 @@ const FileUpload = ({ userId, userRole, onUploadComplete }) => {
           onClick={handleUpload}
           disabled={uploading || !selectedFile || !fileDetails.title}
         >
-          {uploading ? '⏳ Uploading...' : '✓ Upload File'}
+          {uploading ? 'Uploading...' : 'Upload File'}
         </button>
       </div>
 

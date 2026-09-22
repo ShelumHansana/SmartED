@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FileText } from 'lucide-react';
 import '../../styles/MarksEntry.css';
 
 const MarksEntry = () => {
@@ -301,7 +302,7 @@ const MarksEntry = () => {
           ) : (
             <div className="no-assessment-selected">
               <div className="empty-state">
-                <div className="empty-icon">📝</div>
+                <div className="empty-icon"><FileText size={36} color="#94a3b8" /></div>
                 <h3>Select an Assessment</h3>
                 <p>Choose an assessment from the dropdown above to start entering marks</p>
               </div>

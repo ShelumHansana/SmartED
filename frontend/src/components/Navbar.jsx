@@ -1,5 +1,6 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { GraduationCap, User } from 'lucide-react'
 
 const Navbar = ({ onLoginClick }) => {
   const { user, logout, isAuthenticated } = useAuth()
@@ -27,8 +28,8 @@ const Navbar = ({ onLoginClick }) => {
   return (
     <nav className="navbar">
       <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🎓</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <GraduationCap size={24} color="#4f46e5" />
           <h1>SmartED</h1>
         </div>
         <span className="tagline">Smart Learning Management System</span>
@@ -41,9 +42,13 @@ const Navbar = ({ onLoginClick }) => {
               color: '#333',
               fontSize: '0.9rem',
               cursor: 'pointer',
-              fontWeight: 500
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }} onClick={goToDashboard}>
-              👤 {user?.firstName || user?.fullName || user?.email}
+              <User size={16} color="#6366f1" />
+              <span>{user?.firstName || user?.fullName || user?.email}</span>
             </span>
             <button className="login-button" onClick={handleLogout}>
               Logout

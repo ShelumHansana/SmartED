@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { collection, addDoc, query, where, getDocs, serverTimestamp, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../../utils/firebase'
+import { Upload, Paperclip, Calendar, Edit2, Trash2, AlertTriangle, BookOpen } from 'lucide-react'
 
 const ActivityUpload = ({ showToast }) => {
   const { user } = useAuth()
@@ -249,7 +250,7 @@ const ActivityUpload = ({ showToast }) => {
   return (
     <div className="activity-upload">
       <div className="upload-section">
-        <h3>📤 Upload New Activity</h3>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Upload size={18} /> Upload New Activity</h3>
         <form onSubmit={handleSubmit} className="upload-form">
           <div className="form-row">
             <div className="form-group">
@@ -325,19 +326,19 @@ const ActivityUpload = ({ showToast }) => {
                 className="file-input"
               />
               {newActivity.file && (
-                <p className="file-name">📎 {newActivity.file.name}</p>
+                <p className="file-name" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Paperclip size={14} /> {newActivity.file.name}</p>
               )}
             </div>
           </div>
 
           <button type="submit" className="upload-btn" disabled={loading}>
-            <span>📤</span> {loading ? 'Uploading...' : 'Upload Activity'}
+            {loading ? 'Uploading...' : 'Upload Activity'}
           </button>
         </form>
       </div>
 
       <div className="activities-list">
-        <h3>📚 Uploaded Activities</h3>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BookOpen size={18} /> Uploaded Activities</h3>
         {activities.length === 0 ? (
           <p className="no-activities">No activities uploaded yet. Create your first activity above!</p>
         ) : (
@@ -353,22 +354,22 @@ const ActivityUpload = ({ showToast }) => {
                       {activity.class}
                     </span>
                   </div>
-                  <span className="due-date">📅 {activity.dueDate}</span>
+                  <span className="due-date" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Calendar size={13} /> {activity.dueDate}</span>
                 </div>
                 <h4>{activity.title}</h4>
                 <p className="activity-description">{activity.description}</p>
                 {activity.fileName && (
-                  <p className="activity-file">📎 {activity.fileName}</p>
+                  <p className="activity-file" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Paperclip size={14} /> {activity.fileName}</p>
                 )}
                 <div className="activity-actions">
                   <button className="edit-btn">
-                    <span>✏️</span> Edit
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit2 size={14} /> Edit</span>
                   </button>
                   <button 
                     className="delete-btn"
                     onClick={() => handleDeleteClick(activity)}
                   >
-                    <span>🗑️</span> Delete
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Trash2 size={14} /> Delete</span>
                   </button>
                 </div>
               </div>
@@ -385,8 +386,8 @@ const ActivityUpload = ({ showToast }) => {
               <h3>Delete Activity</h3>
             </div>
             <div className="modal-body">
-              <div className="confirm-icon confirm-icon-danger">
-                ⚠️
+              <div className="confirm-icon confirm-icon-danger" style={{ display: 'flex', justifyContent: 'center' }}>
+                <AlertTriangle size={36} color="#ef4444" />
               </div>
               <p className="confirm-message">
                 Are you sure you want to delete "{activityToDelete?.title}"? This action cannot be undone.
@@ -394,10 +395,10 @@ const ActivityUpload = ({ showToast }) => {
             </div>
             <div className="modal-footer">
               <button className="cancel-btn" onClick={handleCancelDelete}>
-                <span>❌</span> Cancel
+                Cancel
               </button>
-              <button className="confirm-btn confirm-btn-danger" onClick={handleConfirmDelete}>
-                <span>🗑️</span> Delete Activity
+              <button className="confirm-btn confirm-btn-danger" onClick={handleConfirmDelete} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <Trash2 size={14} /> Delete Activity
               </button>
             </div>
           </div>

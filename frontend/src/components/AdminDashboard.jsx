@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db, createFirebaseUserWithoutLoggingOut } from '../utils/firebase'
 import ProfileAvatarUploader from './ProfileAvatarUploader'
+import { BarChart3, Users, BookOpen, TrendingUp, Settings, X, Menu, Bell, LogOut, Zap, ClipboardList, UserPlus, Search, Plus, User, Edit2, Trash2, RotateCw, GraduationCap, Eye, EyeOff, Save, Download, FileText, Calendar, CreditCard, Check, CheckCircle2, AlertTriangle, Info, Copy } from 'lucide-react'
 import '../styles/Dashboard.css'
 import '../styles/AdminDashboard.css'
 
@@ -1315,7 +1316,7 @@ const AdminDashboard = () => {
     </div>
 
     <div class="summary-section">
-      <h2>📊 Executive Summary</h2>
+      <h2>Executive Summary</h2>
       <div class="summary-grid">
 `
 
@@ -1341,7 +1342,7 @@ const AdminDashboard = () => {
       if (reportData.summary.byGrade) {
         htmlContent += `
     <div class="section">
-      <h2>📈 Grade Distribution</h2>
+      <h2>Grade Distribution</h2>
       <div class="chart-container">
         <div class="chart-title">Students by Grade Level</div>
         <div class="bar-chart">
@@ -1369,7 +1370,7 @@ const AdminDashboard = () => {
       // Students table
       htmlContent += `
     <div class="section">
-      <h2>👥 Student Details</h2>
+      <h2>Student Details</h2>
       <table>
         <thead>
           <tr>
@@ -1406,7 +1407,7 @@ const AdminDashboard = () => {
     if (reportType === 'Teacher Performance Report' && reportData.teachers) {
       htmlContent += `
     <div class="section">
-      <h2>👨‍🏫 Teacher Details</h2>
+      <h2>Teacher Details</h2>
       <table>
         <thead>
           <tr>
@@ -1445,7 +1446,7 @@ const AdminDashboard = () => {
     if (reportType === 'Grade Analysis Report' && reportData.gradeDistribution) {
       htmlContent += `
     <div class="section">
-      <h2>📊 Grade Distribution Analysis</h2>
+      <h2>Grade Distribution Analysis</h2>
       <div class="chart-container">
         <div class="chart-title">Student Count by Grade</div>
         <div class="bar-chart">
@@ -1473,7 +1474,7 @@ const AdminDashboard = () => {
     if (reportType === 'Attendance Report' && reportData.byRole) {
       htmlContent += `
     <div class="section">
-      <h2>📅 Attendance by Role</h2>
+      <h2>Attendance by Role</h2>
       <table>
         <thead>
           <tr>
@@ -1509,7 +1510,7 @@ const AdminDashboard = () => {
     if (reportType === 'User Activity Report' && reportData.usersByRole) {
       htmlContent += `
     <div class="section">
-      <h2>👥 Users by Role</h2>
+      <h2>Users by Role</h2>
       <div class="chart-container">
         <div class="chart-title">Distribution of Users by Role</div>
         <div class="bar-chart">
@@ -1573,7 +1574,7 @@ const AdminDashboard = () => {
       if (reportData.coursesByLevel) {
         htmlContent += `
     <div class="section">
-      <h2>📚 Courses by Level</h2>
+      <h2>Courses by Level</h2>
       <table>
         <thead>
           <tr>
@@ -1606,7 +1607,7 @@ const AdminDashboard = () => {
       if (reportData.topCourses) {
         htmlContent += `
     <div class="section">
-      <h2>🏆 Top Performing Courses</h2>
+      <h2>Top Performing Courses</h2>
       <table>
         <thead>
           <tr>
@@ -1808,7 +1809,7 @@ const AdminDashboard = () => {
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Close menu"
         >
-          ✕
+          <X size={20} />
         </button>
         <div className="admin-profile">
           <ProfileAvatarUploader 
@@ -1833,35 +1834,35 @@ const AdminDashboard = () => {
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-item-icon">📊</span>
+            <span className="nav-item-icon"><BarChart3 size={18} /></span>
             <span>Overview</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => { setActiveTab('users'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-item-icon">👥</span>
+            <span className="nav-item-icon"><Users size={18} /></span>
             <span>User Management</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
             onClick={() => { setActiveTab('courses'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-item-icon">📚</span>
+            <span className="nav-item-icon"><BookOpen size={18} /></span>
             <span>Course Management</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-item-icon">📈</span>
+            <span className="nav-item-icon"><TrendingUp size={18} /></span>
             <span>Reports</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-item-icon">⚙️</span>
+            <span className="nav-item-icon"><Settings size={18} /></span>
             <span>Settings</span>
           </button>
         </nav>
@@ -1875,7 +1876,7 @@ const AdminDashboard = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Open menu"
             >
-              ☰
+              <Menu size={20} />
             </button>
             <div className="header-title-group">
               <h2>Admin Dashboard</h2>
@@ -1888,7 +1889,7 @@ const AdminDashboard = () => {
               onClick={() => setShowNotifications(!showNotifications)}
               title="Notifications"
             >
-              <span className="btn-icon">🔔</span>
+              <span className="btn-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><Bell size={16} /></span>
               <span>Notifications</span>
               {notificationCount > 0 && (
                 <span className="notification-badge">{notificationCount}</span>
@@ -1899,7 +1900,7 @@ const AdminDashboard = () => {
               onClick={handleLogout}
               title="Logout"
             >
-              <span className="btn-icon">🚪</span>
+              <span className="btn-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><LogOut size={16} /></span>
               <span>Logout</span>
             </button>
           </div>
@@ -1910,28 +1911,28 @@ const AdminDashboard = () => {
             <div className="overview-section">
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon-badge icon-students">👥</div>
+                  <div className="stat-icon-badge icon-students" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={20} /></div>
                   <div className="stat-info">
                     <span className="stat-label">Total Students</span>
                     <div className="stat-value">{stats.totalStudents || 0}</div>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon-badge icon-teachers">👨‍🏫</div>
+                  <div className="stat-icon-badge icon-teachers" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><GraduationCap size={20} /></div>
                   <div className="stat-info">
                     <span className="stat-label">Total Teachers</span>
                     <div className="stat-value">{stats.totalTeachers || 0}</div>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon-badge icon-courses">📚</div>
+                  <div className="stat-icon-badge icon-courses" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BookOpen size={20} /></div>
                   <div className="stat-info">
                     <span className="stat-label">Total Courses</span>
                     <div className="stat-value">{stats.totalCourses || 0}</div>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon-badge icon-users">⚡</div>
+                  <div className="stat-icon-badge icon-users" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={20} /></div>
                   <div className="stat-info">
                     <span className="stat-label">Active Users</span>
                     <div className="stat-value">{stats.activeUsers || 0}</div>
@@ -1958,7 +1959,7 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <div className="empty-activities-placeholder">
-                    <div className="empty-icon-wrap">📋</div>
+                    <div className="empty-icon-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ClipboardList size={32} color="#94a3b8" /></div>
                     <p className="empty-msg">No recent activity logged yet.</p>
                     <span className="empty-sub">Recent administrative events, registrations, and updates will appear here.</span>
                   </div>
@@ -1972,28 +1973,28 @@ const AdminDashboard = () => {
                     className="action-button"
                     onClick={() => handleQuickAction('addUser')}
                   >
-                    <span className="action-icon">👤</span>
+                    <span className="action-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><UserPlus size={16} /></span>
                     Add New User
                   </button>
                   <button 
                     className="action-button"
                     onClick={() => handleQuickAction('createCourse')}
                   >
-                    <span className="action-icon">📚</span>
+                    <span className="action-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><BookOpen size={16} /></span>
                     Create Course
                   </button>
                   <button 
                     className="action-button"
                     onClick={() => handleQuickAction('generateReport')}
                   >
-                    <span className="action-icon">📊</span>
+                    <span className="action-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><BarChart3 size={16} /></span>
                     Generate Report
                   </button>
                   <button 
                     className="action-button"
                     onClick={() => handleQuickAction('systemSettings')}
                   >
-                    <span className="action-icon">⚙️</span>
+                    <span className="action-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><Settings size={16} /></span>
                     System Settings
                   </button>
                 </div>
@@ -2014,7 +2015,7 @@ const AdminDashboard = () => {
                       value={userSearchQuery}
                       onChange={(e) => setUserSearchQuery(e.target.value)}
                     />
-                    <span className="search-icon">🔍</span>
+                    <span className="search-icon"><Search size={16} /></span>
                   </div>
                   <select 
                     value={userFilter} 
@@ -2027,7 +2028,7 @@ const AdminDashboard = () => {
                     <option value="parent">Parents</option>
                   </select>
                   <button className="add-btn" onClick={openAddUserModal}>
-                    <span className="btn-icon">➕</span>
+                    <span className="btn-icon"><Plus size={15} /></span>
                     Add New User
                   </button>
                 </div>
@@ -2048,7 +2049,7 @@ const AdminDashboard = () => {
                   if (filteredUsers.length === 0) {
                     return (
                       <div className="empty-state">
-                        <div className="empty-icon">👤</div>
+                        <div className="empty-icon"><User size={40} color="#94a3b8" /></div>
                         <h4>No users found</h4>
                         <p>
                           {userSearchQuery 
@@ -2062,7 +2063,7 @@ const AdminDashboard = () => {
                           className="empty-action-btn"
                           onClick={openAddUserModal}
                         >
-                          <span className="btn-icon">➕</span>
+                          <span className="btn-icon"><Plus size={15} /></span>
                           Add New User
                         </button>
                       </div>
@@ -2125,7 +2126,7 @@ const AdminDashboard = () => {
                             </p>
                             {(user.inChargeClass || user.teacherData?.inChargeClass) && (
                               <span className="teacher-incharge-badge">
-                                👑 In-Charge: {user.inChargeClass || user.teacherData?.inChargeClass}
+                                In-Charge: {user.inChargeClass || user.teacherData?.inChargeClass}
                               </span>
                             )}
                           </div>
@@ -2147,7 +2148,7 @@ const AdminDashboard = () => {
                           }}
                           title="Edit user information"
                         >
-                          <span className="btn-icon">✏️</span>
+                          <span className="btn-icon"><Edit2 size={14} /></span>
                           Edit
                         </button>
                         <button 
@@ -2158,7 +2159,7 @@ const AdminDashboard = () => {
                           }}
                           title={user.status === 'Active' ? 'Deactivate user' : 'Activate user'}
                         >
-                          <span className="btn-icon">{user.status === 'Active' ? '❌' : '✅'}</span>
+                          <span className="btn-icon">{user.status === 'Active' ? <X size={14} /> : <Check size={14} />}</span>
                           {user.status === 'Active' ? 'Deactivate' : 'Activate'}
                         </button>
                         <button 
@@ -2169,7 +2170,7 @@ const AdminDashboard = () => {
                           }}
                           title="Delete user permanently"
                         >
-                          <span className="btn-icon">🗑️</span>
+                          <span className="btn-icon"><Trash2 size={14} /></span>
                           Delete
                         </button>
                       </div>
@@ -2187,7 +2188,7 @@ const AdminDashboard = () => {
               <div className="section-top">
                 <div className="page-title">
                   <div className="title-with-icon">
-                    <div className="page-icon">📚</div>
+                    <div className="page-icon"><BookOpen size={24} color="#4f46e5" /></div>
                     <div>
                       <h2>Course Management</h2>
                       <p>Manage all courses in your institution</p>
@@ -2198,28 +2199,28 @@ const AdminDashboard = () => {
                 {/* Quick Stats Summary - Enhanced with Icons */}
                 <div className="quick-stats">
                   <div className="stat-item total-courses">
-                    <div className="stat-icon">📊</div>
+                    <div className="stat-icon"><BarChart3 size={20} color="#4f46e5" /></div>
                     <div className="stat-content">
                       <span className="stat-label">Total Courses</span>
                       <span className="stat-value">{courses.length}</span>
                     </div>
                   </div>
                   <div className="stat-item al-courses">
-                    <div className="stat-icon">🎓</div>
+                    <div className="stat-icon"><GraduationCap size={20} color="#3b82f6" /></div>
                     <div className="stat-content">
                       <span className="stat-label">A/L Courses</span>
                       <span className="stat-value">{courses.filter(c => c.level === 'A/L').length}</span>
                     </div>
                   </div>
                   <div className="stat-item ol-courses">
-                    <div className="stat-icon">📖</div>
+                    <div className="stat-icon"><BookOpen size={20} color="#10b981" /></div>
                     <div className="stat-content">
                       <span className="stat-label">O/L Courses</span>
                       <span className="stat-value">{courses.filter(c => c.level === 'O/L').length}</span>
                     </div>
                   </div>
                   <div className="stat-item total-students">
-                    <div className="stat-icon">👥</div>
+                    <div className="stat-icon"><Users size={20} color="#8b5cf6" /></div>
                     <div className="stat-content">
                       <span className="stat-label">Total Students</span>
                       <span className="stat-value">{courses.reduce((sum, c) => sum + (c.students || 0), 0)}</span>
@@ -2239,7 +2240,7 @@ const AdminDashboard = () => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <span className="search-icon">🔍</span>
+                    <span className="search-icon"><Search size={16} /></span>
                   </div>
                   <div className="filter-group">
                     <div className="filter-item">
@@ -2250,8 +2251,8 @@ const AdminDashboard = () => {
                         onChange={(e) => setLevelFilter(e.target.value)}
                       >
                         <option value="">All Levels</option>
-                        <option value="O/L">🏫 O/L Courses</option>
-                        <option value="A/L">🎓 A/L Courses</option>
+                        <option value="O/L">O/L Courses</option>
+                        <option value="A/L">A/L Courses</option>
                       </select>
                     </div>
                     <div className="filter-item">
@@ -2262,8 +2263,8 @@ const AdminDashboard = () => {
                         onChange={(e) => setStatusFilter(e.target.value)}
                       >
                         <option value="">All Status</option>
-                        <option value="Active">✅ Active</option>
-                        <option value="Inactive">❌ Inactive</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
                       </select>
                     </div>
                   </div>
@@ -2274,7 +2275,7 @@ const AdminDashboard = () => {
                     title="Refresh course list and clear filters"
                     onClick={handleRefreshData}
                   >
-                    <span className="btn-icon">🔄</span>
+                    <span className="btn-icon"><RotateCw size={14} /></span>
                     Refresh
                   </button>
                   <button className="add-new-btn" onClick={() => {
@@ -2282,7 +2283,7 @@ const AdminDashboard = () => {
                     setCourseLevel('O/L')
                     setShowCourseModal(true)
                   }} title="Add a new course">
-                    <span className="btn-icon">➕</span>
+                    <span className="btn-icon"><Plus size={15} /></span>
                     Add New Course
                   </button>
                 </div>
@@ -2291,7 +2292,7 @@ const AdminDashboard = () => {
               {/* Main Course List */}
               <div className="courses-container">
                 <div className="courses-header">
-                  <h3>📋 Course Directory</h3>
+                  <h3>Course Directory</h3>
                   <p>Showing {(() => {
                     const filteredCount = courses.filter(course => {
                       const matchesSearch = searchQuery === '' || 
@@ -2319,7 +2320,7 @@ const AdminDashboard = () => {
                     if (filteredCourses.length === 0) {
                       return (
                         <div className="empty-state">
-                          <div className="empty-icon">📚</div>
+                          <div className="empty-icon"><BookOpen size={40} color="#94a3b8" /></div>
                           <h4>No courses found</h4>
                           <p>
                             {searchQuery 
@@ -2336,7 +2337,7 @@ const AdminDashboard = () => {
                               setShowCourseModal(true)
                             }}
                           >
-                            <span className="btn-icon">➕</span>
+                            <span className="btn-icon"><Plus size={15} /></span>
                             Add Your First Course
                           </button>
                         </div>
@@ -2347,10 +2348,7 @@ const AdminDashboard = () => {
                     <div key={course.id} className="course-item">
                       <div className="course-avatar">
                         <div className={`subject-icon ${course.level ? course.level.toLowerCase().replace('/', '-') : 'unknown'}`}>
-                          {course.name && course.name.includes('Mathematics') ? '📐' : 
-                           course.name && course.name.includes('Physics') ? '⚛️' : 
-                           course.name && course.name.includes('Chemistry') ? '🧪' : 
-                           course.name && course.name.includes('Science') ? '🔬' : '📚'}
+                          <BookOpen size={20} />
                         </div>
                       </div>
                       
@@ -2360,33 +2358,33 @@ const AdminDashboard = () => {
                             <div className="course-title-group">
                               <h4 className="course-title">{course.name || 'Unnamed Course'}</h4>
                               {course.grade && (
-                                <span className="grade-label">📖 {course.grade}</span>
+                                <span className="grade-label">{course.grade}</span>
                               )}
                             </div>
                             <div className="course-meta">
                               <span className={`level-tag ${course.level ? course.level.toLowerCase().replace('/', '-') : 'unknown'}`}>
-                                {course.level === 'A/L' ? '🎓 A/L' : course.level === 'O/L' ? '🏫 O/L' : course.level || 'N/A'}
+                                {course.level === 'A/L' ? 'A/L' : course.level === 'O/L' ? 'O/L' : course.level || 'N/A'}
                               </span>
                               {course.stream && (
-                                <span className="stream-tag">🎯 {course.stream}</span>
+                                <span className="stream-tag">{course.stream}</span>
                               )}
                             </div>
                           </div>
                           
                           <div className="course-details-row">
                             <div className="detail-group teacher-info">
-                              <span className="detail-icon">👨‍🏫</span>
+                              <span className="detail-icon"><User size={14} /></span>
                               <span className="detail-label">Teacher:</span>
                               <span className="detail-text">{course.teacher || 'Not Assigned'}</span>
                             </div>
                             <div className="detail-group enrollment-info">
-                              <span className="detail-icon">👥</span>
+                              <span className="detail-icon"><Users size={14} /></span>
                               <span className="detail-label">Students:</span>
                               <span className="detail-text">{course.students || 0} enrolled</span>
                             </div>
                             <div className="detail-group status-info">
                               <span className="detail-icon">
-                                {course.status === 'Active' ? '✅' : '❌'}
+                                {course.status === 'Active' ? <CheckCircle2 size={14} color="#10b981" /> : <AlertTriangle size={14} color="#ef4444" />}
                               </span>
                               <span className="detail-label">Status:</span>
                               <span className={`status-badge ${course.status ? course.status.toLowerCase() : 'active'}`}>
@@ -2406,7 +2404,7 @@ const AdminDashboard = () => {
                           }}
                           title="View course details and analytics"
                         >
-                          <span className="btn-icon">👁️</span>
+                          <span className="btn-icon"><Eye size={14} /></span>
                           View
                         </button>
                         <button 
@@ -2417,7 +2415,7 @@ const AdminDashboard = () => {
                           }}
                           title="Edit course information"
                         >
-                          <span className="btn-icon">✏️</span>
+                          <span className="btn-icon"><Edit2 size={14} /></span>
                           Edit
                         </button>
                         <button 
@@ -2428,7 +2426,7 @@ const AdminDashboard = () => {
                           }}
                           title="Delete course (cannot be undone)"
                         >
-                          <span className="btn-icon">🗑️</span>
+                          <span className="btn-icon"><Trash2 size={14} /></span>
                           Delete
                         </button>
                       </div>
@@ -2444,21 +2442,21 @@ const AdminDashboard = () => {
           {activeTab === 'reports' && (
             <div className="reports-section">
               <div className="section-header">
-                <h3>📊 Reports & Analytics</h3>
+                <h3>Reports & Analytics</h3>
                 <p>Generate comprehensive reports and download them in various formats</p>
               </div>
               
               <div className="reports-grid">
                 <div className="report-category">
-                  <h4>📚 Academic Reports</h4>
+                  <h4>Academic Reports</h4>
                   <div className="report-cards">
                     <div className="report-card">
-                      <div className="report-icon">👨‍🎓</div>
+                      <div className="report-icon"><GraduationCap size={24} color="#4f46e5" /></div>
                       <h5>Student Performance Report</h5>
                       <p>Comprehensive analysis of student performance by grade, class, and subject with enrollment statistics</p>
                       <div className="report-meta">
-                        <span className="meta-item">📋 {stats.totalStudents} Students</span>
-                        <span className="meta-item">✅ Active Data</span>
+                        <span className="meta-item">{stats.totalStudents} Students</span>
+                        <span className="meta-item">Active Data</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2466,7 +2464,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('Student Performance Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">📊</span>
+                          <span className="btn-icon"><BarChart3 size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2475,13 +2473,13 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('Student Performance Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('Student Performance Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">�</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
                 </div>
@@ -2489,12 +2487,12 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="report-card">
-                      <div className="report-icon">👨‍🏫</div>
+                      <div className="report-icon"><User size={24} color="#3b82f6" /></div>
                       <h5>Teacher Performance Report</h5>
                       <p>Teaching effectiveness metrics including subject assignments, class loads, and status overview</p>
                       <div className="report-meta">
-                        <span className="meta-item">📋 {stats.totalTeachers} Teachers</span>
-                        <span className="meta-item">📚 {courses.length} Courses</span>
+                        <span className="meta-item">{stats.totalTeachers} Teachers</span>
+                        <span className="meta-item">{courses.length} Courses</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2502,7 +2500,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('Teacher Performance Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">📊</span>
+                          <span className="btn-icon"><BarChart3 size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2511,13 +2509,13 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('Teacher Performance Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('Teacher Performance Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">�</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
                 </div>
@@ -2525,12 +2523,12 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="report-card">
-                      <div className="report-icon">📈</div>
+                      <div className="report-icon"><TrendingUp size={24} color="#10b981" /></div>
                       <h5>Grade Analysis Report</h5>
                       <p>Detailed grade distribution across all levels (A/L and O/L) with comparative analytics</p>
                       <div className="report-meta">
-                        <span className="meta-item">🎓 A/L: {users.filter(u => u.role === 'student' && (u.grade || '').includes('1')).length}</span>
-                        <span className="meta-item">🏫 O/L: {users.filter(u => u.role === 'student' && !(u.grade || '').includes('1')).length}</span>
+                        <span className="meta-item">A/L: {users.filter(u => u.role === 'student' && (u.grade || '').includes('1')).length}</span>
+                        <span className="meta-item">O/L: {users.filter(u => u.role === 'student' && !(u.grade || '').includes('1')).length}</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2538,7 +2536,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('Grade Analysis Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">📊</span>
+                          <span className="btn-icon"><BarChart3 size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2547,13 +2545,13 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('Grade Analysis Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('Grade Analysis Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">�</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
                 </div>
@@ -2563,15 +2561,15 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="report-category">
-                  <h4>⚙️ Administrative Reports</h4>
+                  <h4>Administrative Reports</h4>
                   <div className="report-cards">
                     <div className="report-card">
-                      <div className="report-icon">📅</div>
+                      <div className="report-icon"><Calendar size={24} color="#f59e0b" /></div>
                       <h5>Attendance Report</h5>
                       <p>Comprehensive attendance statistics for students and teachers with activity status tracking</p>
                       <div className="report-meta">
-                        <span className="meta-item">✅ {stats.activeUsers} Active</span>
-                        <span className="meta-item">❌ {users.length - stats.activeUsers} Inactive</span>
+                        <span className="meta-item">{stats.activeUsers} Active</span>
+                        <span className="meta-item">{users.length - stats.activeUsers} Inactive</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2579,7 +2577,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('Attendance Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">📅</span>
+                          <span className="btn-icon"><Calendar size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2588,13 +2586,13 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('Attendance Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('Attendance Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">📊</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
                 </div>
@@ -2602,12 +2600,12 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="report-card">
-                      <div className="report-icon">👥</div>
+                      <div className="report-icon"><Users size={24} color="#8b5cf6" /></div>
                       <h5>User Activity Report</h5>
                       <p>System usage metrics and user engagement analytics across all user roles and categories</p>
                       <div className="report-meta">
-                        <span className="meta-item">👥 {users.length} Total Users</span>
-                        <span className="meta-item">📊 By Role</span>
+                        <span className="meta-item">{users.length} Total Users</span>
+                        <span className="meta-item">By Role</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2615,7 +2613,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('User Activity Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">👥</span>
+                          <span className="btn-icon"><Users size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2624,13 +2622,13 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('User Activity Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('User Activity Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">�</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
                 </div>
@@ -2638,12 +2636,12 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="report-card">
-                      <div className="report-icon">💰</div>
+                      <div className="report-icon"><CreditCard size={24} color="#06b6d4" /></div>
                       <h5>Financial Report</h5>
                       <p>Course enrollment summary and financial overview with active/inactive status breakdown</p>
                       <div className="report-meta">
-                        <span className="meta-item">💰 {courses.reduce((sum, c) => sum + (c.students || 0), 0)} Enrollments</span>
-                        <span className="meta-item">📚 {courses.length} Courses</span>
+                        <span className="meta-item">{courses.reduce((sum, c) => sum + (c.students || 0), 0)} Enrollments</span>
+                        <span className="meta-item">{courses.length} Courses</span>
                       </div>
                       <div className="report-actions">
                         <button 
@@ -2651,7 +2649,7 @@ const AdminDashboard = () => {
                           onClick={() => handleGenerateReport('Financial Report')}
                           title="Preview report data"
                         >
-                          <span className="btn-icon">💰</span>
+                          <span className="btn-icon"><CreditCard size={14} /></span>
                           Generate
                         </button>
                         <div className="download-group">
@@ -2660,16 +2658,16 @@ const AdminDashboard = () => {
                             onClick={() => handleDownloadReport('Financial Report', 'PDF')}
                             title="Generate PDF report with print dialog"
                           >
-                            <span className="btn-icon">📄</span>PDF</button>
+                            <span className="btn-icon"><FileText size={14} /></span>PDF</button>
                           <button 
                             className="download-btn excel"
                             onClick={() => handleDownloadReport('Financial Report', 'Excel')}
                             title="Download as CSV for Excel"
                           >
-                            <span className="btn-icon">📊</span>
+                            <span className="btn-icon"><Download size={14} /></span>
                             Excel
                           </button>
-                </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2874,7 +2872,7 @@ const AdminDashboard = () => {
                   onClick={handleSaveSettings}
                   title="Save all current settings"
                 >
-                  <span className="btn-icon">💾</span>
+                  <span className="btn-icon"><Save size={15} /></span>
                   Save All Settings
                 </button>
                 <button 
@@ -2882,7 +2880,7 @@ const AdminDashboard = () => {
                   onClick={handleResetSettings}
                   title="Reset all settings to default values"
                 >
-                  <span className="btn-icon">🔄</span>
+                  <span className="btn-icon"><RotateCw size={15} /></span>
                   Reset to Defaults
                 </button>
                 <button 
@@ -2890,7 +2888,7 @@ const AdminDashboard = () => {
                   onClick={handleCreateBackup}
                   title="Create a backup of all system data"
                 >
-                  <span className="btn-icon">📦</span>
+                  <span className="btn-icon"><Download size={15} /></span>
                   Create Backup
                 </button>
               </div>
@@ -3030,7 +3028,7 @@ const AdminDashboard = () => {
             }}>
               {!selectedUser && (
                 <div className="admin-form-tip">
-                  ⚡ <strong>Auto-Credential Generation:</strong> Unique Index Number, Username, and Password are automatically generated. You can customize them or click 🔄 to regenerate.
+                  <strong>Auto-Credential Generation:</strong> Unique Index Number, Username, and Password are automatically generated. You can customize them or click regenerate.
                 </div>
               )}
 
@@ -3093,7 +3091,7 @@ const AdminDashboard = () => {
                           title="Regenerate Index Number"
                           onClick={() => setFormIndexNumber(generateIndexNumber(formRole))}
                         >
-                          🔄
+                          <RotateCw size={13} />
                         </button>
                       </div>
                     </div>
@@ -3117,7 +3115,7 @@ const AdminDashboard = () => {
                             setFormUsername(generateUsername(fullNameInput, formIndexNumber))
                           }}
                         >
-                          🔄
+                          <RotateCw size={13} />
                         </button>
                       </div>
                     </div>
@@ -3138,7 +3136,7 @@ const AdminDashboard = () => {
                           title={showPassword ? 'Hide Password' : 'Show Password'}
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? '🙈' : '👁️'}
+                          {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
                         <button 
                           type="button" 
@@ -3146,7 +3144,7 @@ const AdminDashboard = () => {
                           title="Regenerate Password"
                           onClick={() => setFormPassword(generatePassword())}
                         >
-                          🔄
+                          <RotateCw size={13} />
                         </button>
                       </div>
                     </div>
@@ -3200,7 +3198,7 @@ const AdminDashboard = () => {
                 {formRole === 'teacher' && (
                   <div className="teacher-config-section full-width">
                     <div className="section-divider">
-                      <span>👨‍🏫 Teacher Assignment Settings</span>
+                      <span>Teacher Assignment Settings</span>
                     </div>
 
                     {/* Part 1: Subjects selection */}
@@ -3219,7 +3217,7 @@ const AdminDashboard = () => {
                         ) : (
                           teacherSubjects.map((subj) => (
                             <span key={subj} className="tag-chip active-chip">
-                              <span className="chip-icon">📚</span>
+                              <span className="chip-icon"><BookOpen size={12} /></span>
                               <span className="chip-text">{subj}</span>
                               <button
                                 type="button"
@@ -3253,7 +3251,7 @@ const AdminDashboard = () => {
                                   }
                                 }}
                               >
-                                {isSelected ? '✓ ' : '+ '}{subj}
+                                {isSelected ? <Check size={12} style={{ display: 'inline', marginRight: '4px' }} /> : '+ '}{subj}
                               </button>
                             )
                           })}
@@ -3356,7 +3354,7 @@ const AdminDashboard = () => {
                           <div className="assignment-cards-grid">
                             {teacherClassAssignments.map((assignment) => (
                               <div key={assignment.id} className="assignment-badge-card">
-                                <div className="badge-class-icon">🏫</div>
+                                <div className="badge-class-icon"><GraduationCap size={15} color="#4f46e5" /></div>
                                 <div className="badge-details">
                                   <span className="badge-class-name">{assignment.classId}</span>
                                   <span className="badge-subject-name">{assignment.subject}</span>
@@ -3412,7 +3410,7 @@ const AdminDashboard = () => {
                         </select>
                         {teacherInChargeClass && (
                           <span className="incharge-active-indicator">
-                            👑 Class Teacher: <strong>{teacherInChargeClass}</strong>
+                            Class Teacher: <strong>{teacherInChargeClass}</strong>
                           </span>
                         )}
                       </div>
@@ -3430,7 +3428,7 @@ const AdminDashboard = () => {
                   setSelectedUser(null)
                 }}
               >
-                <span className="btn-icon">❌</span>
+                <span className="btn-icon"><X size={14} /></span>
                 Cancel
               </button>
               <button 
@@ -3443,7 +3441,7 @@ const AdminDashboard = () => {
                   }
                 }}
               >
-                <span className="btn-icon">{selectedUser ? '📝' : '➕'}</span>
+                <span className="btn-icon">{selectedUser ? <Edit2 size={14} /> : <Plus size={14} />}</span>
                 {selectedUser ? 'Update User' : 'Register User'}
               </button>
             </div>
@@ -3456,7 +3454,7 @@ const AdminDashboard = () => {
         <div className="modal-overlay credentials-modal-overlay">
           <div className="modal-content credentials-modal-content">
             <div className="modal-header credentials-modal-header">
-              <div className="credentials-success-badge">✅ User Registered Successfully</div>
+              <div className="credentials-success-badge"><CheckCircle2 size={16} /> User Registered Successfully</div>
               <button 
                 className="close-modal"
                 onClick={() => setShowCredentialsModal(false)}
@@ -3471,33 +3469,33 @@ const AdminDashboard = () => {
 
               <div className="credentials-card">
                 <div className="credential-row">
-                  <span className="credential-label">👤 Full Name:</span>
+                  <span className="credential-label">Full Name:</span>
                   <span className="credential-value">{createdCredentials.fullName}</span>
                 </div>
                 <div className="credential-row">
-                  <span className="credential-label">🏷️ Role:</span>
+                  <span className="credential-label">Role:</span>
                   <span className="credential-value role-tag">{createdCredentials.role.toUpperCase()}</span>
                 </div>
                 <div className="credential-row highlight-row">
-                  <span className="credential-label">🆔 Index Number:</span>
+                  <span className="credential-label">Index Number:</span>
                   <span className="credential-value credential-code">{createdCredentials.indexNumber}</span>
                 </div>
                 <div className="credential-row highlight-row">
-                  <span className="credential-label">🔑 Username:</span>
+                  <span className="credential-label">Username:</span>
                   <span className="credential-value credential-code">{createdCredentials.username}</span>
                 </div>
                 <div className="credential-row highlight-row">
-                  <span className="credential-label">🔒 Password:</span>
+                  <span className="credential-label">Password:</span>
                   <span className="credential-value credential-code">{createdCredentials.password}</span>
                 </div>
                 <div className="credential-row">
-                  <span className="credential-label">✉️ Email:</span>
+                  <span className="credential-label">Email:</span>
                   <span className="credential-value">{createdCredentials.email}</span>
                 </div>
               </div>
 
               <div className="credentials-tip">
-                💡 The user can now log in at the home page using their <strong>Username</strong> (or Index Number) and <strong>Password</strong>.
+                The user can now log in at the home page using their <strong>Username</strong> (or Index Number) and <strong>Password</strong>.
               </div>
             </div>
             <div className="modal-footer credentials-modal-footer">
@@ -3519,7 +3517,7 @@ Portal: ${window.location.origin}`
                   setTimeout(() => setCopiedCredentials(false), 2500)
                 }}
               >
-                <span className="btn-icon">{copiedCredentials ? '✅' : '📋'}</span>
+                <span className="btn-icon">{copiedCredentials ? <Check size={14} /> : <Copy size={14} />}</span>
                 {copiedCredentials ? 'Copied to Clipboard!' : 'Copy All Credentials'}
               </button>
               <button 
@@ -3670,7 +3668,7 @@ Portal: ${window.location.origin}`
                   setCourseLevel('O/L')
                 }}
               >
-                <span className="btn-icon">❌</span>
+                <span className="btn-icon"><X size={14} /></span>
                 Cancel
               </button>
               <button 
@@ -3683,7 +3681,7 @@ Portal: ${window.location.origin}`
                   }
                 }}
               >
-                <span className="btn-icon">{selectedCourse ? '📝' : '➕'}</span>
+                <span className="btn-icon">{selectedCourse ? <Edit2 size={14} /> : <Plus size={14} />}</span>
                 {selectedCourse ? 'Update Course' : 'Add Course'}
               </button>
             </div>
@@ -3700,9 +3698,9 @@ Portal: ${window.location.origin}`
             </div>
             <div className="modal-body">
               <div className={`confirm-icon confirm-icon-${confirmConfig.type}`}>
-                {confirmConfig.type === 'danger' && '⚠️'}
-                {confirmConfig.type === 'warning' && '⚡'}
-                {confirmConfig.type === 'info' && 'ℹ️'}
+                {confirmConfig.type === 'danger' && <AlertTriangle size={24} color="#ef4444" />}
+                {confirmConfig.type === 'warning' && <AlertTriangle size={24} color="#f59e0b" />}
+                {confirmConfig.type === 'info' && <Info size={24} color="#3b82f6" />}
               </div>
               <p className="confirm-message">{confirmConfig.message}</p>
             </div>
@@ -3711,7 +3709,7 @@ Portal: ${window.location.origin}`
                 className="cancel-btn"
                 onClick={handleCancelConfirm}
               >
-                <span className="btn-icon">❌</span>
+                <span className="btn-icon"><X size={14} /></span>
                 {confirmConfig.cancelText}
               </button>
               <button 
@@ -3719,9 +3717,9 @@ Portal: ${window.location.origin}`
                 onClick={handleConfirm}
               >
                 <span className="btn-icon">
-                  {confirmConfig.type === 'danger' && '🗑️'}
-                  {confirmConfig.type === 'warning' && '⚠️'}
-                  {confirmConfig.type === 'info' && '✓'}
+                  {confirmConfig.type === 'danger' && <Trash2 size={14} />}
+                  {confirmConfig.type === 'warning' && <AlertTriangle size={14} />}
+                  {confirmConfig.type === 'info' && <Check size={14} />}
                 </span>
                 {confirmConfig.confirmText}
               </button>
@@ -3735,9 +3733,9 @@ Portal: ${window.location.origin}`
         {toasts.map(toast => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
             <span className="toast-icon">
-              {toast.type === 'success' && '✓'}
-              {toast.type === 'error' && '✕'}
-              {toast.type === 'info' && 'ℹ'}
+              {toast.type === 'success' && <Check size={14} />}
+              {toast.type === 'error' && <X size={14} />}
+              {toast.type === 'info' && <Info size={14} />}
             </span>
             <span className="toast-message">{toast.message}</span>
           </div>

@@ -11,6 +11,7 @@ import ActivityUpload from './teacher/ActivityUpload'
 import GradeEntry from './teacher/GradeEntry'
 import GradeAnalytics from './teacher/GradeAnalytics'
 import ProfileAvatarUploader from './ProfileAvatarUploader'
+import { X, Menu, LogOut, CheckCircle2, XCircle, AlertTriangle, Info, Bell } from 'lucide-react'
 import '../styles/TeacherDashboard.css'
 
 const TeacherDashboard = () => {
@@ -219,7 +220,7 @@ const TeacherDashboard = () => {
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Close menu"
         >
-          ✕
+          <X size={20} />
         </button>
         <div className="teacher-profile">
           <ProfileAvatarUploader
@@ -287,7 +288,7 @@ const TeacherDashboard = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Open menu"
             >
-              ☰
+              <Menu size={20} />
             </button>
             <h2>Welcome back, {teacherName}!</h2>
           </div>
@@ -305,8 +306,9 @@ const TeacherDashboard = () => {
               className="logout-btn"
               onClick={handleLogout}
               title="Logout"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🚪 Logout
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </header>
@@ -419,11 +421,11 @@ const TeacherDashboard = () => {
       <div className="toast-container">
         {toasts.map(toast => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
-            <span className="toast-icon">
-              {toast.type === 'success' && '✅'}
-              {toast.type === 'error' && '❌'}
-              {toast.type === 'warning' && '⚠️'}
-              {toast.type === 'info' && 'ℹ️'}
+            <span className="toast-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              {toast.type === 'success' && <CheckCircle2 size={16} />}
+              {toast.type === 'error' && <XCircle size={16} />}
+              {toast.type === 'warning' && <AlertTriangle size={16} />}
+              {toast.type === 'info' && <Info size={16} />}
             </span>
             <span className="toast-message">{toast.message}</span>
           </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
 import { db } from '../utils/firebase'
 import ProfileAvatarUploader from './ProfileAvatarUploader'
+import { X, Menu, LogOut, User, FileText, Calendar, Award, Mail, GraduationCap, BookOpen, Target, MessageSquare, BarChart3, Bell, CheckCircle2, XCircle, Info } from 'lucide-react'
 import '../styles/ParentDashboard.css'
 
 const ParentDashboard = () => {
@@ -568,7 +569,7 @@ const ParentDashboard = () => {
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Close menu"
         >
-          ✕
+          <X size={20} />
         </button>
         <div className="parent-profile">
           <ProfileAvatarUploader
@@ -651,7 +652,7 @@ const ParentDashboard = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Open menu"
             >
-              ☰
+              <Menu size={20} />
             </button>
             {activeTab !== 'manage' ? (
               <div className="header-info">
@@ -679,8 +680,9 @@ const ParentDashboard = () => {
               className="logout-btn"
               onClick={handleLogout}
               title="Logout"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🚪 Logout
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </header>
@@ -816,14 +818,14 @@ const ParentDashboard = () => {
                       <div className="card-details">
                         <div className="detail-row">
                           <div className="detail-item">
-                            <span className="detail-icon">👨‍🏫</span>
+                            <span className="detail-icon"><User size={15} color="#4f46e5" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Teacher</span>
                               <span className="detail-value">{grade.teacherName || 'Not Assigned'}</span>
                             </div>
                           </div>
                           <div className="detail-item">
-                            <span className="detail-icon">📝</span>
+                            <span className="detail-icon"><FileText size={15} color="#4f46e5" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Assessment</span>
                               <span className="detail-value">{grade.assessmentType || 'Test'}</span>
@@ -832,7 +834,7 @@ const ParentDashboard = () => {
                         </div>
                         <div className="detail-row">
                           <div className="detail-item">
-                            <span className="detail-icon">📅</span>
+                            <span className="detail-icon"><Calendar size={15} color="#4f46e5" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Date</span>
                               <span className="detail-value">
@@ -847,7 +849,7 @@ const ParentDashboard = () => {
                             </div>
                           </div>
                           <div className="detail-item">
-                            <span className="detail-icon">🎯</span>
+                            <span className="detail-icon"><Award size={15} color="#4f46e5" /></span>
                             <div className="detail-content">
                               <span className="detail-label">Class Rank</span>
                               <span className="detail-value">{grade.rank || 'N/A'}</span>
@@ -916,8 +918,8 @@ const ParentDashboard = () => {
                     </div>
 
                     <div className="teacher-contact-info">
-                      <p className="contact-note">
-                        📧 For inquiries, contact through school administration
+                      <p className="contact-note" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Mail size={14} /> For inquiries, contact through school administration
                       </p>
                     </div>
                   </div>
@@ -959,15 +961,15 @@ const ParentDashboard = () => {
                       <h3 className="child-card-name">{student.fullName || student.name}</h3>
                       <div className="child-card-details">
                         <div className="detail-chip">
-                          <span className="chip-icon">🎓</span>
+                          <span className="chip-icon"><GraduationCap size={13} /></span>
                           <span>Grade {student.grade}</span>
                         </div>
                         <div className="detail-chip">
-                          <span className="chip-icon">📚</span>
+                          <span className="chip-icon"><BookOpen size={13} /></span>
                           <span>{student.className || student.class}</span>
                         </div>
                         <div className="detail-chip">
-                          <span className="chip-icon">🎯</span>
+                          <span className="chip-icon"><Target size={13} /></span>
                           <span>{student.level}</span>
                         </div>
                       </div>
@@ -1050,23 +1052,23 @@ const ParentDashboard = () => {
               return (
                 <div key={notification.id} className={`notification-item ${notification.type || 'info'} ${notification.read ? 'read' : 'unread'}`}>
                   <div className="notification-icon">
-                    {notification.type === 'message' ? '💬' : notification.type === 'activity' ? '📚' : notification.type === 'grade' ? '📊' : '🔔'}
+                    {notification.type === 'message' ? <MessageSquare size={16} /> : notification.type === 'activity' ? <BookOpen size={16} /> : notification.type === 'grade' ? <BarChart3 size={16} /> : <Bell size={16} />}
                   </div>
                   <div className="notification-content">
-                    <div className="notification-child-badge">
-                      👤 {notification.childName}
+                    <div className="notification-child-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <User size={12} /> {notification.childName}
                     </div>
                     <h4>{notification.title}</h4>
                     <p>{notification.message}</p>
                     <div className="notification-meta">
                       {notification.teacherName && (
-                        <small className="notification-teacher">👨‍🏫 {notification.teacherName}</small>
+                        <small className="notification-teacher" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}><User size={12} /> {notification.teacherName}</small>
                       )}
                       {notification.subject && (
-                        <small className="notification-subject">📖 {notification.subject}</small>
+                        <small className="notification-subject" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}><BookOpen size={12} /> {notification.subject}</small>
                       )}
                       {notification.dueDate && (
-                        <small className="notification-due-date">📅 Due: {notification.dueDate}</small>
+                        <small className="notification-due-date" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}><Calendar size={12} /> Due: {notification.dueDate}</small>
                       )}
                     </div>
                     <span className="notification-time">
@@ -1155,8 +1157,8 @@ const ParentDashboard = () => {
       <div className="toast-container">
         {toasts.map(toast => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
-            <span className="toast-icon">
-              {toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}
+            <span className="toast-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              {toast.type === 'success' ? <CheckCircle2 size={16} /> : toast.type === 'error' ? <XCircle size={16} /> : <Info size={16} />}
             </span>
             <span className="toast-message">{toast.message}</span>
           </div>

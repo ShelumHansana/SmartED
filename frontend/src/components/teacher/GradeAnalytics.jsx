@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../utils/firebase';
+import { Download, Printer, Lightbulb, Info, BarChart3, TrendingUp, TrendingDown, Users, CheckCircle2, FileText, Minus, AlertTriangle, Target, Eye, Phone, FileEdit, X, Circle } from 'lucide-react';
 import '../../styles/teacher/GradeAnalytics.css';
 
 const GradeAnalytics = ({ students, teacher }) => {
@@ -198,7 +199,7 @@ const GradeAnalytics = ({ students, teacher }) => {
       <div className="analytics-header">
         <div className="header-content">
           <div className="header-text">
-            <h2>📊 Grade Analytics & Performance Insights</h2>
+            <h2>Grade Analytics & Performance Insights</h2>
             <p>Comprehensive analysis of student performance and learning outcomes</p>
           </div>
           <div className="header-actions">
@@ -207,16 +208,18 @@ const GradeAnalytics = ({ students, teacher }) => {
               onClick={handleExportReport}
               disabled={!analyticsData}
               title="Export Report"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              📊 Export Report
+              <Download size={15} /> Export Report
             </button>
             <button 
               className="action-btn primary"
               onClick={handlePrintReport}
               disabled={!analyticsData}
               title="Print Report"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🖨️ Print
+              <Printer size={15} /> Print
             </button>
           </div>
         </div>
@@ -226,7 +229,7 @@ const GradeAnalytics = ({ students, teacher }) => {
       {analyticsData && (
         <div className="tips-panel">
           <div className="tip-content">
-            <div className="tip-icon">💡</div>
+            <div className="tip-icon"><Lightbulb size={20} color="#f59e0b" /></div>
             <div className="tip-text">
               <strong>Pro Tip:</strong> Use the different view modes to analyze performance from various angles. 
               Click on student cards for detailed individual insights and action recommendations.
@@ -238,13 +241,13 @@ const GradeAnalytics = ({ students, teacher }) => {
       {/* Analytics Controls */}
       <div className="analytics-controls">
         <div className="controls-header">
-          <h3>🎯 Select Parameters for Analytics</h3>
+          <h3>Select Parameters for Analytics</h3>
           <p>Choose your class and subject to generate detailed performance insights</p>
         </div>
         
         {classes.length === 0 || subjects.length === 0 ? (
           <div className="no-assignments-message">
-            <div className="message-icon">ℹ️</div>
+            <div className="message-icon"><Info size={20} /></div>
             <h4>No Classes or Subjects Assigned</h4>
             <p>
               {classes.length === 0 && 'You don\'t have any classes assigned yet. '}
@@ -255,7 +258,7 @@ const GradeAnalytics = ({ students, teacher }) => {
         ) : (
           <div className="control-row">
           <div className="form-group">
-            <label htmlFor="class-select">📚 Select Class:</label>
+            <label htmlFor="class-select">Select Class:</label>
             <select 
               id="class-select"
               value={selectedClass} 
@@ -271,7 +274,7 @@ const GradeAnalytics = ({ students, teacher }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="subject-select">📖 Select Subject:</label>
+            <label htmlFor="subject-select">Select Subject:</label>
             <select 
               id="subject-select"
               value={selectedSubject} 
@@ -293,27 +296,27 @@ const GradeAnalytics = ({ students, teacher }) => {
       {/* View Selector */}
       {analyticsData && (
         <div className="view-selector">
-          <h3>📋 Analysis Views</h3>
+          <h3>Analysis Views</h3>
           <div className="view-tabs">
             <button 
               className={`view-tab ${activeView === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveView('overview')}
             >
-              <span className="tab-icon">📊</span>
+              <span className="tab-icon"><BarChart3 size={16} /></span>
               <span className="tab-text">Overview</span>
             </button>
             <button 
               className={`view-tab ${activeView === 'detailed' ? 'active' : ''}`}
               onClick={() => setActiveView('detailed')}
             >
-              <span className="tab-icon">📈</span>
+              <span className="tab-icon"><TrendingUp size={16} /></span>
               <span className="tab-text">Detailed Analysis</span>
             </button>
             <button 
               className={`view-tab ${activeView === 'students' ? 'active' : ''}`}
               onClick={() => setActiveView('students')}
             >
-              <span className="tab-icon">👥</span>
+              <span className="tab-icon"><Users size={16} /></span>
               <span className="tab-text">Student Focus</span>
             </button>
           </div>
@@ -325,7 +328,7 @@ const GradeAnalytics = ({ students, teacher }) => {
         <div className="loading-container">
           <div className="loading-spinner"></div>
           <div className="loading-content">
-            <h3>🔄 Generating Analytics...</h3>
+            <h3>Generating Analytics...</h3>
             <p>Please wait while we process your students' performance metrics</p>
           </div>
         </div>
@@ -336,31 +339,31 @@ const GradeAnalytics = ({ students, teacher }) => {
             <div className="overview-view">
               {/* Quick Stats Cards */}
               <div className="quick-stats">
-                <h3>📊 Quick Performance Overview</h3>
+                <h3>Quick Performance Overview</h3>
                 <div className="stats-grid">
                   <div className="stat-card primary">
-                    <div className="stat-icon">📈</div>
+                    <div className="stat-icon"><TrendingUp size={20} color="#3b82f6" /></div>
                     <div className="stat-content">
                       <div className="stat-number">{analyticsData.classAverage}%</div>
                       <div className="stat-label">Class Average</div>
                     </div>
                   </div>
                   <div className="stat-card success">
-                    <div className="stat-icon">✅</div>
+                    <div className="stat-icon"><CheckCircle2 size={20} color="#10b981" /></div>
                     <div className="stat-content">
                       <div className="stat-number">{analyticsData.passRate}%</div>
                       <div className="stat-label">Pass Rate</div>
                     </div>
                   </div>
                   <div className="stat-card info">
-                    <div className="stat-icon">👥</div>
+                    <div className="stat-icon"><Users size={20} color="#6366f1" /></div>
                     <div className="stat-content">
                       <div className="stat-number">{analyticsData.totalStudents}</div>
                       <div className="stat-label">Total Students</div>
                     </div>
                   </div>
                   <div className="stat-card warning">
-                    <div className="stat-icon">📝</div>
+                    <div className="stat-icon"><FileText size={20} color="#f59e0b" /></div>
                     <div className="stat-content">
                       <div className="stat-number">{analyticsData.assessmentsCount}</div>
                       <div className="stat-label">Assessments</div>
@@ -371,7 +374,7 @@ const GradeAnalytics = ({ students, teacher }) => {
 
               {/* Grade Distribution Chart */}
               <div className="chart-section">
-                <h3>📊 Grade Distribution</h3>
+                <h3>Grade Distribution</h3>
                 <div className="grade-chart">
                   {analyticsData.gradeDistribution.map((item, index) => (
                     <div key={index} className="grade-bar-container">
@@ -393,24 +396,24 @@ const GradeAnalytics = ({ students, teacher }) => {
 
               {/* Performance Trends */}
               <div className="trends-section">
-                <h3>📈 Recent Performance Trends</h3>
+                <h3>Recent Performance Trends</h3>
                 <div className="trend-indicators">
                   <div className="trend-item improving">
-                    <div className="trend-icon">📈</div>
+                    <div className="trend-icon"><TrendingUp size={18} color="#10b981" /></div>
                     <div className="trend-content">
                       <div className="trend-percentage">{analyticsData.recentTrends.improvement}%</div>
                       <div className="trend-label">Improving</div>
                     </div>
                   </div>
                   <div className="trend-item stable">
-                    <div className="trend-icon">➖</div>
+                    <div className="trend-icon"><Minus size={18} color="#64748b" /></div>
                     <div className="trend-content">
                       <div className="trend-percentage">{analyticsData.recentTrends.stable}%</div>
                       <div className="trend-label">Stable</div>
                     </div>
                   </div>
                   <div className="trend-item declining">
-                    <div className="trend-icon">📉</div>
+                    <div className="trend-icon"><TrendingDown size={18} color="#ef4444" /></div>
                     <div className="trend-content">
                       <div className="trend-percentage">{analyticsData.recentTrends.decline}%</div>
                       <div className="trend-label">Needs Attention</div>
@@ -424,17 +427,17 @@ const GradeAnalytics = ({ students, teacher }) => {
           {/* Detailed Analysis View */}
           {activeView === 'detailed' && (
             <div className="detailed-view">
-              <h3>📈 Comprehensive Performance Analysis</h3>
+              <h3>Comprehensive Performance Analysis</h3>
               
               {/* Subject Insights */}
               <div className="subject-insights">
                 <div className="insights-grid">
                   <div className="insight-card strong-areas">
-                    <h4>💪 Strong Performance Areas</h4>
+                    <h4>Strong Performance Areas</h4>
                     <ul className="insight-list">
                       {analyticsData.subjectInsights.strongAreas.map((area, index) => (
                         <li key={index} className="insight-item success">
-                          <span className="insight-icon">✅</span>
+                          <span className="insight-icon"><CheckCircle2 size={16} color="#10b981" /></span>
                           <span>{area}</span>
                         </li>
                       ))}
@@ -442,11 +445,11 @@ const GradeAnalytics = ({ students, teacher }) => {
                   </div>
                   
                   <div className="insight-card weak-areas">
-                    <h4>🎯 Areas for Improvement</h4>
+                    <h4>Areas for Improvement</h4>
                     <ul className="insight-list">
                       {analyticsData.subjectInsights.weakAreas.map((area, index) => (
                         <li key={index} className="insight-item warning">
-                          <span className="insight-icon">⚠️</span>
+                          <span className="insight-icon"><AlertTriangle size={16} color="#f59e0b" /></span>
                           <span>{area}</span>
                         </li>
                       ))}
@@ -455,11 +458,11 @@ const GradeAnalytics = ({ students, teacher }) => {
                 </div>
                 
                 <div className="recommendations">
-                  <h4>💡 Recommended Teaching Actions</h4>
+                  <h4>Recommended Teaching Actions</h4>
                   <div className="recommendation-list">
                     {analyticsData.subjectInsights.recommendedActions.map((action, index) => (
                       <div key={index} className="recommendation-item">
-                        <div className="recommendation-icon">🎯</div>
+                        <div className="recommendation-icon"><Target size={16} color="#6366f1" /></div>
                         <div className="recommendation-text">{action}</div>
                       </div>
                     ))}
@@ -469,7 +472,7 @@ const GradeAnalytics = ({ students, teacher }) => {
 
               {/* Performance Breakdown */}
               <div className="performance-breakdown">
-                <h4>📊 Detailed Performance Metrics</h4>
+                <h4>Detailed Performance Metrics</h4>
                 <div className="metrics-grid">
                   <div className="metric-item">
                     <div className="metric-label">Highest Score</div>
@@ -499,12 +502,12 @@ const GradeAnalytics = ({ students, teacher }) => {
           {/* Student Focus View */}
           {activeView === 'students' && (
             <div className="students-view">
-              <h3>👥 Individual Student Performance</h3>
+              <h3>Individual Student Performance</h3>
               
               {/* Top Performers */}
               <div className="student-section">
                 <div className="section-header">
-                  <h4>🏆 Top Performers</h4>
+                  <h4>Top Performers</h4>
                   <p>Students excelling in this subject - maintain their motivation!</p>
                 </div>
                 <div className="student-cards enhanced">
@@ -526,7 +529,9 @@ const GradeAnalytics = ({ students, teacher }) => {
                         </div>
                       </div>
                       <div className="student-actions">
-                        <button className="action-btn small">👁️ View Details</button>
+                        <button className="action-btn small" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Eye size={13} /> View Details
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -536,7 +541,7 @@ const GradeAnalytics = ({ students, teacher }) => {
               {/* Students Needing Attention */}
               <div className="student-section">
                 <div className="section-header">
-                  <h4>⚠️ Students Needing Support</h4>
+                  <h4>Students Needing Support</h4>
                   <p>Focus your attention on these students for improved outcomes</p>
                 </div>
                 <div className="student-cards enhanced">
@@ -558,8 +563,12 @@ const GradeAnalytics = ({ students, teacher }) => {
                         </div>
                       </div>
                       <div className="student-actions">
-                        <button className="action-btn small primary">📞 Contact Parent</button>
-                        <button className="action-btn small">📝 Add Note</button>
+                        <button className="action-btn small primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Phone size={13} /> Contact Parent
+                        </button>
+                        <button className="action-btn small" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <FileEdit size={13} /> Add Note
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -570,8 +579,8 @@ const GradeAnalytics = ({ students, teacher }) => {
               {selectedStudent && (
                 <div className="student-detail-panel">
                   <div className="panel-header">
-                    <h4>📊 Detailed Analysis: {selectedStudent.name}</h4>
-                    <button className="close-panel" onClick={() => setSelectedStudent(null)}>✕</button>
+                    <h4>Detailed Analysis: {selectedStudent.name}</h4>
+                    <button className="close-panel" onClick={() => setSelectedStudent(null)}><X size={16} /></button>
                   </div>
                   <div className="panel-content">
                     <div className="detail-stats">
@@ -589,19 +598,19 @@ const GradeAnalytics = ({ students, teacher }) => {
                       </div>
                     </div>
                     <div className="action-recommendations">
-                      <h5>💡 Recommended Actions</h5>
+                      <h5>Recommended Actions</h5>
                       <ul>
                         {selectedStudent.average >= 85 ? (
                           <>
-                            <li>🌟 Provide advanced challenges to maintain engagement</li>
-                            <li>👥 Consider peer tutoring opportunities</li>
-                            <li>🎯 Set stretch goals for continued excellence</li>
+                            <li>Provide advanced challenges to maintain engagement</li>
+                            <li>Consider peer tutoring opportunities</li>
+                            <li>Set stretch goals for continued excellence</li>
                           </>
                         ) : (
                           <>
-                            <li>📚 Schedule additional practice sessions</li>
-                            <li>👥 Arrange peer support or study groups</li>
-                            <li>📞 Communicate with parents about support strategies</li>
+                            <li>Schedule additional practice sessions</li>
+                            <li>Arrange peer support or study groups</li>
+                            <li>Communicate with parents about support strategies</li>
                           </>
                         )}
                       </ul>
@@ -614,23 +623,23 @@ const GradeAnalytics = ({ students, teacher }) => {
         </div>
       ) : !selectedClass || !selectedSubject ? (
         <div className="selection-prompt">
-          <div className="prompt-icon">🎯</div>
+          <div className="prompt-icon"><BarChart3 size={36} color="#6366f1" /></div>
           <h3>Ready to Analyze Performance?</h3>
           <p>Select your class and subject above to generate comprehensive analytics and insights.</p>
           <div className="selection-checklist">
             <div className={`checklist-item ${selectedClass ? 'completed' : ''}`}>
-              <span className="check-icon">{selectedClass ? '✅' : '⭕'}</span>
+              <span className="check-icon">{selectedClass ? <CheckCircle2 size={16} color="#10b981" /> : <Circle size={16} color="#94a3b8" />}</span>
               <span>Select Class</span>
             </div>
             <div className={`checklist-item ${selectedSubject ? 'completed' : ''}`}>
-              <span className="check-icon">{selectedSubject ? '✅' : '⭕'}</span>
+              <span className="check-icon">{selectedSubject ? <CheckCircle2 size={16} color="#10b981" /> : <Circle size={16} color="#94a3b8" />}</span>
               <span>Select Subject</span>
             </div>
           </div>
         </div>
       ) : (
         <div className="no-data">
-          <div className="no-data-icon">📊</div>
+          <div className="no-data-icon"><BarChart3 size={44} color="#94a3b8" /></div>
           <h3>No Analytics Data Available</h3>
           <p>No performance data found for the selected parameters. Please check your selections or ensure assessments have been completed.</p>
         </div>

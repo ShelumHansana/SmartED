@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { TrendingUp, BookOpen, BarChart3, Calendar, CheckCircle2, AlertCircle, Lightbulb, Target } from 'lucide-react'
 import '../../styles/StudentDashboard.css'
 
 const StudentProgress = ({ studentLevel = 'A/L' }) => {
@@ -150,14 +151,14 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
   return (
     <div className="student-progress-container">
       <div className="progress-header">
-        <h2>📈 My Academic Progress</h2>
+        <h2>My Academic Progress</h2>
         <p>Track your performance and improvement over time</p>
       </div>
 
       {/* Subject Selection */}
       <div className="subject-selection">
         <div className="form-group">
-          <label>📚 Select Subject to View Progress</label>
+          <label>Select Subject to View Progress</label>
           <select 
             value={selectedSubject} 
             onChange={(e) => setSelectedSubject(e.target.value)}
@@ -185,7 +186,7 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
           <div className="performance-overview">
             <div className="overview-card current-performance">
               <div className="card-header">
-                <h3>📊 Current Performance</h3>
+                <h3>Current Performance</h3>
               </div>
               <div className="performance-stats">
                 <div className="stat-item">
@@ -229,14 +230,14 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
 
           {/* Assessment History */}
           <div className="assessment-history">
-            <h3>📝 Recent Assessments</h3>
+            <h3>Recent Assessments</h3>
             <div className="assessments-grid">
               {progressData.assessments.map((assessment, index) => (
                 <div key={index} className="assessment-card">
                   <div className="assessment-header">
                     <h4>{assessment.name}</h4>
-                    <div className="assessment-date">
-                      📅 {new Date(assessment.date).toLocaleDateString()}
+                    <div className="assessment-date" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={13} /> {new Date(assessment.date).toLocaleDateString()}
                     </div>
                   </div>
                   <div className="assessment-score">
@@ -261,14 +262,14 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
 
           {/* Progress Trend */}
           <div className="progress-trend">
-            <h3>📈 Monthly Progress Trend</h3>
+            <h3>Monthly Progress Trend</h3>
             <div className="trend-chart">
               {progressData.monthlyProgress.map((point, index) => (
                 <div key={index} className="trend-point">
                   <div className="trend-bar-container">
                     <div 
                       className="trend-bar"
-                      style={{
+                      style={{ 
                         height: `${(point.average / 100) * 150}px`,
                         backgroundColor: getProgressColor((point.average / 100) * 100)
                       }}
@@ -284,11 +285,11 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
           {/* Strengths and Weaknesses */}
           <div className="analysis-section">
             <div className="strengths-section">
-              <h3>💪 Your Strengths</h3>
+              <h3>Your Strengths</h3>
               <div className="topics-list">
                 {progressData.strengths.map((strength, index) => (
                   <div key={index} className="topic-item strength">
-                    <span className="topic-icon">✅</span>
+                    <span className="topic-icon"><CheckCircle2 size={15} color="#16a34a" /></span>
                     <span className="topic-name">{strength}</span>
                   </div>
                 ))}
@@ -296,11 +297,11 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
             </div>
 
             <div className="weaknesses-section">
-              <h3>🎯 Areas for Improvement</h3>
+              <h3>Areas for Improvement</h3>
               <div className="topics-list">
                 {progressData.weaknesses.map((weakness, index) => (
                   <div key={index} className="topic-item weakness">
-                    <span className="topic-icon">📚</span>
+                    <span className="topic-icon"><AlertCircle size={15} color="#eab308" /></span>
                     <span className="topic-name">{weakness}</span>
                   </div>
                 ))}
@@ -310,11 +311,11 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
 
           {/* Recommendations */}
           <div className="recommendations">
-            <h3>💡 Study Recommendations</h3>
+            <h3>Study Recommendations</h3>
             <div className="recommendation-list">
               {progressData.recommendations.map((recommendation, index) => (
                 <div key={index} className="recommendation-item">
-                  <span className="recommendation-icon">🎯</span>
+                  <span className="recommendation-icon"><Target size={16} color="#4f46e5" /></span>
                   <span className="recommendation-text">{recommendation}</span>
                 </div>
               ))}
@@ -323,7 +324,7 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
 
           {/* Next Assessment */}
           <div className="next-assessment">
-            <h3>📅 Upcoming Assessment</h3>
+            <h3>Upcoming Assessment</h3>
             <div className="assessment-preview">
               <div className="assessment-info">
                 <h4>{progressData.nextAssessment.name}</h4>
@@ -358,10 +359,10 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
                 </div>
                 <div className="preparation-message">
                   {progressData.nextAssessment.preparation >= 80 
-                    ? "You're well prepared! 🎉" 
+                    ? "Well prepared for assessment." 
                     : progressData.nextAssessment.preparation >= 60 
-                    ? "Good progress, keep studying! 📚" 
-                    : "More preparation needed 💪"}
+                    ? "Good progress, keep studying." 
+                    : "Additional preparation recommended."}
                 </div>
               </div>
             </div>
@@ -369,13 +370,13 @@ const StudentProgress = ({ studentLevel = 'A/L' }) => {
         </div>
       ) : !selectedSubject ? (
         <div className="no-selection">
-          <div className="no-selection-icon">📚</div>
+          <div className="no-selection-icon"><BookOpen size={44} color="#94a3b8" /></div>
           <h3>Select a Subject</h3>
           <p>Choose a subject from the dropdown above to view your academic progress and performance analytics.</p>
         </div>
       ) : (
         <div className="no-data">
-          <div className="no-data-icon">📊</div>
+          <div className="no-data-icon"><BarChart3 size={44} color="#94a3b8" /></div>
           <h3>No Progress Data Available</h3>
           <p>Progress data for this subject will be available once your teachers enter assessment marks.</p>
         </div>

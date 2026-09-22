@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { GraduationCap, Users, Award, BarChart3, Zap, Rocket, TrendingUp, Lightbulb } from 'lucide-react'
 import '../styles/LandingPage.css'
 import Navbar from './Navbar'
 import Login from './Login'
@@ -68,7 +69,7 @@ const LandingPage = () => {
           </div>
 
           <div className="floating-badge badge-right" aria-hidden="true">
-            <span className="floating-icon">🎓</span>
+            <span className="floating-icon"><GraduationCap size={20} color="#4f46e5" /></span>
             <div className="floating-info">
               <span className="floating-title">10,000+</span>
               <span className="floating-sub">Active Students</span>
@@ -114,7 +115,7 @@ const LandingPage = () => {
         {/* Live Platform Stats Strip */}
         <div className="stats-strip">
           <div className="stat-pill-item">
-            <span className="stat-pill-icon">👥</span>
+            <span className="stat-pill-icon"><Users size={18} color="#4f46e5" /></span>
             <div>
               <span className="stat-pill-num">5,000+</span>
               <span className="stat-pill-desc">Active Students</span>
@@ -122,7 +123,7 @@ const LandingPage = () => {
           </div>
           <div className="stat-pill-divider"></div>
           <div className="stat-pill-item">
-            <span className="stat-pill-icon">👨‍🏫</span>
+            <span className="stat-pill-icon"><Award size={18} color="#0284c7" /></span>
             <div>
               <span className="stat-pill-num">120+</span>
               <span className="stat-pill-desc">Expert Educators</span>
@@ -130,7 +131,7 @@ const LandingPage = () => {
           </div>
           <div className="stat-pill-divider"></div>
           <div className="stat-pill-item">
-            <span className="stat-pill-icon">📊</span>
+            <span className="stat-pill-icon"><BarChart3 size={18} color="#059669" /></span>
             <div>
               <span className="stat-pill-num">98.6%</span>
               <span className="stat-pill-desc">Pass Rate</span>
@@ -138,7 +139,7 @@ const LandingPage = () => {
           </div>
           <div className="stat-pill-divider"></div>
           <div className="stat-pill-item">
-            <span className="stat-pill-icon">⚡</span>
+            <span className="stat-pill-icon"><Zap size={18} color="#d97706" /></span>
             <div>
               <span className="stat-pill-num">24/7</span>
               <span className="stat-pill-desc">Instant Access</span>
@@ -151,7 +152,7 @@ const LandingPage = () => {
           <div className="features-grid">
             <div className="feature-card card-animate-1" onClick={() => setShowLogin(true)}>
               <div className="feature-icon-bubble bubble-blue">
-                <span className="feature-emoji">🚀</span>
+                <Rocket size={22} color="#3b82f6" />
               </div>
               <span className="feature-tag">Anytime Access</span>
               <h3>Easy Access</h3>
@@ -164,7 +165,7 @@ const LandingPage = () => {
 
             <div className="feature-card card-animate-2" onClick={() => setShowLogin(true)}>
               <div className="feature-icon-bubble bubble-cyan">
-                <span className="feature-emoji">📈</span>
+                <TrendingUp size={22} color="#06b6d4" />
               </div>
               <span className="feature-tag">Smart Analytics</span>
               <h3>Track Progress</h3>
@@ -177,7 +178,7 @@ const LandingPage = () => {
 
             <div className="feature-card card-animate-3" onClick={() => setShowLogin(true)}>
               <div className="feature-icon-bubble bubble-purple">
-                <span className="feature-emoji">💡</span>
+                <Lightbulb size={22} color="#8b5cf6" />
               </div>
               <span className="feature-tag">Real-Time Interaction</span>
               <h3>Interactive Learning</h3>
@@ -195,7 +196,7 @@ const LandingPage = () => {
       <footer className="landing-footer">
         <div className="footer-container">
           <div className="footer-brand">
-            <span className="footer-icon">🎓</span>
+            <span className="footer-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><GraduationCap size={18} color="#6366f1" /></span>
             <span className="footer-title">SmartED</span>
             <span className="footer-separator">•</span>
             <span className="footer-tag">Smart Learning Management System</span>

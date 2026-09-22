@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { collection, query, where, getDocs, addDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../../utils/firebase'
+import { Plus, X, Calendar, TrendingUp, TrendingDown, Award, CheckCircle2, Eye, Save } from 'lucide-react'
 import './GradeEntry.css'
 
 const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
@@ -470,7 +471,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
   return (
     <div className="grade-entry-container">
       <div className="grade-entry-header">
-        <h2>📊 Grade Entry & Management</h2>
+        <h2>Grade Entry & Management</h2>
         <p>Enter and manage student marks for assessments</p>
       </div>
 
@@ -481,7 +482,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
           color: '#666',
           fontSize: '1.2rem'
         }}>
-          <div>⏳ Loading teacher data...</div>
+          <div>Loading teacher data...</div>
         </div>
       ) : (
         <>
@@ -489,7 +490,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
           <div className="selection-controls">
             <div className="control-row">
               <div className="form-group">
-                <label>📚 Select Class</label>
+                <label>Select Class</label>
                 <select 
                   value={selectedClass} 
                   onChange={(e) => setSelectedClass(e.target.value)}
@@ -510,7 +511,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
               </div>
 
               <div className="form-group">
-                <label>📖 Select Subject</label>
+                <label>Select Subject</label>
                 <select 
                   value={selectedSubject} 
                   onChange={(e) => setSelectedSubject(e.target.value)}
@@ -531,7 +532,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
               </div>
 
               <div className="form-group">
-                <label>📝 Select Assessment</label>
+                <label>Select Assessment</label>
                 <div className="assessment-select-group">
                   <select 
                     value={selectedAssessment} 
@@ -551,13 +552,14 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                     onClick={() => setShowAddAssessment(true)}
                     disabled={!selectedClass || !selectedSubject}
                     title="Add new assessment"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    ➕
+                    <Plus size={16} />
                   </button>
                 </div>
                 {selectedClass && selectedSubject && getFilteredAssessments().length === 0 && (
                   <small style={{ color: '#3498db', fontSize: '0.85rem' }}>
-                    No assessments found. Click ➕ to create one.
+                    No assessments found. Click + to create one.
                   </small>
                 )}
               </div>
@@ -569,12 +571,12 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
         <div className="modal-overlay">
           <div className="modal-content add-assessment-modal">
             <div className="modal-header">
-              <h3>➕ Add New Assessment</h3>
+              <h3>Add New Assessment</h3>
               <button 
                 className="close-modal"
                 onClick={() => setShowAddAssessment(false)}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body">
@@ -657,8 +659,8 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
               <div className="assessment-meta">
                 <span className="assessment-type">{getCurrentAssessment()?.type}</span>
                 <span className="max-marks">Max: {getCurrentAssessment()?.maxMarks} marks</span>
-                <span className="assessment-date">
-                  📅 {new Date(getCurrentAssessment()?.date).toLocaleDateString()}
+                <span className="assessment-date" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Calendar size={13} /> {new Date(getCurrentAssessment()?.date).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -666,10 +668,10 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
 
           {/* Class Statistics - Always visible */}
           <div className="class-stats-section">
-            <h4>📊 Class Performance Statistics</h4>
+            <h4>Class Performance Statistics</h4>
             <div className="stats-cards">
               <div className="stat-card stat-average">
-                <div className="stat-icon">📈</div>
+                <div className="stat-icon"><TrendingUp size={20} color="#3b82f6" /></div>
                 <div className="stat-info">
                   <span className="stat-label">Class Average</span>
                   <span className="stat-value">{getClassStats().average}</span>
@@ -677,7 +679,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                 </div>
               </div>
               <div className="stat-card stat-highest">
-                <div className="stat-icon">🏆</div>
+                <div className="stat-icon"><Award size={20} color="#f59e0b" /></div>
                 <div className="stat-info">
                   <span className="stat-label">Highest Score</span>
                   <span className="stat-value">{getClassStats().highest}</span>
@@ -685,7 +687,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                 </div>
               </div>
               <div className="stat-card stat-lowest">
-                <div className="stat-icon">📉</div>
+                <div className="stat-icon"><TrendingDown size={20} color="#ef4444" /></div>
                 <div className="stat-info">
                   <span className="stat-label">Lowest Score</span>
                   <span className="stat-value">{getClassStats().lowest}</span>
@@ -693,7 +695,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                 </div>
               </div>
               <div className="stat-card stat-entries">
-                <div className="stat-icon">✅</div>
+                <div className="stat-icon"><CheckCircle2 size={20} color="#10b981" /></div>
                 <div className="stat-info">
                   <span className="stat-label">Entries Filled</span>
                   <span className="stat-value">
@@ -764,7 +766,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                 className="action-btn preview-btn"
                 onClick={() => setShowPreviewModal(true)}
               >
-                <span className="btn-icon">👁️</span>
+                <span className="btn-icon"><Eye size={15} /></span>
                 <span className="btn-text">Preview Results</span>
               </button>
               <button 
@@ -772,7 +774,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                 onClick={handleSaveMarks}
                 disabled={isSaving}
               >
-                <span className="btn-icon">{isSaving ? '⏳' : '💾'}</span>
+                <span className="btn-icon"><Save size={15} /></span>
                 <span className="btn-text">{isSaving ? 'Saving...' : 'Save Marks'}</span>
               </button>
             </div>
@@ -784,7 +786,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
       {!selectedClass || !selectedSubject || !selectedAssessment ? (
         <div className="instructions">
           <div className="instruction-card">
-            <h3>📋 How to Enter Grades</h3>
+            <h3>How to Enter Grades</h3>
             <ol>
               <li>Select the class you want to enter grades for</li>
               <li>Choose the subject from your teaching subjects</li>
@@ -794,7 +796,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
               <li>Save the marks to update student progress</li>
             </ol>
             <div className="grade-scale">
-              <h4>🎯 Grading Scale</h4>
+              <h4>Grading Scale</h4>
               <div className="scale-grid">
                 <span>A+: 90-100%</span>
                 <span>A: 85-89%</span>
@@ -820,18 +822,18 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
         <div className="modal-overlay" onClick={() => setShowPreviewModal(false)}>
           <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📊 Class Performance Summary</h3>
+              <h3>Class Performance Summary</h3>
               <button 
                 className="close-modal"
                 onClick={() => setShowPreviewModal(false)}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body">
               <div className="preview-stats">
                 <div className="preview-stat-card">
-                  <div className="preview-icon">📈</div>
+                  <div className="preview-icon"><TrendingUp size={20} color="#3b82f6" /></div>
                   <div className="preview-info">
                     <h4>Class Average</h4>
                     <p className="preview-value">{getClassStats().average} marks</p>
@@ -841,7 +843,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                   </div>
                 </div>
                 <div className="preview-stat-card">
-                  <div className="preview-icon">🏆</div>
+                  <div className="preview-icon"><Award size={20} color="#f59e0b" /></div>
                   <div className="preview-info">
                     <h4>Highest Score</h4>
                     <p className="preview-value">{getClassStats().highest} marks</p>
@@ -851,7 +853,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                   </div>
                 </div>
                 <div className="preview-stat-card">
-                  <div className="preview-icon">📉</div>
+                  <div className="preview-icon"><TrendingDown size={20} color="#ef4444" /></div>
                   <div className="preview-info">
                     <h4>Lowest Score</h4>
                     <p className="preview-value">{getClassStats().lowest} marks</p>
@@ -861,7 +863,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
                   </div>
                 </div>
                 <div className="preview-stat-card">
-                  <div className="preview-icon">✅</div>
+                  <div className="preview-icon"><CheckCircle2 size={20} color="#10b981" /></div>
                   <div className="preview-info">
                     <h4>Completion Status</h4>
                     <p className="preview-value">
@@ -875,7 +877,7 @@ const GradeEntry = ({ students: propStudents, teacherId, showToast }) => {
               </div>
 
               <div className="grade-distribution">
-                <h4>📊 Grade Distribution</h4>
+                <h4>Grade Distribution</h4>
                 <div className="distribution-bars">
                   {['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'S', 'W'].map(gradeLevel => {
                     const count = Object.values(marks)

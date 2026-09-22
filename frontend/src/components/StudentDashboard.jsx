@@ -7,6 +7,7 @@ import Calculator from './Calculator'
 import Notepad from './Notepad'
 import StudentProgress from './dashboard/StudentProgress'
 import ProfileAvatarUploader from './ProfileAvatarUploader'
+import { BarChart3, BookOpen, TrendingUp, FileText, Wrench, GraduationCap, X, Menu, LogOut, Award, Inbox, Calendar, User, MessageSquare, Mail, Bell, BellOff } from 'lucide-react'
 import '../styles/StudentDashboard.css'
 
 // Default avatar image
@@ -302,7 +303,7 @@ const StudentDashboard = () => {
           onClick={() => setMobileMenuOpen(false)}
           aria-label="Close menu"
         >
-          ✕
+          <X size={20} />
         </button>
         <div className="student-profile">
           <ProfileAvatarUploader
@@ -340,35 +341,35 @@ const StudentDashboard = () => {
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-icon">📊</span>
+            <span className="nav-icon"><BarChart3 size={18} /></span>
             Overview
           </button>
           <button 
             className={`nav-item ${activeTab === 'subjects' ? 'active' : ''}`}
             onClick={() => { setActiveTab('subjects'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-icon">📚</span>
+            <span className="nav-icon"><BookOpen size={18} /></span>
             {studentData.level === 'A/L' ? 'My Subjects' : 'My Subjects'}
           </button>
           <button 
             className={`nav-item ${activeTab === 'progress' ? 'active' : ''}`}
             onClick={() => { setActiveTab('progress'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-icon">📈</span>
+            <span className="nav-icon"><TrendingUp size={18} /></span>
             Academic Progress
           </button>
           <button 
             className={`nav-item ${activeTab === 'exams' ? 'active' : ''}`}
             onClick={() => { setActiveTab('exams'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-icon">📝</span>
+            <span className="nav-icon"><FileText size={18} /></span>
             {studentData.level === 'A/L' ? 'A/L Preparation' : 'Examinations'}
           </button>
           <button 
             className={`nav-item ${activeTab === 'tools' ? 'active' : ''}`}
             onClick={() => { setActiveTab('tools'); setMobileMenuOpen(false); }}
           >
-            <span className="nav-icon">🛠️</span>
+            <span className="nav-icon"><Wrench size={18} /></span>
             Study Tools
           </button>
           {studentData.level === 'A/L' && (
@@ -376,7 +377,7 @@ const StudentDashboard = () => {
               className={`nav-item ${activeTab === 'university' ? 'active' : ''}`}
               onClick={() => { setActiveTab('university'); setMobileMenuOpen(false); }}
             >
-              <span className="nav-icon">🎓</span>
+              <span className="nav-icon"><GraduationCap size={18} /></span>
               University Prep
             </button>
           )}
@@ -391,7 +392,7 @@ const StudentDashboard = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Open menu"
             >
-              ☰
+              <Menu size={20} />
             </button>
             <h2>Welcome back, {studentData.name}!</h2>
           </div>
@@ -409,8 +410,9 @@ const StudentDashboard = () => {
               className="logout-btn"
               onClick={handleLogout}
               title="Logout"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🚪 Logout
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </header>
@@ -441,11 +443,11 @@ const StudentDashboard = () => {
               </div>
 
               <div className="achievements-section">
-                <h3>🏆 Recent Achievements</h3>
+                <h3>Recent Achievements</h3>
                 <div className="achievements-list">
                   {studentData.achievements.map((achievement, index) => (
                     <div key={index} className="achievement-item">
-                      <span className="achievement-icon">🎯</span>
+                      <span className="achievement-icon"><Award size={16} color="#eab308" /></span>
                       <span>{achievement}</span>
                     </div>
                   ))}
@@ -456,7 +458,7 @@ const StudentDashboard = () => {
               <div className="activities-section modern-section">
                 <div className="section-header-modern">
                   <div className="header-icon-wrapper activity-icon">
-                    <span className="header-icon">📚</span>
+                    <span className="header-icon"><BookOpen size={18} /></span>
                   </div>
                   <div className="header-text">
                     <h3>Recent Activities & Assignments</h3>
@@ -466,7 +468,7 @@ const StudentDashboard = () => {
                 <div className="modern-cards-grid">
                   {activities.length === 0 ? (
                     <div className="empty-state-modern">
-                      <span className="empty-icon">📭</span>
+                      <span className="empty-icon"><Inbox size={32} color="#94a3b8" /></span>
                       <p>No activities assigned yet</p>
                     </div>
                   ) : (
@@ -480,7 +482,7 @@ const StudentDashboard = () => {
                         <div className="modern-card-header">
                           <h4 className="card-title">{activity.title}</h4>
                           <div className="due-date-badge">
-                            <span className="date-icon">📅</span>
+                            <span className="date-icon"><Calendar size={13} /></span>
                             <span className="date-text">{activity.dueDate}</span>
                           </div>
                         </div>
@@ -488,13 +490,13 @@ const StudentDashboard = () => {
                         <div className="card-footer-meta">
                           {activity.teacherName && (
                             <div className="meta-item">
-                              <span className="meta-icon">👨‍🏫</span>
+                              <span className="meta-icon"><User size={13} /></span>
                               <span className="meta-text">{activity.teacherName}</span>
                             </div>
                           )}
                           {activity.subject && (
                             <div className="meta-item">
-                              <span className="meta-icon">📖</span>
+                              <span className="meta-icon"><BookOpen size={13} /></span>
                               <span className="meta-text">{activity.subject}</span>
                             </div>
                           )}
@@ -509,7 +511,7 @@ const StudentDashboard = () => {
               <div className="messages-section modern-section">
                 <div className="section-header-modern">
                   <div className="header-icon-wrapper message-icon">
-                    <span className="header-icon">💬</span>
+                    <span className="header-icon"><MessageSquare size={18} /></span>
                   </div>
                   <div className="header-text">
                     <h3>Recent Messages</h3>
@@ -519,7 +521,7 @@ const StudentDashboard = () => {
                 <div className="modern-messages-list">
                   {messages.length === 0 ? (
                     <div className="empty-state-modern">
-                      <span className="empty-icon">📪</span>
+                      <span className="empty-icon"><Mail size={32} color="#94a3b8" /></span>
                       <p>No messages yet</p>
                     </div>
                   ) : (
@@ -538,7 +540,7 @@ const StudentDashboard = () => {
                           <p className="message-text">{message.content}</p>
                           {message.subject && (
                             <div className="message-subject-tag">
-                              <span className="tag-icon">📖</span>
+                              <span className="tag-icon"><BookOpen size={13} /></span>
                               <span className="tag-text">{message.subject}</span>
                             </div>
                           )}
@@ -600,7 +602,7 @@ const StudentDashboard = () => {
 
           {activeTab === 'exams' && (
             <div className="exams-section">
-              <h3>🗓️ Upcoming {studentData.level} Examinations</h3>
+              <h3>Upcoming {studentData.level} Examinations</h3>
               <div className="exams-list">
                 {studentData.upcomingExams.map((exam, index) => (
                   <div key={index} className="exam-card">
@@ -612,7 +614,7 @@ const StudentDashboard = () => {
                     </div>
                     <div className="exam-details">
                       <div className="exam-date">
-                        <span className="date-icon">📅</span>
+                        <span className="date-icon"><Calendar size={13} /></span>
                         <span>{new Date(exam.date).toLocaleDateString('en-US', { 
                           weekday: 'long', 
                           year: 'numeric', 
@@ -630,7 +632,7 @@ const StudentDashboard = () => {
               
               {studentData.level === 'A/L' && (
                 <div className="al-exam-info">
-                  <h4>📖 A/L Examination Information</h4>
+                  <h4>A/L Examination Information</h4>
                   <div className="info-cards">
                     <div className="info-card">
                       <h5>Examination Year</h5>
@@ -655,21 +657,21 @@ const StudentDashboard = () => {
               <Calculator />
               <Notepad />
               <div className="todo-widget">
-                <h3>📝 Study Planner</h3>
+                <h3>Study Planner</h3>
                 <div className="study-tips">
                   {studentData.level === 'A/L' ? (
                     <ul>
-                      <li>🎯 Focus on past paper practice</li>
-                      <li>📊 Create mind maps for complex topics</li>
-                      <li>⏰ Follow a strict study timetable</li>
-                      <li>🤝 Form study groups with classmates</li>
+                      <li>Focus on past paper practice</li>
+                      <li>Create mind maps for complex topics</li>
+                      <li>Follow a strict study timetable</li>
+                      <li>Form study groups with classmates</li>
                     </ul>
                   ) : (
                     <ul>
-                      <li>📖 Complete daily homework regularly</li>
-                      <li>🔄 Review previous lessons weekly</li>
-                      <li>❓ Ask questions when in doubt</li>
-                      <li>🎨 Use visual aids for better understanding</li>
+                      <li>Complete daily homework regularly</li>
+                      <li>Review previous lessons weekly</li>
+                      <li>Ask questions when in doubt</li>
+                      <li>Use visual aids for better understanding</li>
                     </ul>
                   )}
                 </div>
@@ -679,7 +681,7 @@ const StudentDashboard = () => {
 
           {activeTab === 'university' && studentData.level === 'A/L' && (
             <div className="university-section">
-              <h3>🎓 University Preparation</h3>
+              <h3>University Preparation</h3>
               <div className="university-info">
                 <div className="info-card">
                   <h4>Admission Requirements</h4>
@@ -703,10 +705,10 @@ const StudentDashboard = () => {
                 <div className="info-card">
                   <h4>Study Resources</h4>
                   <ul>
-                    <li>📚 A/L Past Papers (2015-2024)</li>
-                    <li>🔬 Laboratory Manuals</li>
-                    <li>💻 Online Learning Platforms</li>
-                    <li>📖 Reference Books & Guides</li>
+                    <li>A/L Past Papers (2015-2024)</li>
+                    <li>Laboratory Manuals</li>
+                    <li>Online Learning Platforms</li>
+                    <li>Reference Books & Guides</li>
                   </ul>
                 </div>
               </div>
@@ -718,7 +720,7 @@ const StudentDashboard = () => {
       {/* Notification Panel */}
       <div className={`notification-panel ${showNotifications ? 'open' : ''}`}>
         <div className="notification-header">
-          <h3>🔔 Notifications</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Bell size={18} /> Notifications</h3>
           <button 
             className="close-notifications"
             onClick={() => setShowNotifications(false)}
@@ -729,7 +731,7 @@ const StudentDashboard = () => {
         <div className="notification-list">
           {notifications.length === 0 ? (
             <div className="no-notifications">
-              <div className="empty-notification-icon">📭</div>
+              <div className="empty-notification-icon"><BellOff size={36} color="#94a3b8" /></div>
               <p>No notifications yet</p>
             </div>
           ) : (
@@ -737,10 +739,10 @@ const StudentDashboard = () => {
               // Determine icon based on notification type
               const getNotificationIcon = (type) => {
                 switch(type) {
-                  case 'message': return '💬'
-                  case 'activity': return '📚'
-                  case 'grade': return '📊'
-                  default: return '🔔'
+                  case 'message': return <MessageSquare size={16} />
+                  case 'activity': return <BookOpen size={16} />
+                  case 'grade': return <BarChart3 size={16} />
+                  default: return <Bell size={16} />
                 }
               }
 
@@ -781,13 +783,13 @@ const StudentDashboard = () => {
                       <div className="notification-meta">
                         {notification.teacherName && (
                           <span className="notification-teacher">
-                            <span className="meta-icon">👨‍🏫</span>
+                            <span className="meta-icon"><User size={12} /></span>
                             {notification.teacherName}
                           </span>
                         )}
                         {notification.subject && (
                           <span className="notification-subject">
-                            <span className="meta-icon">📖</span>
+                            <span className="meta-icon"><BookOpen size={12} /></span>
                             {notification.subject}
                           </span>
                         )}
@@ -811,7 +813,7 @@ const StudentDashboard = () => {
               className="mark-all-read"
               onClick={markAllAsRead}
             >
-              ✓ Mark all as read
+              Mark all as read
             </button>
           </div>
         )}

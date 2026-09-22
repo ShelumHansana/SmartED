@@ -1,4 +1,4 @@
-﻿/* Parent Dashboard Styles */
+/* Parent Dashboard Styles */
 .dashboard-container {
   display: flex;
   min-height: 100vh;
@@ -544,16 +544,6 @@
   position: relative;
 }
 
-.progress-section h3::before {
-  content: '📚';
-  font-size: 1.8rem;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
 
 .subjects-grid {
   display: grid;
@@ -843,22 +833,6 @@
 .subject-info p:hover {
   color: #4f46e5;
   background: rgba(79, 70, 229, 0.05);
-}
-
-/* Add icons to subject info */
-.subject-info p:nth-child(1)::before {
-  content: '👨‍🏫';
-  font-size: 1.1rem;
-}
-
-.subject-info p:nth-child(2)::before {
-  content: '📝';
-  font-size: 1.1rem;
-}
-
-.subject-info p:nth-child(3)::before {
-  content: '📅';
-  font-size: 1.1rem;
 }
 
 /* Add a completion indicator */
