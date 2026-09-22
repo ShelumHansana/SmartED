@@ -3576,14 +3576,32 @@
 
 .admin-form-tip {
   grid-column: 1 / -1;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e40af;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.88rem;
   margin-bottom: 0.5rem;
   line-height: 1.4;
+}
+
+.student-class-preview-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f0fdf4;
+  border: 1.5px dashed #86efac;
+  color: #166534;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.student-class-preview-chip strong {
+  color: #14532d;
+  font-weight: 700;
 }
 
 /* ==========================================================================

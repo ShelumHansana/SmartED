@@ -22,7 +22,24 @@ const generateIndexNumber = (role = 'student') => {
   return `${prefix}${year}${randomNum}`
 }
 
-const generateUsername = (fullName = '', indexNumber = '') => {
+const generateNameWithInitials = (fullName = '') => {
+  if (!fullName || !fullName.trim()) return ''
+  const parts = fullName.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 1) return parts[0]
+  const lastName = parts[parts.length - 1]
+  const initials = parts.slice(0, parts.length - 1).map(p => p[0].toUpperCase() + '.').join(' ')
+  return `${initials} ${lastName}`
+}
+
+const generateUsername = (fullName = '', nameWithInitials = '', indexNumber = '') => {
+  if (nameWithInitials && nameWithInitials.trim()) {
+    const cleaned = nameWithInitials
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+    if (cleaned.length >= 3) {
+      return cleaned
+    }
+  }
   if (fullName && fullName.trim()) {
     const cleaned = fullName
       .trim()
@@ -103,6 +120,10 @@ const AdminDashboard = () => {
   const [formUsername, setFormUsername] = useState('')
   const [formPassword, setFormPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [formFullName, setFormFullName] = useState('')
+  const [formNameWithInitials, setFormNameWithInitials] = useState('')
+  const [studentGrade, setStudentGrade] = useState('Grade 10')
+  const [studentClass, setStudentClass] = useState('A')
 
   // Teacher Registration / Edit Options
   const [teacherSubjects, setTeacherSubjects] = useState([])
@@ -123,6 +144,10 @@ const AdminDashboard = () => {
     setFormUsername(index.toLowerCase())
     setFormPassword(pass)
     setShowPassword(false)
+    setFormFullName('')
+    setFormNameWithInitials('')
+    setStudentGrade('Grade 10')
+    setStudentClass('A')
     setTeacherSubjects([])
     setCustomSubjectInput('')
     setTeacherClassAssignments([])
@@ -228,6 +253,7 @@ const AdminDashboard = () => {
         id: doc.id,
         ...doc.data(),
         name: doc.data().fullName || doc.data().name,
+        nameWithInitials: doc.data().nameWithInitials || doc.data().studentData?.nameWithInitials || '',
         joinDate: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toISOString().split('T')[0] : 'N/A'
       }))
       setUsers(usersData)
@@ -274,6 +300,7 @@ const AdminDashboard = () => {
           id: doc.id,
           ...doc.data(),
           name: doc.data().fullName || doc.data().name,
+          nameWithInitials: doc.data().nameWithInitials || doc.data().studentData?.nameWithInitials || '',
           joinDate: doc.data().createdAt ? new Date(doc.data().createdAt.seconds * 1000).toISOString().split('T')[0] : 'N/A'
         }))
         setUsers(usersData)
@@ -415,10 +442,18 @@ const AdminDashboard = () => {
     setSelectedUser(userToEdit)
     const role = userToEdit.role || 'student'
     setFormRole(role)
-    setFormIndexNumber(userToEdit.indexNumber || '')
+    setFormIndexNumber(userToEdit.indexNumber || userToEdit.studentData?.indexNumber || '')
     setFormUsername(userToEdit.username || '')
     setFormPassword(userToEdit.initialPassword || '')
     setShowPassword(false)
+    setFormFullName(userToEdit.fullName || userToEdit.name || '')
+    setFormNameWithInitials(userToEdit.nameWithInitials || userToEdit.studentData?.nameWithInitials || '')
+
+    const rawGrade = userToEdit.studentData?.gradeName || (userToEdit.studentData?.grade ? `Grade ${userToEdit.studentData.grade}` : '') || (userToEdit.grade ? (userToEdit.grade.startsWith('Grade') ? userToEdit.grade : `Grade ${userToEdit.grade}`) : 'Grade 10')
+    setStudentGrade(PRESET_GRADES.includes(rawGrade) ? rawGrade : 'Grade 10')
+
+    const rawClass = userToEdit.studentData?.className || userToEdit.className || (userToEdit.studentData?.class ? userToEdit.studentData.class.split('-').pop() : '') || (userToEdit.class ? userToEdit.class.split('-').pop() : 'A')
+    setStudentClass(PRESET_SECTIONS.includes(rawClass) ? rawClass : 'A')
 
     if (role === 'teacher') {
       const existingSubjects = Array.isArray(userToEdit.subjects) && userToEdit.subjects.length > 0
@@ -483,7 +518,8 @@ const AdminDashboard = () => {
       const password = (userData.password || formPassword || '').trim()
       const email = (userData.email || '').trim() || `${username}@smarted.school`
       const role = userData.role || formRole || 'student'
-      const fullName = userData.fullName || userData.name || 'New User'
+      const fullName = (userData.fullName || formFullName || userData.name || 'New User').trim()
+      const nameWithInitials = (userData.nameWithInitials || formNameWithInitials || '').trim()
 
       if (!password || password.length < 6) {
         showToast('Password must be at least 6 characters long.', 'error')
@@ -509,6 +545,7 @@ const AdminDashboard = () => {
       // 2. Prepare user record for Firestore
       const newUser = {
         fullName: fullName,
+        nameWithInitials: nameWithInitials,
         email: email,
         username: username,
         indexNumber: indexNumber,
@@ -521,12 +558,26 @@ const AdminDashboard = () => {
       
       // Add role-specific data
       if (role === 'student') {
+        const gradeStr = userData.grade || studentGrade || 'Grade 10'
+        const gradeNum = gradeStr.replace('Grade ', '').trim()
+        const classSection = userData.className || studentClass || 'A'
+        const fullClassId = `${gradeNum}-${classSection}`
+
         newUser.studentData = { 
           indexNumber: indexNumber,
           admissionNo: indexNumber,
-          grade: userData.grade || '',
-          class: userData.className || ''
+          fullName: fullName,
+          nameWithInitials: nameWithInitials,
+          grade: gradeNum,
+          gradeName: gradeStr,
+          className: classSection,
+          class: fullClassId,
+          classId: fullClassId
         }
+        newUser.grade = gradeNum
+        newUser.gradeName = gradeStr
+        newUser.className = classSection
+        newUser.class = fullClassId
       } else if (role === 'teacher') {
         const uniqueClasses = Array.from(new Set(teacherClassAssignments.map(a => a.classId)))
         const primarySubject = teacherSubjects[0] || userData.subject || ''
@@ -567,6 +618,10 @@ const AdminDashboard = () => {
       // Open credentials modal for the Admin
       setCreatedCredentials({
         fullName: fullName,
+        nameWithInitials: nameWithInitials,
+        grade: role === 'student' ? (userData.grade || studentGrade || 'Grade 10') : '',
+        className: role === 'student' ? (userData.className || studentClass || 'A') : '',
+        classId: role === 'student' ? `${(userData.grade || studentGrade || '10').replace('Grade ', '').trim()}-${userData.className || studentClass || 'A'}` : '',
         role: role,
         indexNumber: indexNumber,
         username: username,
@@ -586,9 +641,12 @@ const AdminDashboard = () => {
       console.log('Updating user with data:', userData)
       console.log('Selected user ID:', selectedUser.id)
       
+      const effectiveRole = userData.role || selectedUser?.role
+
       // Prepare update data with proper field mapping
       const updateData = {
         fullName: userData.fullName || userData.name,
+        nameWithInitials: userData.nameWithInitials || formNameWithInitials || '',
         email: userData.email,
         role: userData.role,
         status: userData.status,
@@ -596,9 +654,28 @@ const AdminDashboard = () => {
       }
       
       // Add role-specific data if needed
-      if (userData.grade) updateData.studentData = { ...(selectedUser?.studentData || {}), grade: userData.grade }
+      if (effectiveRole === 'student') {
+        const gradeStr = userData.grade || studentGrade || 'Grade 10'
+        const gradeNum = gradeStr.replace('Grade ', '').trim()
+        const classSection = userData.className || studentClass || 'A'
+        const fullClassId = `${gradeNum}-${classSection}`
+
+        updateData.studentData = { 
+          ...(selectedUser?.studentData || {}),
+          fullName: userData.fullName || userData.name,
+          nameWithInitials: userData.nameWithInitials || formNameWithInitials || '',
+          grade: gradeNum,
+          gradeName: gradeStr,
+          className: classSection,
+          class: fullClassId,
+          classId: fullClassId
+        }
+        updateData.grade = gradeNum
+        updateData.gradeName = gradeStr
+        updateData.className = classSection
+        updateData.class = fullClassId
+      }
       
-      const effectiveRole = userData.role || selectedUser?.role
       if (effectiveRole === 'teacher') {
         const uniqueClasses = Array.from(new Set(teacherClassAssignments.map(a => a.classId)))
         const primarySubject = teacherSubjects[0] || userData.subject || selectedUser?.subject || selectedUser?.teacherData?.subject || ''
@@ -2038,11 +2115,13 @@ const AdminDashboard = () => {
                 {(() => {
                   const filteredUsers = users.filter(user => {
                     const matchesRole = userFilter === 'All' || user.role === userFilter
+                    const q = userSearchQuery.toLowerCase()
                     const matchesSearch = userSearchQuery === '' || 
-                      (user.name && user.name.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
-                      (user.username && user.username.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
-                      (user.indexNumber && user.indexNumber.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
-                      (user.email && user.email.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                      (user.name && user.name.toLowerCase().includes(q)) ||
+                      (user.nameWithInitials && user.nameWithInitials.toLowerCase().includes(q)) ||
+                      (user.username && user.username.toLowerCase().includes(q)) ||
+                      (user.indexNumber && user.indexNumber.toLowerCase().includes(q)) ||
+                      (user.email && user.email.toLowerCase().includes(q))
                     return matchesRole && matchesSearch
                   })
                   
@@ -2086,13 +2165,18 @@ const AdminDashboard = () => {
                         </div>
                         <div className="user-info">
                           <h4>{user.name || 'Unnamed User'}</h4>
+                          {user.nameWithInitials && (
+                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '-2px 0 2px 0' }}>
+                              {user.nameWithInitials}
+                            </p>
+                          )}
                           <p>{user.email}</p>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
                             <span className={`role-badge ${user.role ? user.role.toLowerCase() : 'unknown'}`}>
                               {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown'}
                             </span>
                             {user.username && (
-                              <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                              <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
                                 @{user.username}
                               </span>
                             )}
@@ -2106,7 +2190,9 @@ const AdminDashboard = () => {
                       </div>
                       <div className="user-details">
                         {user.role === 'student' && (
-                          <p>Class: {user.grade || user.className || user.class || 'N/A'}</p>
+                          <p>
+                            <strong>Class:</strong> {user.studentData?.gradeName || (user.studentData?.grade ? `Grade ${user.studentData.grade}` : (user.grade || 'N/A'))} - Section {user.studentData?.className || user.className || (user.studentData?.class ? user.studentData.class.split('-').pop() : 'N/A')}
+                          </p>
                         )}
                         {user.role === 'teacher' && (
                           <div className="teacher-info-preview">
@@ -2991,7 +3077,7 @@ const AdminDashboard = () => {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '740px' }}>
             <div className="modal-header">
-              <h3>{selectedUser ? 'Edit User' : 'Add New User & Generate Credentials'}</h3>
+              <h3>{selectedUser ? 'Edit User' : (formRole === 'student' ? 'Register Student & Auto-Generate Credentials' : 'Add New User & Generate Credentials')}</h3>
               <button 
                 className="close-modal"
                 onClick={() => {
@@ -3006,15 +3092,17 @@ const AdminDashboard = () => {
               e.preventDefault()
               const formData = new FormData(e.target)
               const userData = {
-                fullName: formData.get('fullName'),
+                fullName: formFullName.trim() || formData.get('fullName') || '',
+                nameWithInitials: formNameWithInitials.trim() || formData.get('nameWithInitials') || '',
                 email: formData.get('email'),
                 username: formData.get('username') || formUsername,
                 indexNumber: formData.get('indexNumber') || formIndexNumber,
                 password: formData.get('password') || formPassword,
-                role: formData.get('role'),
-                status: formData.get('status'),
+                role: formData.get('role') || formRole,
+                status: formData.get('status') || 'Active',
                 phone: formData.get('phone') || '',
-                grade: formData.get('grade') || '',
+                grade: studentGrade || formData.get('grade') || 'Grade 10',
+                className: studentClass || formData.get('className') || 'A',
                 subject: formData.get('subject') || (teacherSubjects[0] || '')
               }
               
@@ -3044,7 +3132,8 @@ const AdminDashboard = () => {
                       if (!selectedUser) {
                         const newIdx = generateIndexNumber(newRole)
                         setFormIndexNumber(newIdx)
-                        setFormUsername(newIdx.toLowerCase())
+                        const genUser = generateUsername(formFullName, formNameWithInitials, newIdx)
+                        setFormUsername(genUser)
                       }
                     }}
                     required
@@ -3061,17 +3150,83 @@ const AdminDashboard = () => {
                   <input 
                     type="text" 
                     name="fullName"
-                    placeholder="e.g. Kasun Perera"
-                    defaultValue={selectedUser?.fullName || selectedUser?.name || ''}
+                    placeholder="e.g. Kasun Kalhara Perera"
+                    value={formFullName}
                     onChange={(e) => {
-                      if (!selectedUser && e.target.value.trim()) {
-                        const gen = generateUsername(e.target.value, formIndexNumber)
+                      const val = e.target.value
+                      setFormFullName(val)
+                      if (!selectedUser) {
+                        const initials = generateNameWithInitials(val)
+                        setFormNameWithInitials(initials)
+                        const gen = generateUsername(val, initials, formIndexNumber)
                         setFormUsername(gen)
                       }
                     }}
                     required
                   />
                 </div>
+
+                {formRole === 'student' && (
+                  <div className="form-group">
+                    <label>Name with Initials *</label>
+                    <input 
+                      type="text" 
+                      name="nameWithInitials"
+                      placeholder="e.g. K. K. Perera"
+                      value={formNameWithInitials}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setFormNameWithInitials(val)
+                        if (!selectedUser && val.trim() && !formFullName.trim()) {
+                          const gen = generateUsername('', val, formIndexNumber)
+                          setFormUsername(gen)
+                        }
+                      }}
+                      required
+                    />
+                  </div>
+                )}
+
+                {formRole === 'student' && (
+                  <>
+                    <div className="form-group">
+                      <label>Grade *</label>
+                      <select 
+                        name="grade"
+                        value={studentGrade}
+                        onChange={(e) => setStudentGrade(e.target.value)}
+                        required
+                      >
+                        {PRESET_GRADES.map(grade => (
+                          <option key={grade} value={grade}>{grade}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Class / Section *</label>
+                      <select 
+                        name="className"
+                        value={studentClass}
+                        onChange={(e) => setStudentClass(e.target.value)}
+                        required
+                      >
+                        {PRESET_SECTIONS.map(sec => (
+                          <option key={sec} value={sec}>
+                            Section {sec} ({studentGrade.replace('Grade ', '')}-{sec})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group full-width" style={{ marginTop: '-0.25rem', marginBottom: '0.25rem' }}>
+                      <div className="student-class-preview-chip">
+                        <GraduationCap size={16} color="#059669" />
+                        <span>Enrolling Student to: <strong>{studentGrade} - Section {studentClass}</strong> (Class ID: <strong>{studentGrade.replace('Grade ', '')}-{studentClass}</strong>)</span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {!selectedUser && (
                   <>
@@ -3089,7 +3244,13 @@ const AdminDashboard = () => {
                           type="button" 
                           className="input-action-btn"
                           title="Regenerate Index Number"
-                          onClick={() => setFormIndexNumber(generateIndexNumber(formRole))}
+                          onClick={() => {
+                            const newIdx = generateIndexNumber(formRole)
+                            setFormIndexNumber(newIdx)
+                            if (!formFullName.trim()) {
+                              setFormUsername(newIdx.toLowerCase())
+                            }
+                          }}
                         >
                           <RotateCw size={13} />
                         </button>
@@ -3111,8 +3272,7 @@ const AdminDashboard = () => {
                           className="input-action-btn"
                           title="Regenerate Username"
                           onClick={() => {
-                            const fullNameInput = document.querySelector('input[name="fullName"]')?.value
-                            setFormUsername(generateUsername(fullNameInput, formIndexNumber))
+                            setFormUsername(generateUsername(formFullName, formNameWithInitials, formIndexNumber))
                           }}
                         >
                           <RotateCw size={13} />
@@ -3171,18 +3331,6 @@ const AdminDashboard = () => {
                     defaultValue={selectedUser?.phone || ''}
                   />
                 </div>
-
-                {formRole === 'student' && (
-                  <div className="form-group">
-                    <label>Grade (For Students)</label>
-                    <input 
-                      type="text" 
-                      name="grade"
-                      placeholder="e.g., Grade 10"
-                      defaultValue={selectedUser?.studentData?.grade || ''}
-                    />
-                  </div>
-                )}
 
                 <div className="form-group">
                   <label>Status *</label>
@@ -3472,6 +3620,20 @@ const AdminDashboard = () => {
                   <span className="credential-label">Full Name:</span>
                   <span className="credential-value">{createdCredentials.fullName}</span>
                 </div>
+                {createdCredentials.nameWithInitials && (
+                  <div className="credential-row">
+                    <span className="credential-label">Name with Initials:</span>
+                    <span className="credential-value">{createdCredentials.nameWithInitials}</span>
+                  </div>
+                )}
+                {createdCredentials.role === 'student' && (
+                  <div className="credential-row">
+                    <span className="credential-label">Grade & Class:</span>
+                    <span className="credential-value">
+                      {createdCredentials.grade} - Section {createdCredentials.className} ({createdCredentials.classId})
+                    </span>
+                  </div>
+                )}
                 <div className="credential-row">
                   <span className="credential-label">Role:</span>
                   <span className="credential-value role-tag">{createdCredentials.role.toUpperCase()}</span>
@@ -3505,7 +3667,7 @@ const AdminDashboard = () => {
                 onClick={() => {
                   const textToCopy = `SmartED Login Credentials:
 Full Name: ${createdCredentials.fullName}
-Role: ${createdCredentials.role}
+${createdCredentials.nameWithInitials ? `Name with Initials: ${createdCredentials.nameWithInitials}\n` : ''}${createdCredentials.role === 'student' ? `Grade & Class: ${createdCredentials.grade} - Section ${createdCredentials.className} (${createdCredentials.classId})\n` : ''}Role: ${createdCredentials.role}
 Index Number: ${createdCredentials.indexNumber}
 Username: ${createdCredentials.username}
 Password: ${createdCredentials.password}
